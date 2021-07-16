@@ -1,0 +1,54 @@
+### download and install ###
+curl https://downloadmirror.intel.com/29746/eng/ice-1.3.2.tar.gz --output ice-1.3.2.tar.gz
+tar zxf ice-1.3.2.tar.gz
+cd ice-1.3.2/src/
+make install
+cd ../..
+curl https://downloadmirror.intel.com/28933/eng/Linux_x64.zip --output Linux_x64.zip
+unzip Linux_x64.zip
+
+### reboot then configure ###
+sudo ./Linux_x64/epct64e -devices
+
+	Intel(R) Ethernet Port Configuration Tool
+	EPCT version: v1.35.57.01
+	Copyright(C) 2020 Intel Corporation.
+
+	NIC Seg:Bus:Fun   Ven-Dev   Connector Ports Speed    Quads  Lanes per PF
+	=== ============= ========= ========= ===== ======== ====== ============
+	 1) 000:097:00-01 8086-1592 QSFP      2     100 Gbps Dual   4
+
+sudo ./Linux_x64/epct64e -nic=1 -get
+
+	Intel(R) Ethernet Port Configuration Tool
+	EPCT version: v1.35.57.01
+	Copyright(C) 2020 Intel Corporation.
+
+	Available Port Options:
+	===========================================================================
+	 Active  Port                              Quad 0           Quad 1         
+	 Option  Option (Gbps)                     L0  L1  L2  L3   L4  L5  L6  L7 
+	======== =============================    ===============  ================
+	    X    2x1x100                       -> 100   -   -   -  100   -   -   -
+	         2x50                          ->  50   -  50   -    -   -   -   -
+	         4x25                          ->  25  25  25  25    -   -   -   -
+	         2x2x25                        ->  25  25   -   -   25  25   -   -
+	         8x10                          ->  10  10  10  10   10  10  10  10
+	         100                           -> 100   -   -   -    -   -   -   -
+
+sudo ./Linux_x64/epct64e -nic=1 -set 8x10
+	Intel(R) Ethernet Port Configuration Tool
+	EPCT version: v1.35.57.01
+	Copyright(C) 2020 Intel Corporation.
+
+	New configuration was set: 8x10
+	Restart the system to apply the changes.
+
+	The port options have changed for this device. You must reboot for the device to function correctly.
+
+	All actions succeeded.
+
+bottom port is sf0,1,2,3 and top port is sf4,5,6,7
+
+setup /etc/netplan/01-network-manager-all.yaml with the e800 link names
+sudo cp e800_netplan.yaml /etc/netplan/01-network-manager-all.yaml && sudo netplan apply

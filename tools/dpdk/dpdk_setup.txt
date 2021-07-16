@@ -1,0 +1,43 @@
+### Create folder with sym link to librte shared libraries ###
+mkdir -p /usr/local/lib/dpdk-pmds 
+
+for i in /usr/local/lib/librte_mempool_*
+do
+ln -s "$i" /usr/local/lib/dpdk-pmds/"${i##*/}"
+done
+
+for i in /usr/local/lib/librte_pmd_*
+do
+ln -s "$i" /usr/local/lib/dpdk-pmds/"${i##*/}"
+done
+
+
+#### Grub file configures system at boot time. Edit to configure memory manager for DPDK ### 
+#setup for Intel system
+#sed -i "s:quiet splash:quiet splash iommu=pt intel_iommu=on hugepages=2048:" /etc/default/grub
+#setup for AMD system. https://ubuntu.com/server/docs/network-dpdk
+sed -i "s:quiet splash:quiet splash amd_iommu=pt hugepages=2048:" /etc/default/grub
+#grub for AMD that isolates cores and enables high performance option for cores (disables low power state)
+#GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_iommu=pt hugepages=2048 isolcpus=32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47 nohz_full=32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47 rcu_nocbs=32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47"
+update-grub
+
+#load vfio driver into kernel
+modprobe vfio-pci
+
+### Create uhd config file ###
+#get mac addresses and update uhd.conf
+ip -brief link
+ip -brief a
+#copy uhd config file to default location https://files.ettus.com/manual/page_configfiles.html
+mkdir /etc/uhd
+cp uhd.conf /etc/uhd/uhd.conf
+
+### deactive network interfaces then bind vfio-pci ###
+link_names=("enp225s0f0" "enp225s0f1" "enp225s0f2" "enp193s0f3" "enp193s0f0" "enp193s0f1" "enp193s0f2" "enp193s0f3")
+for link_name in "${link_names[@]}"
+do
+	sudo ip link set $link_name down
+	dpdk-devbind.py --bind=vfio-pci $link_name
+done
+#check if devices are bound
+dpdk-devbind.py -s
