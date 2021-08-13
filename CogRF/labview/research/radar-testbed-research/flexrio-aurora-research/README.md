@@ -1,0 +1,1 @@
+This directory contains the results of investigating Aurora streaming options for integrated IO modules using the FlexRIO API. In particular the 5785.
