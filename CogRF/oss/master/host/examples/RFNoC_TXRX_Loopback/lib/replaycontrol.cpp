@@ -42,6 +42,7 @@ int ReplayControl::importData(GraphSettings& graphSettings, SignalSettings& sign
     std::ifstream infile(signalSettings.file.c_str(), std::ifstream::binary);
     if (!infile.is_open()) {
         std::cerr << "Could not open specified file" << std::endl;
+        exit(0);
         return EXIT_FAILURE;
     }
 
@@ -504,10 +505,6 @@ void ReplayControl::runSelector(GraphSettings& graphSettings, SignalSettings& si
     if (deviceSettings.mode == 0){
         ReplayControl::singleTXLoopback( graphSettings, signalSettings, deviceSettings);
     }
-    /* else if(deviceSettings.mode == 1){
-        signalSettings.singleTXRX_loopback = true;
-        ReplayControl::singleTXLoopback( graphSettings, signalSettings, deviceSettings);
-    } */
     else if(deviceSettings.mode == 1){
         ReplayControl::runTXRXiterativeloopback(graphSettings, signalSettings, deviceSettings);
     }

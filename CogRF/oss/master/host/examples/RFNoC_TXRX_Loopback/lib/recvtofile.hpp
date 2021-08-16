@@ -129,14 +129,11 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
         }
 
         
-      
-        if (stop_signal_called){
-            std::cout << "!@$!#$!@#$!@#$!@#$!@#$!@#$@!" << std::endl;
-        }
+    
     
    
     }
-    std::cout << "Shutting Down Receiver..." << std::endl;
+   
 
     // Shut down receiver
     stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
@@ -146,7 +143,7 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
     for (size_t i = 0; i < outfiles.size(); i++) {
         outfiles[i]->close();
     }
-    std::cout << "Recv Complete..." << std::endl;
+    std::cout << "Recv Complete...(Press Ctrl+C to exit)" << std::endl;
 }
 
 
@@ -196,7 +193,6 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     
 
     ofstream output_file(this_filename, ios::out | ios::binary);
-    //std::cout << this_filename << std::endl;
 
     output_file.rdbuf()->pubsetbuf(buf.get(), samps_per_buff);//Important
 
