@@ -3,7 +3,15 @@
 ###2) execute the this script with root priveleges "sudo ./setup_script.sh"
 
 #Set working directory to script location.
-cd "${0%/*}"
+DIR="$(dirname "$(readlink -f "$0")")"
+cd "$DIR"
+
+#Adjust Network Buffers
+echo '###Adjust Network Buffers###' >> /etc/sysctl.conf
+echo 'net.core.wmem_max=33554432' >> /etc/sysctl.conf
+echo 'net.core.rmem_max=33554432' >> /etc/sysctl.conf
+echo 'net.core.wmem_default=33554432' >> /etc/sysctl.conf
+echo 'net.core.rmem_default=33554432' >> /etc/sysctl.conf
 
 #install dependencies
 #Excluded argparse because I believe its installed in -dev
@@ -35,7 +43,7 @@ make
 make install
 
 #Build cogrf host
-cd "${0%/*}"
+cd "$DIR"
 mkdir ../RefDesign/build
 cd ../RefDesign/build
 cmake ..
