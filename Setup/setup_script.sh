@@ -1,6 +1,16 @@
+#!/bin/bash
 ###instructions:
 ###1) open a terminal and set working directory to tools directory
 ###2) execute the this script with root priveleges "sudo ./setup_script.sh"
+
+#check for sudo Priveleges
+if [ `whoami` == root ]; then
+    echo "(1) already root"
+else
+    echo "Error: Please run this as root with the following command"
+    echo "sudo ./setup_script.sh"
+    exit 1
+fi
 
 #Set working directory to script location.
 DIR="$(dirname "$(readlink -f "$0")")"
