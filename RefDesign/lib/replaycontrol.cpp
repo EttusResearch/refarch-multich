@@ -514,6 +514,10 @@ void ReplayControl::runSelector(GraphSettings& graphSettings, SignalSettings& si
     else if(deviceSettings.mode == 3){
         ReplayControl::singleTXLoopbackMultithread( graphSettings, signalSettings, deviceSettings);
     }
+    else if(deviceSettings.mode > 3){
+        std::cout << "ERROR: Choose Valid Mode" << std::endl;
+        exit(0);
+    }
     
 
 }

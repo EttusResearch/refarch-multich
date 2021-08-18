@@ -49,12 +49,26 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
 
     //Place each run into its own folder based on the CW
     boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0/" % cw_folder));
+    boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md2/" % cw_folder));
+
+    boost::filesystem::path base_fn_fp;
    
+    if (threadnum < 7){
+        
     boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(
         str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % deviceSettings.tx_freq % "_thread_" % threadnum % base_fn_fp.extension().string())));
+        return base_fn_fp.string();
+    }
+    else{
+    boost::filesystem::path base_fn_fp("/mnt/md2/" + cw_folder + "/" + base_fn);
+    base_fn_fp.replace_extension(boost::filesystem::path(
+        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % deviceSettings.tx_freq % "_thread_" % threadnum % base_fn_fp.extension().string())));
+        return base_fn_fp.string();
+
+    }
         
-    return base_fn_fp.string();
+    
 
 }
 
