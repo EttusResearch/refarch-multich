@@ -37,12 +37,12 @@ abi-dumper dpdk libdpdk-dev ncompress libncurses5-dev libncursesw5-dev
 
 #This file will add UHD libraries to the enviroment so UHD commands
 #can be executed without a setup step.
-cp -f export_uhd_lib.sh /etc/profile.d/
+cp -f config/export_uhd_lib.sh /etc/profile.d/
 
 #Download the UHD driver. 
 #Only get the Tag release not all changes --depth 1
-mkdir -p ../external
-cd ../external
+mkdir -p external
+cd external
 git clone --branch v4.1.0.1 --depth 1 https://github.com/EttusResearch/uhd.git
 
 #Build the UHD driver and install it to system
@@ -54,8 +54,8 @@ make install
 
 #Build cogrf host
 cd "$DIR"
-mkdir ../RefDesign/build
-cd ../RefDesign/build
+mkdir RefDesign/build
+cd RefDesign/build
 cmake ..
 make
 
