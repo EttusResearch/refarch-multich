@@ -43,3 +43,44 @@ network:
       gateway4: 0.0.0.0
       mtu: 9000
       #usrp 7
+    enp37s0f0:
+      addresses: [192.168.11.1/24]
+      gateway4: 0.0.0.0
+      mtu: 9000
+      #usrp 8
+    enp37s0f1:
+      addresses: [192.168.12.1/24]
+      gateway4: 0.0.0.0
+      mtu: 9000
+      #usrp 9
+    enp37s0f2:
+      addresses: [192.168.13.1/24]
+      gateway4: 0.0.0.0
+      mtu: 9000
+      #usrp 10
+    enp37s0f3:
+      addresses: [192.168.14.1/24]
+      gateway4: 0.0.0.0
+      mtu: 9000
+      #usrp 11
+    enp225s0f0:
+      addresses: [192.168.15.1/24]
+      gateway4: 0.0.0.0
+      mtu: 9000
+      #usrp 12
+    enp225s0f1:
+      addresses: [192.168.16.1/24]
+      gateway4: 0.0.0.0
+      mtu: 9000
+      #usrp 13
+    enp225s0f2:
+      addresses: [192.168.17.1/24]
+      gateway4: 0.0.0.0
+      mtu: 9000
+      #usrp 14
+    enp225s0f3:
+      addresses: [192.168.18.1/24]
+      gateway4: 0.0.0.0
+      mtu: 9000
+      #usrp 15
+    
