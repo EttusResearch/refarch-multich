@@ -1,18 +1,8 @@
-cmake_minimum_required(VERSION 3.10.2)
 
-project(COGRF VERSION 1.0
-        DESCRIPTION "Cognitive RF Host Libaries and Examples"
-        LANGUAGES CXX)
+########################################################################
+# Find Packages and add to the project as a dependency
+########################################################################
 
-# Configure Compiler #
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE "Release")
-
-# Add the sub-directories for CMake to scan
-add_subdirectory(src)
-add_subdirectory(lib)
-
-# Add UHD as a dependency to this project
 find_package(UHD 4.0.0 REQUIRED)
 # Pull in all boost dependencies in one place.
 find_package(Boost 1.50 REQUIRED COMPONENTS
@@ -32,4 +22,8 @@ target_include_directories(UHD_BOOST INTERFACE ${UHD_LIBRARIES} ${Boost_LIBRARIE
 target_link_libraries(UHD_BOOST INTERFACE ${UHD_LIBRARIES} ${Boost_LIBRARIES})
 
 
-
+########################################################################
+# Add the sub-directories
+########################################################################
+add_subdirectory(src)
+add_subdirectory(lib)
