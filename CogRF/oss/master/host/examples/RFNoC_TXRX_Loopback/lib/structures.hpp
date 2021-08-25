@@ -245,7 +245,7 @@ struct GraphSettings{
     uhd::tx_streamer::sptr tx_stream;
     std::vector<size_t> streamer_channels;
     std::vector<uhd::tx_streamer::sptr> tx_stream_vector;
-    std::vector<uhd::rx_streamer::sptr> rx_stream_vector;
+    std::vector<uhd::rx_streamer::sptr> rx_stream_vector; //TODO: This needs to either be a vector or a single streamer
     //txrx settings
     uhd::tx_metadata_t tx_md;
     uhd::time_spec_t time_spec;

@@ -552,7 +552,7 @@ int ReplayControl::singleTXLoopbackMultithread(GraphSettings& graphSettings, Sig
         if (signalSettings.format == "sc16"){
             for (int i = 0; i < graphSettings.rx_stream_vector.size(); i++){
                 std::cout << "Spawning RX Thread.." << i << std::endl;
-                thread_group.create_thread(std::bind(&recvToMemMultithread, graphSettings.rx_stream_vector[i], signalSettings.format, signalSettings.otw, signalSettings.rx_file, signalSettings.spb, signalSettings.nsamps, graphSettings.time_spec, 
+                thread_group.create_thread(std::bind(&recvToFileMultithread, graphSettings.rx_stream_vector[i], signalSettings.format, signalSettings.otw, signalSettings.rx_file, signalSettings.spb, signalSettings.nsamps, graphSettings.time_spec, 
                 rx_channel_nums, signalSettings.rx_timeout, deviceSettings.rx_rate, signalSettings.singleTX, signalSettings, 0, deviceSettings,  graphSettings, signalSettings.time_requested, i ));
             }
     
