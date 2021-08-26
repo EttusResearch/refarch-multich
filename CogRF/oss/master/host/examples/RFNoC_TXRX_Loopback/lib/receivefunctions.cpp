@@ -57,7 +57,7 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
     boost::filesystem::path base_fn_fp;
    
     //Direct half of the USRPs to one RAID and half to the other. 
-    if (threadnum < 7){
+    if (threadnum < 15){
         
     boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(

@@ -201,7 +201,7 @@ void GraphAssembly::buildStreams(GraphSettings& graphSettings, DeviceSettings& d
     std::cout << "Using streamer args: " << stream_args.args.to_string() << std::endl;
     
     if (signalSettings.singleTXRX_loopback == true){
-        graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(2, stream_args);
+        graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(1, stream_args);//TODO: Double check this should be 1
     }
     else{
         graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(graphSettings.radio_ctrls.size(), stream_args);

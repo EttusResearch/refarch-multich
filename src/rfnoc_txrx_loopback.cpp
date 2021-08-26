@@ -4,7 +4,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-
+// Example run command
+// ./rfnoc_txrx_loopback --cfgFile "rfnoc_txrx_loopback.cfg"
 
 
 

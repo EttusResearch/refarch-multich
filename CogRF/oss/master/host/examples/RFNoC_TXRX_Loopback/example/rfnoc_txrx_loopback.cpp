@@ -81,7 +81,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     
 
-    
+    //INFO: Comment what each initilization does what type of data is stored in each.
     device.addProgramOptions(pmd.desc);
     signal.addProgramOptions(pmd.desc);
    
