@@ -63,7 +63,7 @@ main(){
   make
   cd "$DIR"
   chmod 777 -R build
-  chmod 777 -R external
+  chmod 777 -R uhd_GitSource
   exit 0 
 }
 
