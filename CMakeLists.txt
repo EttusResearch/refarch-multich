@@ -59,4 +59,8 @@ target_link_libraries(rfnoc_txrx_loopback PRIVATE UHD_BOOST cogrf_lib)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/rfnoc_txrx_loopback.cfg 
                 ${CMAKE_CURRENT_BINARY_DIR}/)
 
+#TODO: Make this more repust and not error out the cmake if the file is missing.
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config/250e6_a1_500khz_250e6tx_16000_0701_2.dat 
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
+
 
