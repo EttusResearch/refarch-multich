@@ -107,7 +107,7 @@ void SyncDevices::setLOsfromConfig(GraphSettings& graphSettings, const ProgramMe
 void SyncDevices::setSource(int device, GraphSettings& graphSettings){
     std::cout << "Setting Device# " << device << " Radio# " << device*2 << ", Radio# " << device*2+1 << " to: " << "source" << std::endl;
     //Set Device to System LO Source
-    //No difference between RX and TX LOs, just used TX. 
+    //No difference between RX and TX LOs, just used RX. 
     
 
     graphSettings.radio_ctrls[device*2]->set_tx_lo_export_enabled(false, "lo1", 0);

@@ -4,8 +4,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Example run command
-// ./rfnoc_txrx_loopback --cfgFile "rfnoc_txrx_loopback.cfg"
+
 
 
 
@@ -82,7 +81,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     
 
-    
+    //INFO: Comment what each initilization does what type of data is stored in each.
     device.addProgramOptions(pmd.desc);
     signal.addProgramOptions(pmd.desc);
    

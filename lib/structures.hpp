@@ -85,39 +85,42 @@ struct ProgramMetaData
 struct SignalSettings{
 
     // Constants related to the Replay block
+    //TODO: these are not  used anywhere delete?
     const size_t replay_word_size = 8; // Size of words used by replay block
     const size_t sample_size      = 4; // Complex signed 16-bit is 32 bits per sample
     const size_t samples_per_word = 2; // Number of sc16 samples per word
     
-    
+    //Runtime
+    size_t samples_to_replay;
+
     //Load from disk
     std::string rx_file;
     std::string otw;
     std::string type;
     size_t spb, nruns;
-    double rx_timeout;
+    double rx_timeout; //TODO:This should probably be in the Device Settings
     double time_adjust;
     size_t nsamps;
     double rtime; 
     double rep_delay; //replay block time
     std::string format;
     std::string file;
-    bool stop_signal_called = false;
-    std::vector<double> freq_vector;
-    std::string tx_mode;
+    std::string tx_mode; //TODO: This is created but is never used delete?
     bool singleTXRX_loopback;
-    size_t words_to_replay;
-    size_t samples_to_replay;
     int singleTX, singleRX;
     double time_requested;
    
-    
-    
+    //TODO:Review if you still need these in the structure. Could not find any where used.
+    size_t words_to_replay;
+    std::vector<double> freq_vector;
+    bool stop_signal_called = false;
 
     void addProgramOptions( boost::program_options::options_description &desc )
     {
     namespace po = boost::program_options;
         // clang-format off
+        //TODO: Verify we are still using the comments for each value in
+        //or if we can delete and push explaination to top of each structure
         desc.add_options()
         ("rx-file", po::value<std::string>(&rx_file)->default_value("test.dat"), "name of the file to write binary samples to")
         ("otw", po::value<std::string>(&otw)->default_value("sc16"), "specify the over-the-wire sample mode")
@@ -151,10 +154,10 @@ struct DeviceSettings{
 
     //Runtime
     std::string argsWithAddress;
+    std::string folder_name;
 
     //Load from disk
     std::string args;
-    std::string type;
     double tx_rate, tx_freq, tx_gain,tx_bw;
     double rx_rate, rx_freq, rx_gain, rx_bw;
     std::string ref;
@@ -164,16 +167,19 @@ struct DeviceSettings{
     std::vector<std::string> address;
     std::string tx_args;
     std::string rx_args;
-    std::string folder_name;
     std::vector<std::string> lo;
     int mode;
 
-    
+    std::string type; //TODO This does nothing Safe to delete Not loaded from config? Could not find any where used.
+  
 
     void addProgramOptions( boost::program_options::options_description &desc )
     {
     namespace po = boost::program_options;
         // clang-format off
+        //TODO: Verify we are still using the comments for each value in
+        //or if we can delete and push explaination to top of each structure
+
         desc.add_options()
         ("args", po::value<std::string>(&args)->default_value(""), "uhd transmit device address args")
         ("tx-rate", po::value<double>(&tx_rate), "rate of transmit outgoing samples")
@@ -193,7 +199,7 @@ struct DeviceSettings{
         ("tx-args", po::value<std::string>(&tx_args)->default_value(""), "uhd transmit device address args")
         ("rx-args", po::value<std::string>(&rx_args)->default_value(""), "uhd receive device address args")
         ("lo", po::value<std::vector<std::string>>(&lo), "device LO settings")
-        ("mode",po::value<int>(&mode)->default_value(0), "Loopback Mode:  0 - Single TX -> All RX, 1 - Iterative, 2 - Single TX -> Single RX")
+        ("mode",po::value<int>(&mode)->default_value(0), "Loopback Mode:  0 - Single TX -> All RX, 1 - Iterative Loopback, 2 - Single TX -> Single RX")
 
         ;
         // clang-format on
@@ -224,10 +230,10 @@ struct GraphSettings{
 
 
     uhd::rfnoc::rfnoc_graph::sptr graph;
-    std::vector<std::string> mboardname_vector;
+    std::vector<std::string> mboardname_vector;//TODO: this is used in one spot but that code is suspect aswell.
     //radio Global Variables
     std::vector<uhd::rfnoc::radio_control::sptr> radio_ctrls;
-    std::vector<size_t> radio_number{0,1};
+    std::vector<size_t> radio_number{0,1}; //TODO This does nothing Safe to delete? Could not find any where used.
     std::vector<uhd::rfnoc::block_id_t> radio_block_list;
     //DDC/DUC Global Variables
     std::vector<uhd::rfnoc::ddc_block_control::sptr> ddc_ctrls;
@@ -245,11 +251,11 @@ struct GraphSettings{
     uhd::tx_streamer::sptr tx_stream;
     std::vector<size_t> streamer_channels;
     std::vector<uhd::tx_streamer::sptr> tx_stream_vector;
-    std::vector<uhd::rx_streamer::sptr> rx_stream_vector;
+    std::vector<uhd::rx_streamer::sptr> rx_stream_vector; 
     //txrx settings
-    uhd::tx_metadata_t tx_md;
-    uhd::time_spec_t time_spec;
-    uhd::time_spec_t time_adjustment;
+    uhd::tx_metadata_t tx_md;//TODO This is initilized and used in the same function. Delete to clean? ReplayControl.cpp
+    uhd::time_spec_t time_spec;//TODO This is initilized and used in multiple function but same file. Delete to clean? ReplayControl.cpp
+    uhd::time_spec_t time_adjustment;//TODO This is initilized and used in the same function. Delete to clean? ReplayControl.cpp
 
     
     

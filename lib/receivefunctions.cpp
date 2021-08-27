@@ -48,12 +48,16 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
     std::string cw_folder = "CW_" + std::to_string(deviceSettings.tx_freq*1e-9) + "_GHz_" + deviceSettings.folder_name;
 
     //Place each run into its own folder based on the CW
+    //If using a multi-raid system, this code must be changed to accomodate. 
+    //1st RAID
     boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0/" % cw_folder));
+    //2nd RAID
     boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md2/" % cw_folder));
 
     boost::filesystem::path base_fn_fp;
    
-    if (threadnum < 7){
+    //Direct half of the USRPs to one RAID and half to the other. 
+    if (threadnum < 15){
         
     boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(

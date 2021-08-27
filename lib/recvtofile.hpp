@@ -97,7 +97,7 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
         
         
         size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
-       
+        std::cout << "Recv: " << num_rx_samps << std::endl;
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
             break;
