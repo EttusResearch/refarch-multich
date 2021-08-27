@@ -1,0 +1,2 @@
+find_package(Doxygen)
+set(CMAKE_CURRENT_BINARY_DIR_DOXYGEN ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
