@@ -7,7 +7,8 @@ network:
       addresses: [192.168.50.1/24]
       gateway4: 0.0.0.0
       mtu: 9000
-      #usrp 0
+      #usrp 0 
+      #NIC C
     enp193s0f1:
       addresses: [192.168.60.1/24]
       gateway4: 0.0.0.0
@@ -28,6 +29,7 @@ network:
       gateway4: 0.0.0.0
       mtu: 9000
       #usrp 4
+      #NIC B
     enp1s0f1:
       addresses: [192.168.40.1/24]
       gateway4: 0.0.0.0
@@ -48,6 +50,7 @@ network:
       gateway4: 0.0.0.0
       mtu: 9000
       #usrp 8
+      #NIC A
     enp37s0f1:
       addresses: [192.168.12.1/24]
       gateway4: 0.0.0.0
@@ -68,6 +71,7 @@ network:
       gateway4: 0.0.0.0
       mtu: 9000
       #usrp 12
+      #NIC D
     enp225s0f1:
       addresses: [192.168.16.1/24]
       gateway4: 0.0.0.0

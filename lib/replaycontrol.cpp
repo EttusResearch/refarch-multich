@@ -302,12 +302,12 @@ int ReplayControl::runTXRXiterativeloopback(GraphSettings& graphSettings, Signal
             //adjust time for replay blocks, first replay of next loop is delayed but all that follow are relative to the first
             //This also accounts for the case where there is no delay between consecutive runs. There is always a min delay of signalSettings.rtime due to the 
             //nature of synchronization. 
-            //if ((i_play > 0 and run_num > 0) or signalSettings.rep_delay == 0){
+            if ((i_play > 0 and run_num > 0) or signalSettings.rep_delay == 0){
                 
                 uhd::time_spec_t now = graphSettings.graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
-                graphSettings.time_spec = uhd::time_spec_t(signalSettings.rtime + now);
+                graphSettings.time_spec = uhd::time_spec_t(signalSettings.time_adjust + now);
                 
-            //} 
+            } 
 
             
 
@@ -321,8 +321,7 @@ int ReplayControl::runTXRXiterativeloopback(GraphSettings& graphSettings, Signal
             stream_cmd.stream_now = false;
             stream_cmd.time_spec = graphSettings.time_spec;
             graphSettings.replay_ctrls[i_play]->issue_stream_cmd(stream_cmd, graphSettings.replay_chan_vector[i_play]);
-            std::cout << "Channel: " << i_play << " Transmitting..." << std::endl;
-
+            
 
             if (signalSettings.format == "sc16"){
             recvToFile<std::complex<short>>(

@@ -161,7 +161,7 @@ struct DeviceSettings{
     double tx_rate, tx_freq, tx_gain,tx_bw;
     double rx_rate, rx_freq, rx_gain, rx_bw;
     std::string ref;
-    std::string enable_lo;
+    
     std::string tx_ant, rx_ant;
     std::string streamargs;
     std::vector<std::string> address;
@@ -190,7 +190,6 @@ struct DeviceSettings{
         ("tx-freq", po::value<double>(&tx_freq), "transmit RF center frequency in Hz")
         ("rx-freq", po::value<double>(&rx_freq), "receive RF center frequency in Hz")
         ("address", po::value<std::vector<std::string>>(&address), "uhd transmit device address args")
-        ("enable_lo", po::value<std::string>(&enable_lo)->default_value("n321"), "enable_lo options (none, n320, n321)")
         ("tx-ant", po::value<std::string>(&tx_ant)->default_value("TX/RX"), "transmit antenna selection")
         ("rx-ant", po::value<std::string>(&rx_ant)->default_value("RX2"), "receive antenna selection")
         ("streamargs", po::value<std::string>(&streamargs)->default_value(""), "stream args")

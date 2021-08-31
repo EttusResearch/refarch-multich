@@ -139,11 +139,11 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Check TX Sensor Lock
     SyncDevices::checkTXSensorLock(graphStruct);
     // Allow for some setup time
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     //Build Streams
-    GraphAssembly::buildStreamsMultithread(graphStruct, device, signal);
+    GraphAssembly::buildStreams(graphStruct, device, signal);
     //Connect Graph
-    GraphAssembly::connectGraphMultithread(graphStruct, signal);
+    GraphAssembly::connectGraph(graphStruct, signal);
     //Commit Graph
     GraphAssembly::commitGraph(graphStruct);
      // Allow for some setup time

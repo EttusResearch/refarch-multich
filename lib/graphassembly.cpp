@@ -204,6 +204,7 @@ void GraphAssembly::buildStreams(GraphSettings& graphSettings, DeviceSettings& d
         graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(1, stream_args);//TODO: Double check this should be 1
     }
     else{
+        
         graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(graphSettings.radio_ctrls.size(), stream_args);
     }
 
@@ -244,70 +245,83 @@ void GraphAssembly::connectGraph(GraphSettings& graphSettings, SignalSettings& s
 
         UHD_LOG_INFO("CogRF", "Connecting graph...");
 
-        //Connect Graph
-        for (int i = 0; i < graphSettings.radio_ctrls.size(); i++){
-            //connect radios to ddc
-            graphSettings.graph->connect(graphSettings.radio_block_list[i], 0, graphSettings.ddc_ctrls[i]->get_block_id(),0);
-            std::cout << "Connected "  << graphSettings.radio_block_list[i] << " to " << graphSettings.ddc_ctrls[i]->get_block_id() << std::endl;
-            graphSettings.graph->connect(graphSettings.ddc_ctrls[i]->get_block_id(), 0, graphSettings.rx_stream,i);
-            std::cout << "Connected " << graphSettings.ddc_ctrls[i]->get_block_id() << " to " << graphSettings.rx_stream << " Port " << i << std::endl;
-        }
+    //Connect Graph
+    for (int i = 0; i < graphSettings.radio_ctrls.size(); i++){
+        //connect radios to ddc
+        graphSettings.graph->connect(graphSettings.radio_block_list[i], 0, graphSettings.ddc_ctrls[i]->get_block_id(),0);
+        std::cout << "Connected "  << graphSettings.radio_block_list[i] << " to " << graphSettings.ddc_ctrls[i]->get_block_id() << std::endl;
+        graphSettings.graph->connect(graphSettings.ddc_ctrls[i]->get_block_id(), 0, graphSettings.rx_stream,i);
+        std::cout << "Connected " << graphSettings.ddc_ctrls[i]->get_block_id() << " to " << graphSettings.rx_stream << " Port " << i << std::endl;
+    }
 
-        int pos2 = 0;
-        if (graphSettings.duc_ctrls.size() > 0){
+    int pos2 = 0;
+    if (graphSettings.duc_ctrls.size() > 0){
+       
         
+        for (auto& rctrl : graphSettings.radio_ctrls){
+            graphSettings.graph->connect(
+                graphSettings.duc_ctrls[pos2]->get_block_id(), graphSettings.duc_chan, rctrl->get_block_id(), 0);
+            std::cout << "Connected " << graphSettings.duc_ctrls[pos2]->get_block_id() << " port " 
+            << graphSettings.duc_chan << " to radio " << rctrl->get_block_id() << " port " << 0 << std::endl;
             
-            for (auto& rctrl : graphSettings.radio_ctrls){
-                graphSettings.graph->connect(
-                    graphSettings.duc_ctrls[pos2]->get_block_id(), graphSettings.duc_chan, rctrl->get_block_id(), 0);
-                std::cout << "Connected " << graphSettings.duc_ctrls[pos2]->get_block_id() << " port " 
-                << graphSettings.duc_chan << " to radio " << rctrl->get_block_id() << " port " << 0 << std::endl;
-                
+           
+            pos2++;
             
-                pos2++;
-                
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-            
-            for (int i_r2d = 0; i_r2d < graphSettings.duc_ctrls.size(); i_r2d++){
-                
-                graphSettings.graph->connect(
-                graphSettings.replay_ctrls[i_r2d]->get_block_id(), graphSettings.replay_chan_vector[i_r2d], graphSettings.duc_ctrls[i_r2d]->get_block_id(), graphSettings.duc_chan);
-                break;
-                   
-                std::cout << "Connected " <<  graphSettings.replay_ctrls[i_r2d]->get_block_id() << " port " 
-                << graphSettings.replay_chan_vector[i_r2d] << " to DUC " << graphSettings.duc_ctrls[i_r2d]->get_block_id() << " port " << graphSettings.duc_chan << std::endl;
-            
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        
+        for (int i_r2d = 0; i_r2d < graphSettings.duc_ctrls.size(); i_r2d++){
+            // Catch timeout exception issue. 
+            while(true){
+                try{
+                    graphSettings.graph->connect(
+                    graphSettings.replay_ctrls[i_r2d]->get_block_id(), graphSettings.replay_chan_vector[i_r2d], graphSettings.duc_ctrls[i_r2d]->get_block_id(), graphSettings.duc_chan);
+                    break;
+                } catch (...){
+                    //std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-        } else {
-            int pos2 = 0;
-            for (auto& replctrl : graphSettings.replay_ctrls){
-                for (auto& rctrl : graphSettings.radio_ctrls){
-                    
-                        
-                        graphSettings.graph->connect(replctrl->get_block_id(),
-                        graphSettings.replay_chan_vector[pos2],rctrl->get_block_id(),0);
-                            
-                        pos2++;
-                    
                 }
             }
+            std::cout << "Connected " <<  graphSettings.replay_ctrls[i_r2d]->get_block_id() << " port " 
+            << graphSettings.replay_chan_vector[i_r2d] << " to DUC " << graphSettings.duc_ctrls[i_r2d]->get_block_id() << " port " << graphSettings.duc_chan << std::endl;
+        
         }
-        for (int i_s2r = 0; i_s2r < graphSettings.replay_ctrls.size(); i_s2r = i_s2r + 2){
-            
-            graphSettings.graph->connect(graphSettings.tx_stream_vector[i_s2r], 0, graphSettings.replay_ctrls[i_s2r]->get_block_id(), 0);
-            std::cout << "Streamer: " << graphSettings.tx_stream_vector[i_s2r] << " connected to " << graphSettings.replay_ctrls[i_s2r]->get_block_id() << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+    } else {
+        int pos2 = 0;
+        for (auto& replctrl : graphSettings.replay_ctrls){
+            for (auto& rctrl : graphSettings.radio_ctrls){
+                while(true){
+                    try{
+                    graphSettings.graph->connect(replctrl->get_block_id(),
+                        graphSettings.replay_chan_vector[pos2],
+                        rctrl->get_block_id(),
+                        0);
+                        break;
+                    }catch(...){
+                        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+                    }
+                }
+                
+                    pos2++;
+                
+            }
         }
+    }
+    for (int i_s2r = 0; i_s2r < graphSettings.replay_ctrls.size(); i_s2r = i_s2r + 2){
+        
+        graphSettings.graph->connect(graphSettings.tx_stream_vector[i_s2r], 0, graphSettings.replay_ctrls[i_s2r]->get_block_id(), 0);
+        std::cout << "Streamer: " << graphSettings.tx_stream_vector[i_s2r] << " connected to " << graphSettings.replay_ctrls[i_s2r]->get_block_id() << std::endl;
+        
 
+    }
     }
     else{
         //Single Loopback Graph
         //connect radios to ddc
-
+        std::cout << "SINGLE TXRX" << std::endl;
         UHD_LOG_INFO("CogRF", "Connecting graph...");
         graphSettings.graph->connect(graphSettings.radio_block_list[signalSettings.singleRX], 0, graphSettings.ddc_ctrls[signalSettings.singleRX]->get_block_id(),0);
         std::cout << "Connected "  << graphSettings.radio_block_list[signalSettings.singleRX] << " to " << graphSettings.ddc_ctrls[signalSettings.singleRX]->get_block_id() << std::endl;

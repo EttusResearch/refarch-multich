@@ -19,6 +19,8 @@ main(){
   echo 'net.core.wmem_default=33554432' >> /etc/sysctl.conf
   echo 'net.core.rmem_default=33554432' >> /etc/sysctl.conf
 
+  sysctl -p /etc/sysctl.conf
+
   #install dependencies
   #Excluded argparse because I believe its installed in -dev
   apt-get update
