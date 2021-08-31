@@ -50,7 +50,7 @@ main(){
     mkdir uhd/host/build
     cd uhd/host/build
     cmake ..
-    make
+    make -j
     make install
 
     #Update Library files to include UHD for the cogrf build
