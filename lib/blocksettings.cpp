@@ -109,7 +109,7 @@ void BlockSettings::tuneRX(GraphSettings& graphSettings, DeviceSettings& deviceS
         std::cout << rctrl->get_block_id() << " Setting RX Freq: " << std::fixed << (deviceSettings.rx_freq / 1e6) << " MHz..."
                 << std::endl;
 
-        rctrl->set_rx_frequency(deviceSettings.tx_freq, 0);//BUG: this looks like a bug set rx to tx freq!
+        rctrl->set_rx_frequency(deviceSettings.rx_freq, 0);
         std::cout << rctrl->get_block_id() << " Actual RX Freq: " << (rctrl->get_rx_frequency(0) / 1e6)
                   << " MHz..." << std::endl
                   << std::endl;
