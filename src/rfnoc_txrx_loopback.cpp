@@ -73,8 +73,9 @@ typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
 
-    
+    //find configuration file -cfgFile adds to "desc" variable
     ProgramMetaData pmd;
+
     DeviceSettings device;
     SignalSettings signal;
     GraphSettings graphStruct;
@@ -84,7 +85,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //INFO: Comment what each initilization does what type of data is stored in each.
     device.addProgramOptions(pmd.desc);
     signal.addProgramOptions(pmd.desc);
-   
+
     pmd.storeProgramOptions(argc, argv);
     device.addAddresstoArgs();
 
@@ -102,7 +103,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     device.folder_name = month + day +  year + "_" + hour +  minute + seconds + "_" + signal.rx_file ;
 
 
-    
+    //Can we get rid of the ProgramMetaData in these functions?
+    //We might want to try to only pass data that is required.
     
     //Setup Graph with input Arguments
     GraphAssembly::buildGraph(graphStruct, device);

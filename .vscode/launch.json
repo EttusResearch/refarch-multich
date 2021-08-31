@@ -8,13 +8,13 @@
             "type": "by-gdb",
             "request": "launch",
             "name": "Launch(remote)",
-            "program": "${workspaceRoot}/CogRF/oss/master/host/examples/RFNoC_TXRX_Loopback/build/example/rfnoc_txrx_loopback",
+            "program": "${workspaceRoot}/build/rfnoc_txrx_loopback",
             "cwd": "${workspaceRoot}",
             "remote": {
                 "enabled": true,
                 "address": ":15970",
                 "mode": "remote",
-                "execfile": "${workspaceRoot}/CogRF/oss/master/host/examples/RFNoC_TXRX_Loopback/example/rfnoc_txrx_loopback.cpp"
+                "execfile": "${workspaceRoot}/src/rfnoc_txrx_loopback.cpp"
             }
         }
     ]
