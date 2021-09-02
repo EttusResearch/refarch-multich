@@ -101,7 +101,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::string seconds = std::to_string(timeLocal.time_of_day().seconds());
 
     
-    device.folder_name = month + day +  year + "_" + hour +  minute + seconds + "_" + signal.rx_file ;
+    device.folder_name = month + day +  year + "_" + hour +  minute + seconds + "_" ;
 
 
     //Can we get rid of the ProgramMetaData in these functions?
@@ -144,9 +144,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Allow for some setup time
     //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     //Build Streams
-    GraphAssembly::buildStreamsMultithread(graphStruct, device, signal);
+    GraphAssembly::buildStreams(graphStruct, device, signal);
     //Connect Graph
-    GraphAssembly::connectGraphMultithread(graphStruct, signal);
+    GraphAssembly::connectGraph(graphStruct, signal);
     //Commit Graph
     GraphAssembly::commitGraph(graphStruct);
      // Allow for some setup time
@@ -165,6 +165,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     ReplayControl::stopReplay(graphStruct);
     //Kill LO
     SyncDevices::killLOs(graphStruct, device);
+    
 
 
         

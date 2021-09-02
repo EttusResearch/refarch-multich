@@ -472,7 +472,7 @@ int ReplayControl::multiCWloopback(GraphSettings& graphSettings, SignalSettings&
 
     //iterates each TX, changing carrier waves after every TX has transmitted. 
     
-    for (double freq = 2300000000; freq <= 2400000000; freq += 100000000){
+    for (double freq = 1000000000; freq <= 5500000000; freq += 100000000){
 
         deviceSettings.tx_freq = freq;
         
@@ -482,16 +482,18 @@ int ReplayControl::multiCWloopback(GraphSettings& graphSettings, SignalSettings&
         //Tune TX
         BlockSettings::tuneTX(graphSettings, deviceSettings, pmd);
 
-         //Check RX Sensor Lock
+        //Check RX Sensor Lock
         SyncDevices::checkRXSensorLock(graphSettings);
         //Check TX Sensor Lock
         SyncDevices::checkTXSensorLock(graphSettings);
 
         //Begin TX and RX
-        ReplayControl::runTXRXiterativeloopback(graphSettings, signalSettings, deviceSettings);
+        ReplayControl::singleTXLoopbackMultithread(graphSettings, signalSettings, deviceSettings);
         //Kill Replay 
         ReplayControl::stopReplay(graphSettings);
+        
     }
+    
     
 
     return EXIT_SUCCESS;

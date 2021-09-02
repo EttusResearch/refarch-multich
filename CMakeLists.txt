@@ -12,7 +12,7 @@ enable_testing()
 # Configure Compiler
 ########################################################################
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_BUILD_TYPE "Debug")
 
 ########################################################################
 # Find Packages and add to the project as a dependency
@@ -51,6 +51,10 @@ add_subdirectory(lib)
 add_executable(rfnoc_txrx_loopback src/rfnoc_txrx_loopback.cpp)
 message(STATUS "Linking rfnoc_txrx_loopback.")
 target_link_libraries(rfnoc_txrx_loopback PRIVATE UHD_BOOST cogrf_lib)
+
+add_executable(rfnoc_txrx_loopback_singlethread src/rfnoc_txrx_loopback_singlethread.cpp)
+message(STATUS "Linking rfnoc_txrx_loopback_singlethread.")
+target_link_libraries(rfnoc_txrx_loopback_singlethread PRIVATE UHD_BOOST cogrf_lib)
 
 ########################################################################
 # Post Build Include Configuration files
