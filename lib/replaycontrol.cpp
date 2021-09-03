@@ -501,27 +501,6 @@ int ReplayControl::multiCWloopback(GraphSettings& graphSettings, SignalSettings&
 
     }
 
-void ReplayControl::runSelector(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd ){
-
-    if (deviceSettings.mode == 0){
-        ReplayControl::singleTXLoopback( graphSettings, signalSettings, deviceSettings);
-    }
-    else if(deviceSettings.mode == 1){
-        ReplayControl::runTXRXiterativeloopback(graphSettings, signalSettings, deviceSettings);
-    }
-    else if(deviceSettings.mode == 2){
-        ReplayControl::multiCWloopback(graphSettings, signalSettings, deviceSettings, pmd);
-    }
-    else if(deviceSettings.mode == 3){
-        ReplayControl::singleTXLoopbackMultithread( graphSettings, signalSettings, deviceSettings);
-    }
-    else if(deviceSettings.mode > 3){
-        std::cout << "ERROR: Choose Valid Mode" << std::endl;
-        exit(0);
-    }
-    
-
-}
 
 void ReplayControl::sig_int_handler(int)
 {

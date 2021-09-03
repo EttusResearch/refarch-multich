@@ -22,16 +22,6 @@
 extern volatile bool stop_signal_called;
 
 
-
-struct recvStruct{
-
-    std::vector<std::complex<short>*> buff_ptrs;
-    size_t received_samples;
-
-
-    
-};
-
 //This struct handles reading the config file and parsing the data. 
 struct ProgramMetaData
 {
@@ -105,7 +95,6 @@ struct SignalSettings{
     double rep_delay; //replay block time
     std::string format;
     std::string file;
-    std::string tx_mode; //TODO: This is created but is never used delete?
     bool singleTXRX_loopback;
     int singleTX, singleRX;
     double time_requested;
@@ -133,7 +122,6 @@ struct SignalSettings{
         ("replay_time",po::value<double>(&rtime)->default_value(2.0), "Replay Block Time Delay (seconds)")
         ("nruns", po::value<size_t>(&nruns)->default_value(1), "number of repeats")
         ("repeat_delay", po::value<double>(&rep_delay)->default_value(0), "delay between repeats (seconds)")
-        ("tx_mode", po::value<std::string>(&tx_mode)->default_value("i"), "Transmission mode: Simulataneous (s) or Iterative (i)")
         ("time_adjust",po::value<double>(&time_adjust)->default_value(2.0), "If tramsmitting in iterative mode, seperation between per-channel transmission (seconds).")
         ("singleTXRX_loopback", po::value<bool>(&singleTXRX_loopback)->default_value(false), "Loopback between a single TX and single RX channel.")
         ("singleTX",po::value<int>(&singleTX)->default_value(0), "Single Loopback TX Channel)")
@@ -168,7 +156,6 @@ struct DeviceSettings{
     std::string tx_args;
     std::string rx_args;
     std::vector<std::string> lo;
-    int mode;
 
     std::string type; //TODO This does nothing Safe to delete Not loaded from config? Could not find any where used.
   
@@ -198,7 +185,6 @@ struct DeviceSettings{
         ("tx-args", po::value<std::string>(&tx_args)->default_value(""), "uhd transmit device address args")
         ("rx-args", po::value<std::string>(&rx_args)->default_value(""), "uhd receive device address args")
         ("lo", po::value<std::vector<std::string>>(&lo), "device LO settings")
-        ("mode",po::value<int>(&mode)->default_value(0), "Loopback Mode:  0 - Single TX -> All RX, 1 - Iterative Loopback, 2 - Single TX -> Single RX")
 
         ;
         // clang-format on

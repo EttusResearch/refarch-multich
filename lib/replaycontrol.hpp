@@ -9,7 +9,6 @@ class ReplayControl{
         static void stopReplay(GraphSettings& graphSettings);
         static int singleTXLoopback(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);
         static int multiCWloopback(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd);
-        static void runSelector( GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd );
         static void sig_int_handler(int);
         static int singleTXLoopbackMultithread(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);
         static int allTX(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);

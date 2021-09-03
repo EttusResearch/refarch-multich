@@ -156,7 +156,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Sync time across devices
     SyncDevices::syncAllDevices(graphStruct);
     //Begin TX and RX
-    ReplayControl::runSelector(graphStruct, signal, device, pmd);
+    ReplayControl::singleTXLoopbackMultithread(graphStruct, signal, device);
     while (not stop_signal_called);
 
 

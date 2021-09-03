@@ -101,7 +101,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::string seconds = std::to_string(timeLocal.time_of_day().seconds());
 
     
-    device.folder_name = month + day +  year + "_" + hour +  minute + seconds + "_" ;
+    device.folder_name = month + day +  year + "_" + hour +  minute + seconds + "_" + signal.rx_file ;
 
 
     //Can we get rid of the ProgramMetaData in these functions?
@@ -156,7 +156,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Sync time across devices
     SyncDevices::syncAllDevices(graphStruct);
     //Begin TX and RX
-    ReplayControl::runSelector(graphStruct, signal, device, pmd);
+    ReplayControl::runTXRXiterativeloopback(graphStruct, signal, device);
     while (not stop_signal_called);
 
 

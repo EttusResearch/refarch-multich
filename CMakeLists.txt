@@ -52,15 +52,15 @@ add_executable(rfnoc_txrx_loopback src/rfnoc_txrx_loopback.cpp)
 message(STATUS "Linking rfnoc_txrx_loopback.")
 target_link_libraries(rfnoc_txrx_loopback PRIVATE UHD_BOOST cogrf_lib)
 
-add_executable(rfnoc_txrx_loopback_singlethread src/rfnoc_txrx_loopback_singlethread.cpp)
-message(STATUS "Linking rfnoc_txrx_loopback_singlethread.")
-target_link_libraries(rfnoc_txrx_loopback_singlethread PRIVATE UHD_BOOST cogrf_lib)
+add_executable(iterative_loopback_singlethread src/iterative_loopback_singlethread.cpp)
+message(STATUS "Linking iterative_loopback_singlethread.")
+target_link_libraries(iterative_loopback_singlethread PRIVATE UHD_BOOST cogrf_lib)
 
 ########################################################################
 # Post Build Include Configuration files
 ########################################################################
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/rfnoc_txrx_loopback.cfg 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/runconfig.cfg 
                 ${CMAKE_CURRENT_BINARY_DIR}/)
 
 #TODO: Make this more repust and not error out the cmake if the file is missing.

@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument("-a", "--amplitude", default=.3, type=int)
     parser.add_argument("-freq","--frequency", default = 500000, type=int)
     parser.add_argument("-txrate","--tx_rate", default = 250000000, type = int)
-    parser.add_argument("-method","--method",default = "complete", type = str)
+    parser.add_argument("-method","--method",default = "wavetable", type = str)
     parser.add_argument("-nsamples","-nsamples", default = 16000, type = int)
     return parser.parse_args()
 
@@ -24,8 +24,9 @@ def parse_args():
 
 def main():
     args = parse_args()
-    #Use this method only for the time being
-    if (args.method == "complete"):
+    #This method is an alternate way to generate data but is not
+    #guaranteed to work with the replay block. 
+    if (args.method == "alternate"):
         
         file = open(args.file_path, "wb")
 
