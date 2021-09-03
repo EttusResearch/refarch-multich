@@ -361,7 +361,7 @@ void ReplayControl::stopReplay(GraphSettings& graphSettings){
     for (int i_kill = 0; i_kill < graphSettings.replay_ctrls.size(); i_kill++){
         graphSettings.replay_ctrls[i_kill]->stop(graphSettings.replay_chan_vector[i_kill]);
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
         
     }
 
