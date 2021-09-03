@@ -432,7 +432,7 @@ void GraphAssembly::connectGraphMultithread(GraphSettings& graphSettings, Signal
             pos2++;
             
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         
         for (int i_r2d = 0; i_r2d < graphSettings.duc_ctrls.size(); i_r2d++){
            
@@ -444,7 +444,7 @@ void GraphAssembly::connectGraphMultithread(GraphSettings& graphSettings, Signal
             << graphSettings.replay_chan_vector[i_r2d] << " to DUC " << graphSettings.duc_ctrls[i_r2d]->get_block_id() << " port " << graphSettings.duc_chan << std::endl;
         
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     } else {
         int pos2 = 0;
@@ -464,7 +464,7 @@ void GraphAssembly::connectGraphMultithread(GraphSettings& graphSettings, Signal
         
         graphSettings.graph->connect(graphSettings.tx_stream_vector[i_s2r], 0, graphSettings.replay_ctrls[i_s2r]->get_block_id(), 0);
         std::cout << "Streamer: " << graphSettings.tx_stream_vector[i_s2r] << " connected to " << graphSettings.replay_ctrls[i_s2r]->get_block_id() << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     }
 
