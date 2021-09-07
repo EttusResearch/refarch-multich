@@ -90,8 +90,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     pmd.storeProgramOptions(argc, argv);
     device.addAddresstoArgs();
 
-    //determine folder name to store data in, will move this eventually.
-    //TODO: MAKE A Function 
+    //determine folder name to store data in
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
     std::string month = std::to_string(timeLocal.date().month());
     std::string day = std::to_string(timeLocal.date().day());

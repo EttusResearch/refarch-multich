@@ -74,12 +74,7 @@ struct ProgramMetaData
 
 struct SignalSettings{
 
-    // Constants related to the Replay block
-    //TODO: these are not  used anywhere delete?
-    const size_t replay_word_size = 8; // Size of words used by replay block
-    const size_t sample_size      = 4; // Complex signed 16-bit is 32 bits per sample
-    const size_t samples_per_word = 2; // Number of sc16 samples per word
-    
+
     //Runtime
     size_t samples_to_replay;
 
@@ -88,7 +83,7 @@ struct SignalSettings{
     std::string otw;
     std::string type;
     size_t spb, nruns;
-    double rx_timeout; //TODO:This should probably be in the Device Settings
+    double rx_timeout; 
     double time_adjust;
     size_t nsamps;
     double rtime; 
@@ -98,11 +93,9 @@ struct SignalSettings{
     bool singleTXRX_loopback;
     int singleTX, singleRX;
     double time_requested;
+    bool stop_signal_called;
    
-    //TODO:Review if you still need these in the structure. Could not find any where used.
-    size_t words_to_replay;
-    std::vector<double> freq_vector;
-    bool stop_signal_called = false;
+   
 
     void addProgramOptions( boost::program_options::options_description &desc )
     {
@@ -157,8 +150,7 @@ struct DeviceSettings{
     std::string rx_args;
     std::vector<std::string> lo;
 
-    std::string type; //TODO This does nothing Safe to delete Not loaded from config? Could not find any where used.
-  
+   
 
     void addProgramOptions( boost::program_options::options_description &desc )
     {
@@ -213,12 +205,10 @@ struct DeviceSettings{
 
 struct GraphSettings{
 
-
+    //rfnoc graph
     uhd::rfnoc::rfnoc_graph::sptr graph;
-    std::vector<std::string> mboardname_vector;//TODO: this is used in one spot but that code is suspect aswell.
     //radio Global Variables
     std::vector<uhd::rfnoc::radio_control::sptr> radio_ctrls;
-    std::vector<size_t> radio_number{0,1}; //TODO This does nothing Safe to delete? Could not find any where used.
     std::vector<uhd::rfnoc::block_id_t> radio_block_list;
     //DDC/DUC Global Variables
     std::vector<uhd::rfnoc::ddc_block_control::sptr> ddc_ctrls;
@@ -238,9 +228,8 @@ struct GraphSettings{
     std::vector<uhd::tx_streamer::sptr> tx_stream_vector;
     std::vector<uhd::rx_streamer::sptr> rx_stream_vector; 
     //txrx settings
-    uhd::tx_metadata_t tx_md;//TODO This is initilized and used in the same function. Delete to clean? ReplayControl.cpp
-    uhd::time_spec_t time_spec;//TODO This is initilized and used in multiple function but same file. Delete to clean? ReplayControl.cpp
-    uhd::time_spec_t time_adjustment;//TODO This is initilized and used in the same function. Delete to clean? ReplayControl.cpp
+    uhd::time_spec_t time_spec;
+    uhd::time_spec_t time_adjustment;
 
     
     

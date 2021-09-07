@@ -30,13 +30,6 @@ void GraphAssembly::buildGraph(GraphSettings& graphSettings, const DeviceSetting
     // View mboard names
     
     
-    for (size_t i = 0; i < graphSettings.graph->get_num_mboards(); ++i) {
-            
-        graphSettings.mboardname_vector.push_back(graphSettings.graph->get_mb_controller(i)->get_mboard_name());
-            
-            
-        }
-
 
 }
 
@@ -201,7 +194,7 @@ void GraphAssembly::buildStreams(GraphSettings& graphSettings, DeviceSettings& d
     std::cout << "Using streamer args: " << stream_args.args.to_string() << std::endl;
     
     if (signalSettings.singleTXRX_loopback == true){
-        graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(1, stream_args);//TODO: Double check this should be 1
+        graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(1, stream_args);
     }
     else{
         

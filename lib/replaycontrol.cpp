@@ -130,12 +130,12 @@ int ReplayControl::importData(GraphSettings& graphSettings, SignalSettings& sign
             ***********************************************************************/
             std::cout << "Sending data to be recorded..." << std::endl;
             
+            uhd::tx_metadata_t tx_md;
+            tx_md.start_of_burst = true;
+            tx_md.end_of_burst   = true;
             
-            graphSettings.tx_md.start_of_burst = true;
-            graphSettings.tx_md.end_of_burst   = true;
             
-            
-            size_t num_tx_samps  = graphSettings.tx_stream_vector[i]->send(tx_buf_ptr, signalSettings.samples_to_replay, graphSettings.tx_md);
+            size_t num_tx_samps  = graphSettings.tx_stream_vector[i]->send(tx_buf_ptr, signalSettings.samples_to_replay, tx_md);
             
             if (num_tx_samps != signalSettings.samples_to_replay) {
                 std::cout << "ERROR: Unable to send " << signalSettings.samples_to_replay << " samples" << std::endl;
@@ -219,12 +219,12 @@ int ReplayControl::importData(GraphSettings& graphSettings, SignalSettings& sign
         ***********************************************************************/
         std::cout << "Sending data to be recorded..." << std::endl;
         
+        uhd::tx_metadata_t tx_md;
+        tx_md.start_of_burst = true;
+        tx_md.end_of_burst   = true;
         
-        graphSettings.tx_md.start_of_burst = true;
-        graphSettings.tx_md.end_of_burst   = true;
         
-        
-        size_t num_tx_samps  = graphSettings.tx_stream_vector[signalSettings.singleTX]->send(tx_buf_ptr, signalSettings.samples_to_replay, graphSettings.tx_md);
+        size_t num_tx_samps  = graphSettings.tx_stream_vector[signalSettings.singleTX]->send(tx_buf_ptr, signalSettings.samples_to_replay, tx_md);
         
         if (num_tx_samps != signalSettings.samples_to_replay) {
             std::cout << "ERROR: Unable to send " << signalSettings.samples_to_replay << " samples" << std::endl;

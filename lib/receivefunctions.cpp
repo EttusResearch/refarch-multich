@@ -43,12 +43,12 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
                                                 SignalSettings& signalSettings, DeviceSettings& deviceSettings, int threadnum){
 
     //Generates filenames for multithreaded implementation. 
-    //TODO: Consolidate into single function. 
 
     std::string cw_folder = "CW_" + std::to_string(deviceSettings.tx_freq*1e-9) + "_GHz_" + deviceSettings.folder_name;
 
     //Place each run into its own folder based on the CW
-    //If using a multi-raid system, this code must be changed to accomodate. 
+    //If using a multi-raid system, this code must be changed to accomodate.
+    //Change /mnt/md0/ and /mnt/md2/ to accomodate your file structure.  
     //1st RAID
     boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0/" % cw_folder));
     //2nd RAID
