@@ -468,38 +468,6 @@ int ReplayControl::singleTXLoopback(GraphSettings& graphSettings, SignalSettings
         
     }
 
-int ReplayControl::multiCWloopback(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
-
-    //iterates each TX, changing carrier waves after every TX has transmitted. 
-    
-    for (double freq = 1000000000; freq <= 5500000000; freq += 100000000){
-
-        deviceSettings.tx_freq = freq;
-        
-        deviceSettings.rx_freq = freq;
-        //Tune RX
-        BlockSettings::tuneRX(graphSettings, deviceSettings, pmd);
-        //Tune TX
-        BlockSettings::tuneTX(graphSettings, deviceSettings, pmd);
-
-        //Check RX Sensor Lock
-        SyncDevices::checkRXSensorLock(graphSettings);
-        //Check TX Sensor Lock
-        SyncDevices::checkTXSensorLock(graphSettings);
-
-        //Begin TX and RX
-        ReplayControl::singleTXLoopbackMultithread(graphSettings, signalSettings, deviceSettings);
-        //Kill Replay 
-        ReplayControl::stopReplay(graphSettings);
-        
-    }
-    
-    
-
-    return EXIT_SUCCESS;
-
-
-    }
 
 
 void ReplayControl::sig_int_handler(int)

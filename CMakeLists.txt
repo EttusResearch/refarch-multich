@@ -56,6 +56,10 @@ add_executable(iterative_loopback_singlethread src/iterative_loopback_singlethre
 message(STATUS "Linking iterative_loopback_singlethread.")
 target_link_libraries(iterative_loopback_singlethread PRIVATE UHD_BOOST cogrf_lib)
 
+add_executable(multicw_iterative src/multicw_iterative.cpp)
+message(STATUS "Linking multicw_iterative.")
+target_link_libraries(multicw_iterative PRIVATE UHD_BOOST cogrf_lib)
+
 ########################################################################
 # Post Build Include Configuration files
 ########################################################################
