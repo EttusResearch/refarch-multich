@@ -12,14 +12,6 @@ main(){
   DIR="$(dirname "$(readlink -f "$0")")"
   cd "$DIR"
 
-  #Adjust Network Buffers
-  echo '###Adjust Network Buffers###' >> /etc/sysctl.conf
-  echo 'net.core.wmem_max=33554432' >> /etc/sysctl.conf
-  echo 'net.core.rmem_max=33554432' >> /etc/sysctl.conf
-  echo 'net.core.wmem_default=33554432' >> /etc/sysctl.conf
-  echo 'net.core.rmem_default=33554432' >> /etc/sysctl.conf
-
-  sysctl -p /etc/sysctl.conf
 
   #install dependencies
   #Excluded argparse because I believe its installed in -dev
@@ -57,6 +49,17 @@ main(){
     ldconfig /usr/local/lib/
   fi
 
+  ##########
+  #Tuning https://kb.ettus.com/USRP_Host_Performance_Tuning_Tips_and_Tricks
+  ##########
+  #CPU_governor to set all to performance
+  cpu_governor
+  #Adds current user to a thread priority group called USRP
+  thread_priority
+  #Adjust Network Buffers
+  network_buffers_update
+  sysctl -p /etc/sysctl.conf
+
   #Build cogrf
   cd "$DIR"
   mkdir build
@@ -74,14 +77,15 @@ main(){
 
 #requests User input function
 user_input(){
-while true; do
-    read -p "$1" yn
-    case $yn in
-        [Yy]* ) return 0;;
-        [Nn]* ) return 1;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+  echo "Please answer yes or no: "
+  while true; do
+      read -p "$1" yn
+      case $yn in
+          [Yy]* ) return 0;;
+          [Nn]* ) return 1;;
+          * ) echo "Please answer yes or no: ";;
+      esac
+  done
 }
 
 #finds UHD install and returns 1 if you need to install UHD
@@ -95,12 +99,12 @@ if [[ $VAR == *"libuhd"* ]]; then
     echo "Warning: you dont have the correct version Looking for UHD4.1.0. Instead found"
     echo $VAR
     echo "A minimum version of 4.0.0 is required"
-    echo
-    tempText="Would you like to install UHD 4.1.0?"
+    echo ""
+    tempText="Would you like to install UHD 4.1.0? "
     if user_input "$tempText"; then
       return 1
     else
-       tempText="Would you like to compile without the supported version of UHD?"
+       tempText="Would you like to compile without the supported version of UHD? "
       if user_input "$tempText"; then
         return 0
       else
@@ -125,6 +129,53 @@ check_root(){
     echo "Error: Please run this as root with the following command"
     echo "sudo ./setup_script.sh"
     exit 1
+  fi
+}
+
+#checks network buffers and updates the values if they arn't high enough
+network_buffers_update(){
+    VAR=$(cat /etc/sysctl.conf | grep "net.core")
+    if [[ $VAR == *"net.core"* ]]; then
+        VAR=$(cut -d "=" -f2- <<< "$VAR")
+        if [[ $VAR != *"33554432"* ]]; then
+            VAR=33554432
+            sed -i -e "s/\(net.core.wmem_max=\).*/\1$VAR/" \
+            -e "s/\(net.core.rmem_max=\).*/\1$VAR/" \
+            -e "s/\(net.core.wmem_default=\).*/\1$VAR/" \
+            -e "s/\(net.core.rmem_default=\).*/\1$VAR/" /etc/sysctl.conf
+        fi
+    else
+        echo '###Adjust Network Buffers###' >> /etc/sysctl.conf
+        echo 'net.core.wmem_max=33554432' >> /etc/sysctl.conf
+        echo 'net.core.rmem_max=33554432' >> /etc/sysctl.conf
+        echo 'net.core.wmem_default=33554432' >> /etc/sysctl.conf
+        echo 'net.core.rmem_default=33554432' >> /etc/sysctl.conf
+    fi
+}
+
+cpu_governor(){
+  echo ''
+  echo 'NI Recommends you set cores to performance for maximum streaming rates'
+  tempText="Would you like to install cpufreq and set cores to performance? "
+  if user_input "$tempText"; then
+    apt-get -y install -q cpufrequtils
+    for ((i=0;i<$(nproc);i++)) do 
+      sudo cpufreq-set -c $i -r -g performance
+    done
+  fi
+}
+
+thread_priority(){
+  echo ''
+  echo 'NI Rommends you set thread priority for maximum streaming rates'
+  tempText="Would you like to set thread priority by setting your current user in the usrp group? "
+  if user_input "$tempText"; then
+    groupadd usrp
+    usermod -aG usrp $(logname)
+    VAR=$(cat /etc/security/limits.conf | grep "@usrp")
+    if [[ $VAR != *"@usrp - rtprio"* ]]; then
+      echo '@usrp - rtprio  99' >> /etc/security/limits.conf
+    fi
   fi
 }
 #used to have main code at the top 
