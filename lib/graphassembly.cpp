@@ -27,7 +27,7 @@ void GraphAssembly::buildGraph(GraphSettings& graphSettings, const DeviceSetting
     std::cout << std::endl;
     std::cout << "Creating the RFNoC graph with args: " << deviceSettings.args << "..." << std::endl;
     graphSettings.graph = uhd::rfnoc::rfnoc_graph::make(deviceSettings.args);
-    // View mboard names
+    
     
     
 
@@ -458,7 +458,7 @@ void GraphAssembly::connectGraphMultithread(GraphSettings& graphSettings, Signal
         graphSettings.graph->connect(graphSettings.tx_stream_vector[i_s2r], 0, graphSettings.replay_ctrls[i_s2r]->get_block_id(), 0);
         std::cout << "Streamer: " << graphSettings.tx_stream_vector[i_s2r] << " connected to " << graphSettings.replay_ctrls[i_s2r]->get_block_id() << std::endl;
         //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
+ 
     }
 
    
