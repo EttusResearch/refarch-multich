@@ -36,11 +36,14 @@ main(){
     #Only get the Tag release not all changes --depth 1
     mkdir -p uhd_GitSource
     cd uhd_GitSource
-    git clone --branch v4.1.0.1 --depth 1 https://github.com/EttusResearch/uhd.git
+    git clone --branch UHD-4.0 https://github.com/EttusResearch/uhd.git
+    cd uhd
+    git checkout a7948beeef648fecd9646bbeaa63126d55cf1fc3
+
 
     #Build the UHD driver and install it to system
-    mkdir uhd/host/build
-    cd uhd/host/build
+    mkdir host/build
+    cd host/build
     cmake ..
     make -j
     make install
