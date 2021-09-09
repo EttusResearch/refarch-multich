@@ -60,9 +60,6 @@ add_executable(multicw_iterative src/multicw_iterative.cpp)
 message(STATUS "Linking multicw_iterative.")
 target_link_libraries(multicw_iterative PRIVATE UHD_BOOST cogrf_lib)
 
-add_executable(singlestream src/singlestream.cpp)
-message(STATUS "Linking singlestream.")
-target_link_libraries(singlestream PRIVATE UHD_BOOST cogrf_lib)
 
 ########################################################################
 # Post Build Include Configuration files
