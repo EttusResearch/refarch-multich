@@ -8,10 +8,15 @@ import argparse
 
 
 def parse_args():
-    """Parse the command line arguments"""
+    """
+    Parse the command line arguments
+    Example command line syntax:
+    python readDatFile.py -f "./my_data.dat" -s 250000000
+    """
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--file-path", default="", type=str)
-    parser.add_argument("-s", "--sample-rate", default=1, type=int)   
+    parser.add_argument("-s", "--sample-rate", default=1, type=int)
     return parser.parse_args()
 
 def deinterleave_iq(array = [], *args):
@@ -25,7 +30,7 @@ def main():
     data_array = np.fromfile(args.file_path, dtype=np.int16)
     i,q = deinterleave_iq(data_array)
     time_scale = np.linspace(0,len(i)/args.sample_rate,len(i))
-    
+
     plt.plot(time_scale,i)
     plt.plot(time_scale,q)
     plt.ylabel('voltage')
