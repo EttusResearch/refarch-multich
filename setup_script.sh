@@ -80,6 +80,7 @@ main(){
 
 #requests User input function
 user_input(){
+  echo ""
   echo "Please answer yes or no: "
   while true; do
       read -p "$1" yn
@@ -96,14 +97,15 @@ user_input(){
 find_UHD_install(){
 VAR=$(ldconfig -p | grep "libuhd.so.4")
 if [[ $VAR == *"libuhd"* ]]; then
-  if [[ $VAR == *"libuhd.so.4.1.0"* ]]; then
+  if [[ $VAR == *"libuhd.so.4.0.0"* ]]; then
     return 0
   else
+    echo ""
     echo "Warning: you dont have the correct version Looking for UHD4.1.0. Instead found"
     echo $VAR
     echo "A minimum version of 4.0.0 is required"
     echo ""
-    tempText="Would you like to install UHD 4.1.0? "
+    tempText="Would you like to install UHD 4.0.0? "
     if user_input "$tempText"; then
       return 1
     else
@@ -116,7 +118,7 @@ if [[ $VAR == *"libuhd"* ]]; then
     fi
   fi
 else
-  tempText="Would you like to install UHD 4.1.0?"
+  tempText="Would you like to install UHD 4.0.0?"
   if user_input "$tempText"; then
     return 1
   else
@@ -170,7 +172,7 @@ cpu_governor(){
 
 thread_priority(){
   echo ''
-  echo 'NI Rommends you set thread priority for maximum streaming rates'
+  echo 'NI Recommends you set thread priority for maximum streaming rates'
   tempText="Would you like to set thread priority by setting your current user in the usrp group? "
   if user_input "$tempText"; then
     groupadd usrp
