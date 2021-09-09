@@ -684,6 +684,7 @@ int ReplayControl::singleTXLoopbackMultithread16(GraphSettings& graphSettings, S
     User has the option af a single TX -> ALL RX or a single TX to a single RX. 
     If the user sets the number of samples to zero, this function will stream continuously. WARNING: This can quickly 
     create large files. The multithreaded version currently has each channel in its own thread. Receiving and Writing are not yet seperate. 
+    This version uses one RX streamer per device. 
     *******************************************************************************************************************/
    
 
@@ -693,6 +694,7 @@ int ReplayControl::singleTXLoopbackMultithread16(GraphSettings& graphSettings, S
     
     rx_channel_nums.push_back(0);
     rx_channel_nums.push_back(1);
+    
         
 
     uhd::time_spec_t now = graphSettings.graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
@@ -719,7 +721,7 @@ int ReplayControl::singleTXLoopbackMultithread16(GraphSettings& graphSettings, S
          if (signalSettings.format == "sc16"){
             for (int i = 0; i < 1; i++){
                 //std::cout << "Spawning RX Thread.." << i << std::endl;
-                thread_group.create_thread(std::bind(&recvToFileMultithread, graphSettings.rx_stream_vector[signalSettings.singleRX], signalSettings.format, signalSettings.otw, signalSettings.rx_file, signalSettings.spb, signalSettings.nsamps, graphSettings.time_spec, 
+                thread_group.create_thread(std::bind(&recvToFileMultithread16, graphSettings.rx_stream_vector[signalSettings.singleRX], signalSettings.format, signalSettings.otw, signalSettings.rx_file, signalSettings.spb, signalSettings.nsamps, graphSettings.time_spec, 
                 rx_channel_nums, signalSettings.rx_timeout, deviceSettings.rx_rate, signalSettings.singleTX, signalSettings, 0, deviceSettings,  graphSettings, signalSettings.time_requested, i ));
             }
     
