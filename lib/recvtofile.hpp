@@ -347,7 +347,7 @@ void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                 str(boost::format("Receiver error %s") % md.strerror()));
         }
 
-        num_total_samps += num_rx_samps;
+        num_total_samps += num_rx_samps  * rx_stream->get_num_channels();
 
     
     }

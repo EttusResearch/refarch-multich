@@ -69,6 +69,7 @@ typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
 
 /***********************************************************************
  * Main function
+ * This function uses a single streamer per device configuration.
  **********************************************************************/
 
 int UHD_SAFE_MAIN(int argc, char* argv[])
@@ -157,7 +158,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Begin TX and RX
     ReplayControl::singleTXLoopbackMultithread16(graphStruct, signal, device);
     while (not stop_signal_called);
-
 
     std::cout << "Run complete." << std::endl;
     //Kill Replay 
