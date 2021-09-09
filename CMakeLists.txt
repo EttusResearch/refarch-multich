@@ -48,15 +48,15 @@ add_subdirectory(lib)
 # Make the executable
 ########################################################################
 
-add_executable(rfnoc_txrx_loopback src/rfnoc_txrx_loopback.cpp)
+add_executable(rfnoc_txrx_loopback examples/rfnoc_txrx_loopback.cpp)
 message(STATUS "Linking rfnoc_txrx_loopback.")
 target_link_libraries(rfnoc_txrx_loopback PRIVATE UHD_BOOST cogrf_lib)
 
-add_executable(iterative_loopback_singlethread src/iterative_loopback_singlethread.cpp)
+add_executable(iterative_loopback_singlethread examples/iterative_loopback_singlethread.cpp)
 message(STATUS "Linking iterative_loopback_singlethread.")
 target_link_libraries(iterative_loopback_singlethread PRIVATE UHD_BOOST cogrf_lib)
 
-add_executable(multicw_iterative src/multicw_iterative.cpp)
+add_executable(multicw_iterative examples/multicw_iterative.cpp)
 message(STATUS "Linking multicw_iterative.")
 target_link_libraries(multicw_iterative PRIVATE UHD_BOOST cogrf_lib)
 
@@ -65,7 +65,7 @@ target_link_libraries(multicw_iterative PRIVATE UHD_BOOST cogrf_lib)
 # Post Build Include Configuration files
 ########################################################################
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/runconfig.cfg 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/examples/runconfig.cfg 
                 ${CMAKE_CURRENT_BINARY_DIR}/)
 
 #TODO: Make this more repust and not error out the cmake if the file is missing.
