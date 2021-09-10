@@ -41,3 +41,4 @@ Utilities to generate and test DAT files that are used in the example applicatio
 2. Open a terminal in the root folder.
 3. Make the setup script executable using the command `sudo chmod +x setup_script.sh`
 4. Run the script using the command `sudo ./setup_script.sh`
+
