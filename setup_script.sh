@@ -59,6 +59,7 @@ main(){
   cpu_governor
   #Adds current user to a thread priority group called USRP
   thread_priority
+  LOGOUT=$?
   #Adjust Network Buffers
   network_buffers_update
   sysctl -p /etc/sysctl.conf
@@ -72,6 +73,16 @@ main(){
   cd "$DIR"
   chmod 777 -R build
   chmod 777 -R uhd_GitSource
+
+  #Logout to set changes. Must be at end of script.
+  if [[ $LOGOUT ]]; then
+    echo ''
+    echo 'In order for the ThreadPriority to take affect you must logout'
+    tempText="Would you like to logout now? "
+    if user_input "$tempText"; then
+      pkill -KILL -u $(logname)
+    fi
+  fi
   exit 0 
 }
 
@@ -122,7 +133,7 @@ else
   if user_input "$tempText"; then
     return 1
   else
-    exit 0;
+    return 0;
   fi
 fi
 }
@@ -181,6 +192,10 @@ thread_priority(){
     if [[ $VAR != *"@usrp - rtprio"* ]]; then
       echo '@usrp - rtprio  99' >> /etc/security/limits.conf
     fi
+    return 0
+
+  else
+    return 1
   fi
 }
 #used to have main code at the top 

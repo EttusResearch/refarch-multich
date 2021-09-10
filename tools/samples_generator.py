@@ -1,7 +1,6 @@
 import math 
 import struct
 import argparse
-import matplotlib.pyplot as plt
 import cmath
 import sys
 
