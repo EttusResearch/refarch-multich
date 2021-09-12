@@ -479,7 +479,7 @@ void ReplayControl::sig_int_handler(int)
 
 
 
-int ReplayControl::allTX(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings){
+int ReplayControl::allTX(GraphSettings& graphSettings, SignalSettings& signalSettings){
     //WARNING! DO NOT USE THIS TO TX ALL USRPS WHEN CONNECTED TO MIMO LOOPBACK. PERMANENT DAMAGE TO HARDWARE CAN OCCUR!
     //USE FOR OVER THE AIR TRANSMISSIONS ONLY VIA ANTENNAS
 
@@ -628,6 +628,8 @@ int ReplayControl::singleTXLoopbackMultithread(GraphSettings& graphSettings, Sig
     }
 
     std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
+
+    //BUG: This is the same If and else
     if (signalSettings.nsamps <= 0){
         //replay the entire buffer over and over
         std::cout << "Issuing replay command for " << signalSettings.samples_to_replay << " samps in continuous mode..." << std::endl;

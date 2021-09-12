@@ -99,7 +99,7 @@ int BlockSettings::setRadioRates(GraphSettings& graphSettings, DeviceSettings& d
     
 }
 
-void BlockSettings::tuneRX(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
+void BlockSettings::tuneRX(GraphSettings& graphSettings, DeviceSettings& deviceSettings){
 
     for (auto& rctrl : graphSettings.radio_ctrls){
 
@@ -122,7 +122,7 @@ void BlockSettings::tuneRX(GraphSettings& graphSettings, DeviceSettings& deviceS
 
 }
 
-void BlockSettings::tuneTX(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
+void BlockSettings::tuneTX(GraphSettings& graphSettings, DeviceSettings& deviceSettings){
    
    for (auto& rctrl : graphSettings.radio_ctrls){
 
@@ -146,6 +146,7 @@ void BlockSettings::tuneTX(GraphSettings& graphSettings, DeviceSettings& deviceS
 void BlockSettings::setRXGain(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
 
     //Set RX Gain of all Devices (Appears that max in UHD Is 65)
+    //TODO: get rid of pmd. The check does nothing because we set it to deviceSetings. Still have to test it out.
     for (auto& rctrl : graphSettings.radio_ctrls){
         if (pmd.vm.count("rx-gain")) {
                 std::cout << std::fixed;
@@ -163,6 +164,7 @@ void BlockSettings::setRXGain(GraphSettings& graphSettings, DeviceSettings& devi
 void BlockSettings::setTXGain(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
 
     //Set TX Gain of all devices (Appears that max in UHD is 65)
+    //TODO: get rid of pmd. The check does nothing because we set it to deviceSetings. Still have to test it out.
     for (auto& rctrl : graphSettings.radio_ctrls){
         if (pmd.vm.count("tx-gain")) {
             std::cout << std::fixed;
@@ -181,6 +183,7 @@ void BlockSettings::setTXGain(GraphSettings& graphSettings, DeviceSettings& devi
 void BlockSettings::setRXBw(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
 
     //Set RX BandWidth for all devices
+    //TODO: get rid of pmd. The check does nothing because we set it to deviceSetings. Still have to test it out.
     for (auto& rctrl : graphSettings.radio_ctrls){
 
         if (pmd.vm.count("rx-bw")) {
@@ -201,6 +204,7 @@ void BlockSettings::setRXBw(GraphSettings& graphSettings, DeviceSettings& device
 void BlockSettings::setTXBw(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
 
     //Set TX BandWidth for all devices
+    //TODO: get rid of pmd. The check does nothing because we set it to deviceSetings. Still have to test it out.
     for (auto& rctrl : graphSettings.radio_ctrls){
         if (pmd.vm.count("tx-bw")) {
             std::cout << std::fixed;
@@ -221,6 +225,7 @@ void BlockSettings::setTXBw(GraphSettings& graphSettings, DeviceSettings& device
 void BlockSettings::setRXAnt(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
 
     //Set RX Antenna for all devices
+    //TODO: get rid of pmd. The check does nothing because we set it to deviceSetings. Still have to test it out.
     for (auto& rctrl : graphSettings.radio_ctrls){
         if (pmd.vm.count("rx-ant")) {
             rctrl->set_rx_antenna(deviceSettings.rx_ant, 0);
@@ -233,6 +238,7 @@ void BlockSettings::setRXAnt(GraphSettings& graphSettings, DeviceSettings& devic
 void BlockSettings::setTXAnt(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd){
 
     //Set TX Antenna for all devices
+    //TODO: get rid of pmd. The check does nothing because we set it to deviceSetings. Still have to test it out.
     for (auto& rctrl : graphSettings.radio_ctrls){
         if (pmd.vm.count("tx-ant")) {
             rctrl->set_tx_antenna(deviceSettings.tx_ant, 0);

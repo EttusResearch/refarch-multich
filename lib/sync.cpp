@@ -10,6 +10,7 @@
 void SyncDevices::setSources(ProgramMetaData& pmd, DeviceSettings& device, GraphSettings& graphSettings){
 
     // Set clock reference
+    //TODO: get rid of pmd. The check does nothing because we set it to deviceSetings. Still have to test it out.
     if (pmd.vm.count("ref")) {
         std::cout << "Locking motherboard reference/time sources..." << std::endl;
         // Lock mboard clocks
@@ -72,7 +73,7 @@ void SyncDevices::killLOs(GraphSettings& graphSettings, DeviceSettings& deviceSe
 
 }
 
-void SyncDevices::setLOsfromConfig(GraphSettings& graphSettings, const ProgramMetaData& pmd, DeviceSettings& deviceSettings){
+void SyncDevices::setLOsfromConfig(GraphSettings& graphSettings, DeviceSettings& deviceSettings){
 
     // Set LOs per config from config file
 
@@ -108,6 +109,7 @@ void SyncDevices::setSource(int device, GraphSettings& graphSettings){
     std::cout << "Setting Device# " << device << " Radio# " << device*2 << ", Radio# " << device*2+1 << " to: " << "source" << std::endl;
     //Set Device to System LO Source
     //No difference between RX and TX LOs, just used RX. 
+    //TODO: Hardcoded number of channels per device.
     
 
     graphSettings.radio_ctrls[device*2]->set_tx_lo_export_enabled(false, "lo1", 0);
@@ -138,6 +140,7 @@ void SyncDevices::setSource(int device, GraphSettings& graphSettings){
 }
 
 void SyncDevices::setTerminal(int device, GraphSettings& graphSettings){
+    //TODO: Hardcoded number of channels per device.
     std::cout << "Setting Device# " << device << " Radio# " << device*2 << ", Radio# " << device*2+1 << " to: " << "terminal" << std::endl;
     graphSettings.radio_ctrls[device*2]->set_tx_lo_source("external", "lo1",0);
     graphSettings.radio_ctrls[device*2+1]->set_tx_lo_source("external", "lo1",0);
@@ -148,6 +151,7 @@ void SyncDevices::setTerminal(int device, GraphSettings& graphSettings){
 }
 
 void SyncDevices::setDistributor(int device, GraphSettings& graphSettings){
+    //TODO: Hardcoded number of channels per device.
     std::cout << "Setting Device# " << device << " Radio# " << device*2 << ", Radio# " << device*2+1 << " to: " << "distributor" << std::endl;
 
     graphSettings.radio_ctrls[device*2]->set_tx_lo_source("external", "lo1",0);
