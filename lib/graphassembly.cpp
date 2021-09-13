@@ -33,7 +33,7 @@ void GraphAssembly::buildGraph(GraphSettings& graphSettings, const DeviceSetting
 
 }
 
-void GraphAssembly::buildRadios(GraphSettings& graphSettings, DeviceSettings& deviceSettings){
+void GraphAssembly::buildRadios(GraphSettings& graphSettings){
 
     /************************************************************************
      * Seek radio blocks on each USRP and assemble a vector of radio 
@@ -60,7 +60,7 @@ void GraphAssembly::buildRadios(GraphSettings& graphSettings, DeviceSettings& de
     
 }
 
-void GraphAssembly::buildDDCDUC(GraphSettings& graphSettings, DeviceSettings& deviceSettings){
+void GraphAssembly::buildDDCDUC(GraphSettings& graphSettings){
 
     /*************************************************************************
     * Seek DDCs & DUCs on each USRP and assemble a vector of DDC & DUC controllers.
@@ -197,7 +197,6 @@ void GraphAssembly::buildStreams(GraphSettings& graphSettings, DeviceSettings& d
         graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(1, stream_args);
     }
     else{
-        
         graphSettings.rx_stream = graphSettings.graph->create_rx_streamer(graphSettings.radio_ctrls.size(), stream_args);
     }
 
@@ -396,7 +395,7 @@ void GraphAssembly::buildStreamsMultithread(GraphSettings& graphSettings, Device
 }
 }
 
-void GraphAssembly::connectGraphMultithread(GraphSettings& graphSettings, SignalSettings& signalSettings){
+void GraphAssembly::connectGraphMultithread(GraphSettings& graphSettings){
     //This is the function that connects the graph for the multithreaded implementation
     //The difference is that each channel gets its own RX streamer. 
 
@@ -466,7 +465,7 @@ void GraphAssembly::connectGraphMultithread(GraphSettings& graphSettings, Signal
 }
 
 
-void GraphAssembly::connectGraphMultithread16(GraphSettings& graphSettings, SignalSettings& signalSettings){
+void GraphAssembly::connectGraphMultithread16(GraphSettings& graphSettings){
     //This is the function that connects the graph for the multithreaded implementation
     //The difference is that each channel gets its own RX streamer. 
 

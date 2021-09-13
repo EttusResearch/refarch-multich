@@ -1,5 +1,6 @@
 #ifndef REPLAYCONTROL_H
 #define REPLAYCONTROL_H
+#include "structures.hpp"
 
 class ReplayControl{
 
@@ -10,7 +11,7 @@ class ReplayControl{
         static int singleTXLoopback(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);
         static void sig_int_handler(int);
         static int singleTXLoopbackMultithread(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);
-        static int allTX(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);
+        static int allTX(GraphSettings& graphSettings, SignalSettings& signalSettings);
         static int allRX(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);
         
 
