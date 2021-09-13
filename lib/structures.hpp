@@ -188,7 +188,7 @@ struct DeviceSettings{
     {
         argsWithAddress = "" + args;
 
-        for (auto addr : address)
+        for (const auto& addr : address)
         {
             argsWithAddress += ", " + addr;
         }

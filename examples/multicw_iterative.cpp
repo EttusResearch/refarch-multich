@@ -112,19 +112,19 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Sync Device Clocks
     SyncDevices::setSources(pmd, device, graphStruct);
     //Setup Radio Blocks
-    GraphAssembly::buildRadios(graphStruct, device);
+    GraphAssembly::buildRadios(graphStruct);
     //Setup DDC/DUC Blocks
-    GraphAssembly::buildDDCDUC(graphStruct, device);
+    GraphAssembly::buildDDCDUC(graphStruct);
     //Setup Replay Blocks
     GraphAssembly::buildReplay(graphStruct);
     //Setup LO distribution
-    SyncDevices::setLOsfromConfig(graphStruct, pmd, device);
+    SyncDevices::setLOsfromConfig(graphStruct, device);
     //Set Radio Block Settings
     BlockSettings::setRadioRates(graphStruct, device);
     //Tune RX
-    BlockSettings::tuneRX(graphStruct, device, pmd);
+    BlockSettings::tuneRX(graphStruct, device);
     //Tune TX
-    BlockSettings::tuneTX(graphStruct, device, pmd);
+    BlockSettings::tuneTX(graphStruct, device);
     //set RX Gain
     BlockSettings::setRXGain(graphStruct, device, pmd);
     //set TX Gain
@@ -162,9 +162,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         
         device.rx_freq = freq;
         //Tune RX
-        BlockSettings::tuneRX(graphStruct, device, pmd);
+        BlockSettings::tuneRX(graphStruct, device);
         //Tune TX
-        BlockSettings::tuneTX(graphStruct, device, pmd);
+        BlockSettings::tuneTX(graphStruct, device);
 
         //Check RX Sensor Lock
         SyncDevices::checkRXSensorLock(graphStruct);

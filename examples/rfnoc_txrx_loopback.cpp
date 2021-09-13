@@ -111,19 +111,19 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Sync Device Clocks
     SyncDevices::setSources(pmd, device, graphStruct);
     //Setup Radio Blocks
-    GraphAssembly::buildRadios(graphStruct, device);
+    GraphAssembly::buildRadios(graphStruct);
     //Setup DDC/DUC Blocks
-    GraphAssembly::buildDDCDUC(graphStruct, device);
+    GraphAssembly::buildDDCDUC(graphStruct);
     //Setup Replay Blocks
     GraphAssembly::buildReplay(graphStruct);
     //Setup LO distribution
-    SyncDevices::setLOsfromConfig(graphStruct, pmd, device);
+    SyncDevices::setLOsfromConfig(graphStruct, device);
     //Set Radio Block Settings
     BlockSettings::setRadioRates(graphStruct, device);
     //Tune RX
-    BlockSettings::tuneRX(graphStruct, device, pmd);
+    BlockSettings::tuneRX(graphStruct, device);
     //Tune TX
-    BlockSettings::tuneTX(graphStruct, device, pmd);
+    BlockSettings::tuneTX(graphStruct, device);
     //set RX Gain
     BlockSettings::setRXGain(graphStruct, device, pmd);
     //set TX Gain
@@ -145,7 +145,11 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Build Streams
     GraphAssembly::buildStreamsMultithread16(graphStruct, device, signal);
     //Connect Graph
+<<<<<<< HEAD
     GraphAssembly::connectGraphMultithread16(graphStruct, signal);
+=======
+    GraphAssembly::connectGraphMultithread(graphStruct);
+>>>>>>> daf0197270084ca7f3393540f359c75a7d2e2db0
     //Commit Graph
     GraphAssembly::commitGraph(graphStruct);
      // Allow for some setup time

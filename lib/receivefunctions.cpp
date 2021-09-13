@@ -22,7 +22,7 @@
 
 
 std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn, size_t n_names, size_t rx_chan_num, int tx_chan_num, int run_num, 
-                                                SignalSettings& signalSettings, DeviceSettings& deviceSettings){
+                                                DeviceSettings& deviceSettings){
     //Generates file names for single threaded implementation.
 
     
@@ -42,7 +42,7 @@ std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn, si
 
 
 std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& base_fn, size_t n_names, size_t rx_chan_num, int tx_chan_num, int run_num, 
-                                                SignalSettings& signalSettings, DeviceSettings& deviceSettings, int threadnum){
+                                                DeviceSettings& deviceSettings, int threadnum){
 
     //Generates filenames for multithreaded implementation. 
 
@@ -59,6 +59,7 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
     boost::filesystem::path base_fn_fp;
    
     //Direct half of the USRPs to one RAID and half to the other. 
+    //TODO: THis is hard coded. Need modular.
     if (threadnum < 8){
         
     boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
