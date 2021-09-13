@@ -303,7 +303,7 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     UHD_ASSERT_THROW(outfiles.size() == buffs.size());
     UHD_ASSERT_THROW(buffs.size() == rx_channel_nums.size());
     
-    std::cout << buffs.size() << std::endl;
+   
 
     //ofstream output_file(this_filename, ios::out | ios::binary);
     
@@ -360,7 +360,7 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         num_total_samps += num_rx_samps;
 
          for (size_t i = 0; i < outfiles.size(); i++) {
-            std::cout << "Buffer: " << i << std::endl;
+            
             outfiles[i]->write(
                 (const char*)buff_ptrs[i], num_rx_samps * sizeof(std::complex<short>));
         }
