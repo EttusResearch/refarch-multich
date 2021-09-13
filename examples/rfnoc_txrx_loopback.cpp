@@ -145,7 +145,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Build Streams
     GraphAssembly::buildStreamsMultithread(graphStruct, device, signal);
     //Connect Graph
+
     GraphAssembly::connectGraphMultithread(graphStruct);
+
     //Commit Graph
     GraphAssembly::commitGraph(graphStruct);
      // Allow for some setup time
