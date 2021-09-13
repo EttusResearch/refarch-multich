@@ -66,10 +66,9 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
 
     // Create one ofstream object per channel
     // (use shared_ptr because ofstream is non-copyable)
-    //BUG: This looks like its creating files for each i but i is never used in the naming. Need to review ASAP
     std::vector<boost::shared_ptr<std::ofstream>> outfiles;
     for (size_t i = 0; i < buffs.size(); i++) {
-        const std::string this_filename = ReceiveFunctions::generateOutFilename(file, buffs.size(), i, tx_chan_num, numrepeat, deviceSettings);
+        const std::string this_filename = ReceiveFunctions::generateOutFilename(file, i, tx_chan_num, numrepeat, deviceSettings.tx_freq, deviceSettings.folder_name);
         outfiles.push_back(boost::shared_ptr<std::ofstream>(
             new std::ofstream(this_filename.c_str(), std::ofstream::binary)));
     }
@@ -293,7 +292,7 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     std::vector<std::shared_ptr<std::ofstream>> outfiles;
     for (size_t i = 0; i < buffs.size(); i++) {
         //rx_identifier * 2 + i in order to get correct channel number in filename
-        const std::string this_filename = ReceiveFunctions::generateOutFilenameMultithread(file, buffs.size(), rx_identifier * 2 + i, tx_chan_num, numrepeat, deviceSettings, threadnum);
+        const std::string this_filename = ReceiveFunctions::generateOutFilenameMultithread(file, rx_identifier * 2 + i, tx_chan_num, numrepeat, deviceSettings.tx_freq, deviceSettings.folder_name, threadnum);
         std::ofstream* outstream = new std::ofstream(this_filename.c_str(), std::ofstream::binary);
         outstream->rdbuf()->pubsetbuf(buf.get(), samps_per_buff);//Important
         

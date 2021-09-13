@@ -11,7 +11,7 @@ def parse_args():
     """
     Parse the command line arguments
     Example command line syntax:
-    python readDatFile.py -f "./my_data.dat" -s 250000000
+    python3 readDatFile.py -f "../../CW_2.000000_GHz_9132021_10442_test.dat/test.tx_00_rx_00_run_00_cw_2e+09_thread_0.dat" -s 250000000
     """
 
     parser = argparse.ArgumentParser()
@@ -31,11 +31,11 @@ def main():
     i,q = deinterleave_iq(data_array)
     time_scale = np.linspace(0,len(i)/args.sample_rate,len(i))
 
-    plt.plot(time_scale,i)
-    plt.plot(time_scale,q)
+    plt.plot(time_scale,i/(2**15-1))
+    plt.plot(time_scale,q/(2**15-1))
     plt.ylabel('voltage')
     plt.xlabel('time')
-    plt.show()
+    plt.savefig("delme.png")
 
 if __name__ == "__main__":
     main()
