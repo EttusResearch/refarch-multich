@@ -5,7 +5,7 @@
 class ReplayControl{
 
     public:
-        static int importData(GraphSettings& graphSettings, SignalSettings& signalSettings);
+        static int importData(GraphSettings& graphSettings, const std::string& file, size_t& samples_to_replay);
         static int runTXRXiterativeloopback(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);
         static void stopReplay(GraphSettings& graphSettings);
         static int singleTXLoopback(GraphSettings& graphSettings, SignalSettings& signalSettings, DeviceSettings& deviceSettings);

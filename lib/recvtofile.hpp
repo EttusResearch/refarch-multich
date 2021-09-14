@@ -281,14 +281,8 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     }
 
     //Correctly lable output files based on run method, single TX->single RX or single TX -> All RX
-    int rx_identifier;
-    if (signalSettings.singleTXRX_loopback == true){
-        rx_identifier = signalSettings.singleRX;
-    }
-    else{
-        rx_identifier = threadnum;
+    int rx_identifier = threadnum;
 
-    }
     std::vector<std::shared_ptr<std::ofstream>> outfiles;
     for (size_t i = 0; i < buffs.size(); i++) {
         //rx_identifier * 2 + i in order to get correct channel number in filename

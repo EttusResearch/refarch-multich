@@ -5,13 +5,14 @@ Plot samples from .dat file
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import os
 
 
 def parse_args():
     """
     Parse the command line arguments
     Example command line syntax:
-    python3 readDatFile.py -f "../../CW_2.000000_GHz_9132021_10442_test.dat/test.tx_00_rx_00_run_00_cw_2e+09_thread_0.dat" -s 250000000
+    python3 readDatFile.py -f "../../CW_2.000000_GHz_9142021_151949_test.dat/" -s 250000000
     """
 
     parser = argparse.ArgumentParser()
@@ -26,16 +27,19 @@ def deinterleave_iq(array = [], *args):
 def main():
     """Plot samples from .dat file"""
     args = parse_args()
-
-    data_array = np.fromfile(args.file_path, dtype=np.int16)
-    i,q = deinterleave_iq(data_array)
-    time_scale = np.linspace(0,len(i)/args.sample_rate,len(i))
-
-    plt.plot(time_scale,i/(2**15-1))
-    plt.plot(time_scale,q/(2**15-1))
-    plt.ylabel('voltage')
-    plt.xlabel('time')
-    plt.savefig("delme.png")
+    subPlot = plt.subplot()
+    for file in os.listdir(os.getcwd()+"/"+args.file_path):
+        if file.endswith(".dat"):
+            data_array = np.fromfile(args.file_path+"/"+file, dtype=np.int16)
+            i,q = deinterleave_iq(data_array)
+            time_scale = np.linspace(0,len(i)/args.sample_rate,len(i))
+            subPlot.plot(time_scale,i/(2**15-1))
+            subPlot.plot(time_scale,q/(2**15-1))
+            plt.ylabel('voltage')
+            plt.xlabel('time')
+            plt.savefig("delme"+file+".png")
+            subPlot.clear()
+            
 
 if __name__ == "__main__":
     main()

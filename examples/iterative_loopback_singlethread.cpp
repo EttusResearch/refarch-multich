@@ -5,19 +5,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-
-
-
 #include "structures.hpp"
 #include "graphassembly.hpp"
 #include "sync.hpp"
 #include "blocksettings.hpp"
 #include "replaycontrol.hpp"
 #include "receivefunctions.hpp"
-
-
-
-
 
 #include <uhd/exception.hpp>
 #include <uhd/types/tune_request.hpp>
@@ -46,14 +39,7 @@
 #include <uhd/rfnoc_graph.hpp>
 #include <uhd/rfnoc/ddc_block_control.hpp>
 
-
-
-
-
 volatile bool stop_signal_called = false;
-
-
-
 
 
 // Constants related to the Replay block
@@ -63,7 +49,6 @@ const size_t samples_per_word = 2; // Number of sc16 samples per word
 
 
 typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
-
 
 
 
@@ -108,9 +93,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //We might want to try to only pass data that is required.
     
     //Setup Graph with input Arguments
-    GraphAssembly::buildGraph(graphStruct, device);
+    GraphAssembly::buildGraph(graphStruct, device.args);
     //Sync Device Clocks
-    SyncDevices::setSources(pmd, device, graphStruct);
+    SyncDevices::setSources(graphStruct, device.ref);
     //Setup Radio Blocks
     GraphAssembly::buildRadios(graphStruct);
     //Setup DDC/DUC Blocks
@@ -118,25 +103,25 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Setup Replay Blocks
     GraphAssembly::buildReplay(graphStruct);
     //Setup LO distribution
-    SyncDevices::setLOsfromConfig(graphStruct, device);
+    SyncDevices::setLOsfromConfig(graphStruct, device.lo);
     //Set Radio Block Settings
-    BlockSettings::setRadioRates(graphStruct, device);
+    BlockSettings::setRadioRates(graphStruct, device.rx_rate, device.tx_rate);
     //Tune RX
-    BlockSettings::tuneRX(graphStruct, device);
+    BlockSettings::tuneRX(graphStruct, device.rx_freq);
     //Tune TX
-    BlockSettings::tuneTX(graphStruct, device);
+    BlockSettings::tuneTX(graphStruct, device.tx_freq);
     //set RX Gain
-    BlockSettings::setRXGain(graphStruct, device, pmd);
+    BlockSettings::setRXGain(graphStruct, device.rx_gain);
     //set TX Gain
-    BlockSettings::setTXGain(graphStruct, device, pmd);
+    BlockSettings::setTXGain(graphStruct, device.tx_gain);
     //set RX bandwidth
-    BlockSettings::setRXBw(graphStruct, device, pmd);
+    BlockSettings::setRXBw(graphStruct, device.rx_bw);
     //set TX bandwidth
-    BlockSettings::setTXBw(graphStruct, device, pmd);
+    BlockSettings::setTXBw(graphStruct, device.tx_bw);
     //set RX Antenna
-    BlockSettings::setRXAnt(graphStruct, device, pmd);
+    BlockSettings::setRXAnt(graphStruct, device.rx_ant);
     //set TX Antenna
-    BlockSettings::setTXAnt(graphStruct, device, pmd);
+    BlockSettings::setTXAnt(graphStruct, device.tx_ant);
      //Check RX Sensor Lock
     SyncDevices::checkRXSensorLock(graphStruct);
     //Check TX Sensor Lock
@@ -144,15 +129,15 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Allow for some setup time
     //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     //Build Streams
-    GraphAssembly::buildStreams(graphStruct, device, signal);
+    GraphAssembly::buildStreams(graphStruct, device.streamargs, signal.format, signal.otw);
     //Connect Graph
-    GraphAssembly::connectGraph(graphStruct, signal);
+    GraphAssembly::connectGraph(graphStruct);
     //Commit Graph
     GraphAssembly::commitGraph(graphStruct);
      // Allow for some setup time
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     //Load Replay Block Buffers with data to transmit
-    ReplayControl::importData(graphStruct, signal);
+    ReplayControl::importData(graphStruct, signal.file, signal.samples_to_replay);
     //Sync time across devices
     SyncDevices::syncAllDevices(graphStruct);
     //Begin TX and RX
@@ -164,13 +149,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     //Kill Replay 
     ReplayControl::stopReplay(graphStruct);
     //Kill LO
-    SyncDevices::killLOs(graphStruct, device);
+    SyncDevices::killLOs(graphStruct, device.lo);
     
-
-
-        
-    
-
 
   
     std::cout << std::endl << "Done!" << std::endl << std::endl;

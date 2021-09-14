@@ -5,15 +5,15 @@
 class BlockSettings{
 
     public:
-        static int setRadioRates(GraphSettings& graphSettings, DeviceSettings& deviceSettings);
-        static void tuneRX(GraphSettings& graphSettings, DeviceSettings& deviceSettings);
-        static void tuneTX(GraphSettings& graphSettings, DeviceSettings& deviceSettings);
-        static void setRXGain(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd);
-        static void setTXGain(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd);
-        static void setRXBw(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd);
-        static void setTXBw(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd);
-        static void setRXAnt(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd);
-        static void setTXAnt(GraphSettings& graphSettings, DeviceSettings& deviceSettings, ProgramMetaData& pmd);
+        static int setRadioRates(GraphSettings& graphSettings, double& rx_rate, double& tx_rate);
+        static void tuneRX(GraphSettings& graphSettings, const double& rx_freq);
+        static void tuneTX(GraphSettings& graphSettings, const double& tx_freq);
+        static void setRXGain(GraphSettings& graphSettings, const double& rx_gain);
+        static void setTXGain(GraphSettings& graphSettings, const double& tx_gain);
+        static void setRXBw(GraphSettings& graphSettings, const double& rx_bw);
+        static void setTXBw(GraphSettings& graphSettings, const double& tx_bw);
+        static void setRXAnt(GraphSettings& graphSettings, const std::string& rx_ant);
+        static void setTXAnt(GraphSettings& graphSettings, const std::string& tx_ant);
 
 
 };

@@ -21,8 +21,8 @@
 //This function generates output file names for the received data. 
 
 
-std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn, const size_t rx_chan_num, const int tx_chan_num, const int run_num, 
-                                                const double tx_freq, const std::string folder_name){
+std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn, const size_t& rx_chan_num, const int& tx_chan_num, const int& run_num, 
+                                                const double& tx_freq, const std::string& folder_name){
     //Generates file names for single threaded implementation.
     //BUG: This is not dynamic file creation!
     
@@ -41,8 +41,8 @@ std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn, co
 
 
 
-std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& base_fn, const size_t rx_chan_num, const int tx_chan_num, const int run_num, 
-                                                const double tx_freq, const std::string folder_name, const int threadnum){
+std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& base_fn, const size_t& rx_chan_num, const int& tx_chan_num, const int& run_num, 
+                                                const double& tx_freq, const std::string& folder_name, const int& threadnum){
 
     //Generates filenames for multithreaded implementation. 
 
