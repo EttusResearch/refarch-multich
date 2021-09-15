@@ -22,16 +22,6 @@
 extern volatile bool stop_signal_called;
 
 
-
-struct recvStruct{
-
-    std::vector<std::complex<short>*> buff_ptrs;
-    size_t received_samples;
-
-
-    
-};
-
 //This struct handles reading the config file and parsing the data. 
 struct ProgramMetaData
 {
@@ -84,12 +74,7 @@ struct ProgramMetaData
 
 struct SignalSettings{
 
-    // Constants related to the Replay block
-    //TODO: these are not  used anywhere delete?
-    const size_t replay_word_size = 8; // Size of words used by replay block
-    const size_t sample_size      = 4; // Complex signed 16-bit is 32 bits per sample
-    const size_t samples_per_word = 2; // Number of sc16 samples per word
-    
+
     //Runtime
     size_t samples_to_replay;
 
@@ -98,22 +83,18 @@ struct SignalSettings{
     std::string otw;
     std::string type;
     size_t spb, nruns;
-    double rx_timeout; //TODO:This should probably be in the Device Settings
+    double rx_timeout; 
     double time_adjust;
     size_t nsamps;
     double rtime; 
     double rep_delay; //replay block time
     std::string format;
     std::string file;
-    std::string tx_mode; //TODO: This is created but is never used delete?
-    bool singleTXRX_loopback;
-    int singleTX, singleRX;
+    int singleTX;
     double time_requested;
+    bool stop_signal_called;
    
-    //TODO:Review if you still need these in the structure. Could not find any where used.
-    size_t words_to_replay;
-    std::vector<double> freq_vector;
-    bool stop_signal_called = false;
+   
 
     void addProgramOptions( boost::program_options::options_description &desc )
     {
@@ -133,11 +114,8 @@ struct SignalSettings{
         ("replay_time",po::value<double>(&rtime)->default_value(2.0), "Replay Block Time Delay (seconds)")
         ("nruns", po::value<size_t>(&nruns)->default_value(1), "number of repeats")
         ("repeat_delay", po::value<double>(&rep_delay)->default_value(0), "delay between repeats (seconds)")
-        ("tx_mode", po::value<std::string>(&tx_mode)->default_value("i"), "Transmission mode: Simulataneous (s) or Iterative (i)")
         ("time_adjust",po::value<double>(&time_adjust)->default_value(2.0), "If tramsmitting in iterative mode, seperation between per-channel transmission (seconds).")
-        ("singleTXRX_loopback", po::value<bool>(&singleTXRX_loopback)->default_value(false), "Loopback between a single TX and single RX channel.")
-        ("singleTX",po::value<int>(&singleTX)->default_value(0), "Single Loopback TX Channel)")
-        ("singleRX",po::value<int>(&singleRX)->default_value(0), "Single Loopback RX Channel)")
+        ("singleTX",po::value<int>(&singleTX)->default_value(0), "TX Channel)")
         ("time_requested", po::value<double>(&time_requested)->default_value(0.0), "Single Loopback Continous Time Limit (s).")
 
 
@@ -165,13 +143,9 @@ struct DeviceSettings{
     std::string tx_ant, rx_ant;
     std::string streamargs;
     std::vector<std::string> address;
-    std::string tx_args;
-    std::string rx_args;
     std::vector<std::string> lo;
-    int mode;
 
-    std::string type; //TODO This does nothing Safe to delete Not loaded from config? Could not find any where used.
-  
+   
 
     void addProgramOptions( boost::program_options::options_description &desc )
     {
@@ -182,23 +156,20 @@ struct DeviceSettings{
 
         desc.add_options()
         ("args", po::value<std::string>(&args)->default_value(""), "uhd transmit device address args")
-        ("tx-rate", po::value<double>(&tx_rate), "rate of transmit outgoing samples")
-        ("rx-rate", po::value<double>(&rx_rate), "rate of receive incoming samples")
-        ("tx-gain", po::value<double>(&tx_gain), "gain for the transmit RF chain")
-        ("rx-gain", po::value<double>(&rx_gain), "gain for the receive RF chain")
+        ("tx-rate", po::value<double>(&tx_rate)->default_value(200e6), "rate of transmit outgoing samples")
+        ("rx-rate", po::value<double>(&rx_rate)->default_value(25e6), "rate of receive incoming samples")
+        ("tx-gain", po::value<double>(&tx_gain)->default_value(0), "gain for the transmit RF chain")
+        ("rx-gain", po::value<double>(&rx_gain)->default_value(0), "gain for the receive RF chain")
         ("ref", po::value<std::string>(&ref)->default_value("external"), "clock reference (internal, external, mimo)")
-        ("tx-freq", po::value<double>(&tx_freq), "transmit RF center frequency in Hz")
-        ("rx-freq", po::value<double>(&rx_freq), "receive RF center frequency in Hz")
+        ("tx-freq", po::value<double>(&tx_freq)->default_value(2000e6), "transmit RF center frequency in Hz")
+        ("rx-freq", po::value<double>(&rx_freq)->default_value(2000e6), "receive RF center frequency in Hz")
         ("address", po::value<std::vector<std::string>>(&address), "uhd transmit device address args")
         ("tx-ant", po::value<std::string>(&tx_ant)->default_value("TX/RX"), "transmit antenna selection")
         ("rx-ant", po::value<std::string>(&rx_ant)->default_value("RX2"), "receive antenna selection")
         ("streamargs", po::value<std::string>(&streamargs)->default_value(""), "stream args")
-        ("tx-bw", po::value<double>(&tx_bw), "analog transmit filter bandwidth in Hz")
-        ("rx-bw", po::value<double>(&rx_bw), "analog receive filter bandwidth in Hz")
-        ("tx-args", po::value<std::string>(&tx_args)->default_value(""), "uhd transmit device address args")
-        ("rx-args", po::value<std::string>(&rx_args)->default_value(""), "uhd receive device address args")
+        ("tx-bw", po::value<double>(&tx_bw)->default_value(0), "analog transmit filter bandwidth in Hz")
+        ("rx-bw", po::value<double>(&rx_bw)->default_value(0), "analog receive filter bandwidth in Hz")
         ("lo", po::value<std::vector<std::string>>(&lo), "device LO settings")
-        ("mode",po::value<int>(&mode)->default_value(0), "Loopback Mode:  0 - Single TX -> All RX, 1 - Iterative Loopback, 2 - Single TX -> Single RX")
 
         ;
         // clang-format on
@@ -210,7 +181,7 @@ struct DeviceSettings{
     {
         argsWithAddress = "" + args;
 
-        for (auto addr : address)
+        for (const auto& addr : address)
         {
             argsWithAddress += ", " + addr;
         }
@@ -227,12 +198,10 @@ struct DeviceSettings{
 
 struct GraphSettings{
 
-
+    //rfnoc graph
     uhd::rfnoc::rfnoc_graph::sptr graph;
-    std::vector<std::string> mboardname_vector;//TODO: this is used in one spot but that code is suspect aswell.
     //radio Global Variables
     std::vector<uhd::rfnoc::radio_control::sptr> radio_ctrls;
-    std::vector<size_t> radio_number{0,1}; //TODO This does nothing Safe to delete? Could not find any where used.
     std::vector<uhd::rfnoc::block_id_t> radio_block_list;
     //DDC/DUC Global Variables
     std::vector<uhd::rfnoc::ddc_block_control::sptr> ddc_ctrls;
@@ -252,9 +221,8 @@ struct GraphSettings{
     std::vector<uhd::tx_streamer::sptr> tx_stream_vector;
     std::vector<uhd::rx_streamer::sptr> rx_stream_vector; 
     //txrx settings
-    uhd::tx_metadata_t tx_md;//TODO This is initilized and used in the same function. Delete to clean? ReplayControl.cpp
-    uhd::time_spec_t time_spec;//TODO This is initilized and used in multiple function but same file. Delete to clean? ReplayControl.cpp
-    uhd::time_spec_t time_adjustment;//TODO This is initilized and used in the same function. Delete to clean? ReplayControl.cpp
+    uhd::time_spec_t time_spec;
+    uhd::time_spec_t time_adjustment;
 
     
     

@@ -28,8 +28,11 @@ Utilities to build a Cognitive Radar Testbed. Includes Setup Script, and Example
 **lib/**
 The functions used to setup, configure, test, and use the Testbed.
 
-**src/**
+**examples/**
 The example application and configuration file.
+
+**tools/**
+Utilities to generate and test DAT files that are used in the example application.
 
 
 ## Instructions
@@ -38,3 +41,4 @@ The example application and configuration file.
 2. Open a terminal in the root folder.
 3. Make the setup script executable using the command `sudo chmod +x setup_script.sh`
 4. Run the script using the command `sudo ./setup_script.sh`
+

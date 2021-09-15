@@ -7,18 +7,16 @@
 #include <thread>
 
 
-void SyncDevices::setSources(ProgramMetaData& pmd, DeviceSettings& device, GraphSettings& graphSettings){
+void SyncDevices::setSources(GraphSettings& graphSettings, const std::string& ref ){
 
     // Set clock reference
-    if (pmd.vm.count("ref")) {
-        std::cout << "Locking motherboard reference/time sources..." << std::endl;
-        // Lock mboard clocks
+    std::cout << "Locking motherboard reference/time sources..." << std::endl;
+    // Lock mboard clocks
+    
+    for (size_t i = 0; i < graphSettings.graph->get_num_mboards(); ++i) {
+        graphSettings.graph->get_mb_controller(i)->set_clock_source(ref);
+        graphSettings.graph->get_mb_controller(i)->set_time_source(ref);
         
-        for (size_t i = 0; i < graphSettings.graph->get_num_mboards(); ++i) {
-            graphSettings.graph->get_mb_controller(i)->set_clock_source(device.ref);
-            graphSettings.graph->get_mb_controller(i)->set_time_source(device.ref);
-            
-        }
     }
        
 
@@ -45,12 +43,12 @@ int SyncDevices::syncAllDevices(GraphSettings& graphSettings){
 
 }
 
-void SyncDevices::killLOs(GraphSettings& graphSettings, DeviceSettings& deviceSettings){
+void SyncDevices::killLOs(GraphSettings& graphSettings, const std::vector<std::string>& lo){
 
     int device = 0;
-    while (device < deviceSettings.lo.size()){
+    while (device < lo.size()){
 
-        if (deviceSettings.lo[device] == "source" or deviceSettings.lo[device] == "distributor"){
+        if (lo[device] == "source" or lo[device] == "distributor"){
 
             graphSettings.graph->get_tree()->access<bool>(str(boost::format("%s%d%s") % "blocks/" % device % "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_0/export")).set(false);
             graphSettings.graph->get_tree()->access<bool>(str(boost::format("%s%d%s") % "blocks/" % device % "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_1/export")).set(false);
@@ -72,7 +70,7 @@ void SyncDevices::killLOs(GraphSettings& graphSettings, DeviceSettings& deviceSe
 
 }
 
-void SyncDevices::setLOsfromConfig(GraphSettings& graphSettings, const ProgramMetaData& pmd, DeviceSettings& deviceSettings){
+void SyncDevices::setLOsfromConfig(GraphSettings& graphSettings, const std::vector<std::string>& lo){
 
     // Set LOs per config from config file
 
@@ -80,16 +78,16 @@ void SyncDevices::setLOsfromConfig(GraphSettings& graphSettings, const ProgramMe
     int device = 0;
 
     
-    while (device < deviceSettings.lo.size()){
+    while (device < lo.size()){
         
 
-        if (deviceSettings.lo[device] == "source"){
+        if (lo[device] == "source"){
             SyncDevices::setSource(device, graphSettings);
         }
-        else if (deviceSettings.lo[device] == "terminal"){
+        else if (lo[device] == "terminal"){
             SyncDevices::setTerminal(device, graphSettings);
         }
-        else if (deviceSettings.lo[device] == "distributor"){
+        else if (lo[device] == "distributor"){
             SyncDevices::setDistributor(device, graphSettings);
         }
 
@@ -108,6 +106,7 @@ void SyncDevices::setSource(int device, GraphSettings& graphSettings){
     std::cout << "Setting Device# " << device << " Radio# " << device*2 << ", Radio# " << device*2+1 << " to: " << "source" << std::endl;
     //Set Device to System LO Source
     //No difference between RX and TX LOs, just used RX. 
+    //TODO: Hardcoded number of channels per device.
     
 
     graphSettings.radio_ctrls[device*2]->set_tx_lo_export_enabled(false, "lo1", 0);
@@ -138,6 +137,7 @@ void SyncDevices::setSource(int device, GraphSettings& graphSettings){
 }
 
 void SyncDevices::setTerminal(int device, GraphSettings& graphSettings){
+    //TODO: Hardcoded number of channels per device.
     std::cout << "Setting Device# " << device << " Radio# " << device*2 << ", Radio# " << device*2+1 << " to: " << "terminal" << std::endl;
     graphSettings.radio_ctrls[device*2]->set_tx_lo_source("external", "lo1",0);
     graphSettings.radio_ctrls[device*2+1]->set_tx_lo_source("external", "lo1",0);
@@ -148,6 +148,7 @@ void SyncDevices::setTerminal(int device, GraphSettings& graphSettings){
 }
 
 void SyncDevices::setDistributor(int device, GraphSettings& graphSettings){
+    //TODO: Hardcoded number of channels per device.
     std::cout << "Setting Device# " << device << " Radio# " << device*2 << ", Radio# " << device*2+1 << " to: " << "distributor" << std::endl;
 
     graphSettings.radio_ctrls[device*2]->set_tx_lo_source("external", "lo1",0);

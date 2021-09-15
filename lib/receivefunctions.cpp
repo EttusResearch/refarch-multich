@@ -21,53 +21,56 @@
 //This function generates output file names for the received data. 
 
 
-std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn, size_t n_names, size_t rx_chan_num, int tx_chan_num, int run_num, 
-                                                SignalSettings& signalSettings, DeviceSettings& deviceSettings){
+std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn, const size_t& rx_chan_num, const int& tx_chan_num, const int& run_num, 
+                                                const double& tx_freq, const std::string& folder_name){
     //Generates file names for single threaded implementation.
-
+    //BUG: This is not dynamic file creation!
     
-    std::string cw_folder = "CW_" + std::to_string(deviceSettings.tx_freq*1e-9) + "_GHz_" + deviceSettings.folder_name;
+    std::string cw_folder = "CW_" + std::to_string(tx_freq*1e-9) + "_GHz_" + folder_name;
 
     //Place each run into its own folder based on the CW
-    boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0/" % cw_folder));
+    boost::filesystem::create_directory(str(boost::format("%s%s")% "/home/ts-cogrf/workarea/" % cw_folder));
    
-    boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
+    boost::filesystem::path base_fn_fp("/home/ts-cogrf/workarea/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(
-        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % deviceSettings.tx_freq % base_fn_fp.extension().string())));
+        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq % base_fn_fp.extension().string())));
         
     return base_fn_fp.string();
 
 }
 
-std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& base_fn, size_t n_names, size_t rx_chan_num, int tx_chan_num, int run_num, 
-                                                SignalSettings& signalSettings, DeviceSettings& deviceSettings, int threadnum){
+
+
+std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& base_fn, const size_t& rx_chan_num, const int& tx_chan_num, const int& run_num, 
+                                                const double& tx_freq, const std::string& folder_name, const int& threadnum){
 
     //Generates filenames for multithreaded implementation. 
-    //TODO: Consolidate into single function. 
 
-    std::string cw_folder = "CW_" + std::to_string(deviceSettings.tx_freq*1e-9) + "_GHz_" + deviceSettings.folder_name;
-
+    std::string cw_folder = "CW_" + std::to_string(tx_freq*1e-9) + "_GHz_" + folder_name;
+    //BUG: This is not dynamic file creation!
     //Place each run into its own folder based on the CW
-    //If using a multi-raid system, this code must be changed to accomodate. 
+    //If using a multi-raid system, this code must be changed to accomodate.
+    //Change /home/ts-cogrf/workarea/ and /home/ts-cogrf/workarea/ to accomodate your file structure.  
     //1st RAID
-    boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0/" % cw_folder));
+    boost::filesystem::create_directory(str(boost::format("%s%s")% "/home/ts-cogrf/workarea/" % cw_folder));
     //2nd RAID
-    boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md2/" % cw_folder));
+    boost::filesystem::create_directory(str(boost::format("%s%s")% "/home/ts-cogrf/workarea/" % cw_folder));
 
     boost::filesystem::path base_fn_fp;
    
     //Direct half of the USRPs to one RAID and half to the other. 
-    if (threadnum < 15){
+    //TODO: THis is hard coded. Need modular.
+    if (threadnum < 8){
         
-    boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
+    boost::filesystem::path base_fn_fp("/home/ts-cogrf/workarea/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(
-        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % deviceSettings.tx_freq % "_thread_" % threadnum % base_fn_fp.extension().string())));
+        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq % "_thread_" % threadnum % base_fn_fp.extension().string())));
         return base_fn_fp.string();
     }
     else{
-    boost::filesystem::path base_fn_fp("/mnt/md2/" + cw_folder + "/" + base_fn);
+    boost::filesystem::path base_fn_fp("/home/ts-cogrf/workarea/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(
-        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % deviceSettings.tx_freq % "_thread_" % threadnum % base_fn_fp.extension().string())));
+        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq % "_thread_" % threadnum % base_fn_fp.extension().string())));
         return base_fn_fp.string();
 
     }
