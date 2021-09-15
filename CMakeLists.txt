@@ -68,6 +68,7 @@ target_link_libraries(UHD_BOOST INTERFACE ${UHD_LIBRARIES} ${Boost_LIBRARIES})
 ########################################################################
 
 add_subdirectory(lib)
+add_subdirectory(docs)
 
 ########################################################################
 # Make the executable
