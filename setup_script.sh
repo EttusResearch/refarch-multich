@@ -21,7 +21,7 @@ main(){
   libssl-dev curl libboost-all-dev libusb-1.0-0-dev libudev-dev libgps-dev \
   doxygen cmake libgps-dev python3-dev python3-pip python3-matplotlib \
   python3-mako python3-docutils python3-requests python3-numpy python3-venv \
-  abi-dumper libdpdk-dev ncompress libncurses5-dev libncursesw5-dev
+  abi-dumper libdpdk-dev ncompress libncurses5-dev libncursesw5-dev ethtool
 
 
   #Checks to see if UHD is already installed and will skip the installation.
@@ -124,7 +124,7 @@ if [[ $VAR == *"libuhd"* ]]; then
       if user_input "$tempText"; then
         return 0
       else
-        exit 0;
+        exit 0
       fi
     fi
   fi
@@ -133,7 +133,7 @@ else
   if user_input "$tempText"; then
     return 1
   else
-    return 0;
+    return 0
   fi
 fi
 }
