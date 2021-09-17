@@ -162,7 +162,7 @@ void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
     
     //Receive to memory only, multi-threaded implementation. 
 
-    uhd::set_thread_priority_safe();
+    uhd::set_thread_priority_safe(0.9F);
 
     int num_total_samps = 0;
    

@@ -54,6 +54,8 @@ typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
 
 /***********************************************************************
  * Main function
+ * Performs an "iterative loopback". Each tx transmits to all RX. 
+ * Do not run in continuous mode, nsamps > 0;
  **********************************************************************/
 
 int UHD_SAFE_MAIN(int argc, char* argv[])
