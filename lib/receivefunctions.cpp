@@ -62,7 +62,7 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
     //TODO: THis is hard coded. Need modular.
     if (threadnum > 8){
         
-    boost::filesystem::path base_fn_fp("/mnt/md0" + cw_folder + "/" + base_fn);
+    boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(
         str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq % "_thread_" % threadnum % base_fn_fp.extension().string())));
         return base_fn_fp.string();
