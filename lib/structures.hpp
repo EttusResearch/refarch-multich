@@ -90,8 +90,7 @@ struct SignalSettings{
     double rep_delay; //replay block time
     std::string format;
     std::string file;
-    bool singleTXRX_loopback;
-    int singleTX, singleRX;
+    int singleTX;
     double time_requested;
     bool stop_signal_called;
    
@@ -116,9 +115,7 @@ struct SignalSettings{
         ("nruns", po::value<size_t>(&nruns)->default_value(1), "number of repeats")
         ("repeat_delay", po::value<double>(&rep_delay)->default_value(0), "delay between repeats (seconds)")
         ("time_adjust",po::value<double>(&time_adjust)->default_value(2.0), "If tramsmitting in iterative mode, seperation between per-channel transmission (seconds).")
-        ("singleTXRX_loopback", po::value<bool>(&singleTXRX_loopback)->default_value(false), "Loopback between a single TX and single RX channel.")
-        ("singleTX",po::value<int>(&singleTX)->default_value(0), "Single Loopback TX Channel)")
-        ("singleRX",po::value<int>(&singleRX)->default_value(0), "Single Loopback RX Channel)")
+        ("singleTX",po::value<int>(&singleTX)->default_value(0), "TX Channel)")
         ("time_requested", po::value<double>(&time_requested)->default_value(0.0), "Single Loopback Continous Time Limit (s).")
 
 
@@ -146,8 +143,6 @@ struct DeviceSettings{
     std::string tx_ant, rx_ant;
     std::string streamargs;
     std::vector<std::string> address;
-    std::string tx_args;
-    std::string rx_args;
     std::vector<std::string> lo;
 
    
@@ -161,21 +156,19 @@ struct DeviceSettings{
 
         desc.add_options()
         ("args", po::value<std::string>(&args)->default_value(""), "uhd transmit device address args")
-        ("tx-rate", po::value<double>(&tx_rate), "rate of transmit outgoing samples")
-        ("rx-rate", po::value<double>(&rx_rate), "rate of receive incoming samples")
-        ("tx-gain", po::value<double>(&tx_gain), "gain for the transmit RF chain")
-        ("rx-gain", po::value<double>(&rx_gain), "gain for the receive RF chain")
+        ("tx-rate", po::value<double>(&tx_rate)->default_value(200e6), "rate of transmit outgoing samples")
+        ("rx-rate", po::value<double>(&rx_rate)->default_value(25e6), "rate of receive incoming samples")
+        ("tx-gain", po::value<double>(&tx_gain)->default_value(0), "gain for the transmit RF chain")
+        ("rx-gain", po::value<double>(&rx_gain)->default_value(0), "gain for the receive RF chain")
         ("ref", po::value<std::string>(&ref)->default_value("external"), "clock reference (internal, external, mimo)")
-        ("tx-freq", po::value<double>(&tx_freq), "transmit RF center frequency in Hz")
-        ("rx-freq", po::value<double>(&rx_freq), "receive RF center frequency in Hz")
+        ("tx-freq", po::value<double>(&tx_freq)->default_value(2000e6), "transmit RF center frequency in Hz")
+        ("rx-freq", po::value<double>(&rx_freq)->default_value(2000e6), "receive RF center frequency in Hz")
         ("address", po::value<std::vector<std::string>>(&address), "uhd transmit device address args")
         ("tx-ant", po::value<std::string>(&tx_ant)->default_value("TX/RX"), "transmit antenna selection")
         ("rx-ant", po::value<std::string>(&rx_ant)->default_value("RX2"), "receive antenna selection")
         ("streamargs", po::value<std::string>(&streamargs)->default_value(""), "stream args")
-        ("tx-bw", po::value<double>(&tx_bw), "analog transmit filter bandwidth in Hz")
-        ("rx-bw", po::value<double>(&rx_bw), "analog receive filter bandwidth in Hz")
-        ("tx-args", po::value<std::string>(&tx_args)->default_value(""), "uhd transmit device address args")
-        ("rx-args", po::value<std::string>(&rx_args)->default_value(""), "uhd receive device address args")
+        ("tx-bw", po::value<double>(&tx_bw)->default_value(0), "analog transmit filter bandwidth in Hz")
+        ("rx-bw", po::value<double>(&rx_bw)->default_value(0), "analog receive filter bandwidth in Hz")
         ("lo", po::value<std::vector<std::string>>(&lo), "device LO settings")
 
         ;
