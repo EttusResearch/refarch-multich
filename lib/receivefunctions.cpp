@@ -52,7 +52,7 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
     //If using a multi-raid system, this code must be changed to accomodate.
     //Change /home/ts-cogrf/workarea/ and /home/ts-cogrf/workarea/ to accomodate your file structure.  
     //1st RAID
-    boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0" % cw_folder));
+    boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0/" % cw_folder));
     //2nd RAID
     boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md1/" % cw_folder));
 
