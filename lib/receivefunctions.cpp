@@ -29,9 +29,9 @@ std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn, co
     std::string cw_folder = "CW_" + std::to_string(tx_freq*1e-9) + "_GHz_" + folder_name;
 
     //Place each run into its own folder based on the CW
-    boost::filesystem::create_directory(str(boost::format("%s%s")% "/home/ts-cogrf/workarea/" % cw_folder));
+    boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0/" % cw_folder));
    
-    boost::filesystem::path base_fn_fp("/home/ts-cogrf/workarea/" + cw_folder + "/" + base_fn);
+    boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(
         str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_" % tx_chan_num  % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq % base_fn_fp.extension().string())));
         
@@ -50,7 +50,7 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
     //BUG: This is not dynamic file creation!
     //Place each run into its own folder based on the CW
     //If using a multi-raid system, this code must be changed to accomodate.
-    //Change /home/ts-cogrf/workarea/ and /home/ts-cogrf/workarea/ to accomodate your file structure.  
+    //Change /mnt/md0/ and /mnt/md1/ to accomodate your file structure.  
     //1st RAID
     boost::filesystem::create_directory(str(boost::format("%s%s")% "/mnt/md0/" % cw_folder));
     //2nd RAID
@@ -58,7 +58,7 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
 
     boost::filesystem::path base_fn_fp;
    
-    //Direct half of the USRPs to one RAID and half to the other. 
+    //Direct half of the USRPs to one RAID and half to the other. Make sure that the USRPS are local to the RAID array that you direct them to.  
     //TODO: THis is hard coded. Need modular.
     if (threadnum > 8){
         

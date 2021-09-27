@@ -19,6 +19,7 @@
 #include <uhd/utils/thread.hpp>
 #include "structures.hpp"
 #include "receivefunctions.hpp"
+#include <boost/circular_buffer.hpp>
 
 #include <memory>
 #include <stdio.h>
@@ -146,7 +147,13 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
     std::cout << "Recv Complete...(Press Ctrl+C to exit)" << std::endl;
 }
 
-
+void write_file(
+    std::shared_ptr<std::ofstream> outfile, 
+    std::complex<short>* buff_ptr,
+    size_t num_rx_samps)
+    {
+        outfile->write((const char*)buff_ptr, num_rx_samps * sizeof(std::complex<short>));
+    }
 
 
 void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
@@ -172,7 +179,7 @@ void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
     std::vector<std::vector<std::complex<short>>> buffs(
-        rx_channel_nums.size(), std::vector<std::complex<short>>(samps_per_buff));
+        rx_channel_nums.size(), std::vector<std::complex<short>>(samps_per_buff*4+1));
     // create a vector of pointers to point to each of the channel buffers
     std::vector<std::complex<short>*> buff_ptrs;
     for (size_t i = 0; i < buffs.size(); i++) {
@@ -203,7 +210,7 @@ void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
             and (num_requested_samples > num_total_samps or num_requested_samples == 0) and (time_requested == 0.0 or graphSettings.graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now() <= stop_time)) {
         
         
-        size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
+        size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff*4, md, timeout);
         
        
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -273,7 +280,7 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
     std::vector<std::vector<std::complex<short>>> buffs(
-        rx_channel_nums.size(), std::vector<std::complex<short>>(samps_per_buff));
+        rx_channel_nums.size(), std::vector<std::complex<short>>(samps_per_buff*4+1));
     // create a vector of pointers to point to each of the channel buffers
     std::vector<std::complex<short>*> buff_ptrs;
     for (size_t i = 0; i < buffs.size(); i++) {
@@ -325,7 +332,7 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
             and (num_requested_samples > num_total_samps or num_requested_samples == 0) and (time_requested == 0.0 or graphSettings.graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now() <= stop_time)) {
         
         
-        size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
+        size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff*4, md, timeout);
        
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
@@ -351,14 +358,13 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         }
 
         num_total_samps += num_rx_samps;
-
-         for (size_t i = 0; i < outfiles.size(); i++) {
-            
-            outfiles[i]->write(
-                (const char*)buff_ptrs[i], num_rx_samps * sizeof(std::complex<short>));
-        }
+        boost::thread_group thread_group;
         
-        //output_file.write((const char*)buff_ptrs[0], num_rx_samps * sizeof(std::complex<short>));
+        for (size_t i = 0; i < outfiles.size(); i++) {
+            thread_group.create_thread(std::bind(&write_file, outfiles[i], buff_ptrs[i], num_rx_samps));
+
+        }
+        thread_group.join_all();
     
     }
     if (stop_signal_called){

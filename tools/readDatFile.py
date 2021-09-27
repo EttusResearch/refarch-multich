@@ -12,7 +12,7 @@ def parse_args():
     """
     Parse the command line arguments
     Example command line syntax:
-    python readDatFile.py -f "/mnt/md0/CW_2.000000_GHz_9142021_145839_test.dat/test.tx_00_rx_00_run_00_cw_2e+09.dat" -s 250000000
+    python3 readDatFile.py -f "/mnt/md0/CW_2.000000_GHz_9232021_144851_test.dat/" -s 250000000
     """
 
     parser = argparse.ArgumentParser()
@@ -28,10 +28,13 @@ def main():
     """Plot samples from .dat file"""
     args = parse_args()
     subPlot = plt.subplot()
-    for file in os.listdir(os.getcwd()+"/"+args.file_path):
+    for file in os.listdir(args.file_path):
         if file.endswith(".dat"):
             data_array = np.fromfile(args.file_path+"/"+file, dtype=np.int16)
+
             i,q = deinterleave_iq(data_array)
+            i = i[:1000]
+            q = q[:1000]
             time_scale = np.linspace(0,len(i)/args.sample_rate,len(i))
             subPlot.plot(time_scale,i/(2**15-1))
             subPlot.plot(time_scale,q/(2**15-1))
@@ -39,6 +42,7 @@ def main():
             plt.xlabel('time')
             plt.savefig("delme"+file+".png")
             subPlot.clear()
+
             
 
 if __name__ == "__main__":
