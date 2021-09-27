@@ -359,7 +359,7 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
 
         num_total_samps += num_rx_samps;
         boost::thread_group thread_group;
-        
+        //Notice that this makes threads every loop, should move outside the loop. - Dylan 
         for (size_t i = 0; i < outfiles.size(); i++) {
             thread_group.create_thread(std::bind(&write_file, outfiles[i], buff_ptrs[i], num_rx_samps));
 
