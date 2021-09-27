@@ -2,39 +2,35 @@
 #define STRUCTURES_H
 
 #include <uhd/rfnoc/block_id.hpp>
+#include <uhd/rfnoc/ddc_block_control.hpp>
 #include <uhd/rfnoc/duc_block_control.hpp>
 #include <uhd/rfnoc/mb_controller.hpp>
 #include <uhd/rfnoc/radio_control.hpp>
 #include <uhd/rfnoc/replay_block_control.hpp>
 #include <uhd/rfnoc_graph.hpp>
-#include <uhd/rfnoc/ddc_block_control.hpp>
-
-#include <boost/lockfree/spsc_queue.hpp>
-
-#include <iostream>
 #include <boost/format.hpp>
-#include <string>
-#include <vector>
+#include <boost/lockfree/spsc_queue.hpp>
 #include <boost/program_options.hpp>
 #include <fstream>
+#include <iostream>
 #include <mutex>
+#include <string>
+#include <vector>
 
 extern volatile bool stop_signal_called;
 
 
-//This struct handles reading the config file and parsing the data. 
+// This struct handles reading the config file and parsing the data.
 struct ProgramMetaData
 {
-    
-
-    //Input argument
+    // Input argument
     std::string cfgFile;
 
-    //runtime
+    // runtime
     boost::program_options::options_description desc;
     boost::program_options::variables_map vm;
 
-    //Avoid boilerplate in main by initializing desc with cfgFile option 
+    // Avoid boilerplate in main by initializing desc with cfgFile option
     ProgramMetaData()
     {
         namespace po = boost::program_options;
@@ -53,52 +49,44 @@ struct ProgramMetaData
         po::store(po::parse_command_line(argc, argv, desc), vm);
         po::notify(vm);
 
-        
 
         // store program options from config file
         if (vm.count("cfgFile")) {
             std::cout << "Load cfg_file: " << cfgFile << std::endl;
-            //standard streams don't accept a standard string, so pass the string using c_str()
+            // standard streams don't accept a standard string, so pass the string using
+            // c_str()
             po::store(po::parse_config_file(cfgFile.c_str(), desc), vm);
             po::notify(vm);
         }
-        
     }
 };
 
 
-
-
-
-
-
-struct SignalSettings{
-
-
-    //Runtime
+struct SignalSettings
+{
+    // Runtime
     size_t samples_to_replay;
 
-    //Load from disk
+    // Load from disk
     std::string rx_file;
     std::string otw;
     std::string type;
     size_t spb, nruns;
-    double rx_timeout; 
+    double rx_timeout;
     double time_adjust;
     size_t nsamps;
-    double rtime; 
-    double rep_delay; //replay block time
+    double rtime;
+    double rep_delay; // replay block time
     std::string format;
     std::string file;
     int singleTX;
     double time_requested;
     bool stop_signal_called;
-   
-   
 
-    void addProgramOptions( boost::program_options::options_description &desc )
+
+    void addProgramOptions(boost::program_options::options_description& desc)
     {
-    namespace po = boost::program_options;
+        namespace po = boost::program_options;
         // clang-format off
         //TODO: Verify we are still using the comments for each value in
         //or if we can delete and push explaination to top of each structure
@@ -123,33 +111,29 @@ struct SignalSettings{
         ;
         // clang-format on
     }
-
-    
 };
 
-struct DeviceSettings{
-    
-
-    //Runtime
+struct DeviceSettings
+{
+    // Runtime
     std::string argsWithAddress;
     std::string folder_name;
 
-    //Load from disk
+    // Load from disk
     std::string args;
-    double tx_rate, tx_freq, tx_gain,tx_bw;
+    double tx_rate, tx_freq, tx_gain, tx_bw;
     double rx_rate, rx_freq, rx_gain, rx_bw;
     std::string ref;
-    
+
     std::string tx_ant, rx_ant;
     std::string streamargs;
     std::vector<std::string> address;
     std::vector<std::string> lo;
 
-   
 
-    void addProgramOptions( boost::program_options::options_description &desc )
+    void addProgramOptions(boost::program_options::options_description& desc)
     {
-    namespace po = boost::program_options;
+        namespace po = boost::program_options;
         // clang-format off
         //TODO: Verify we are still using the comments for each value in
         //or if we can delete and push explaination to top of each structure
@@ -175,63 +159,48 @@ struct DeviceSettings{
         // clang-format on
     }
 
-    //when loading the args from a configuration file the address is split per 
-    //device so add them back to the args
+    // when loading the args from a configuration file the address is split per
+    // device so add them back to the args
     void addAddresstoArgs()
     {
         argsWithAddress = "" + args;
 
-        for (const auto& addr : address)
-        {
+        for (const auto& addr : address) {
             argsWithAddress += ", " + addr;
         }
 
         args = argsWithAddress;
     }
-
-   
-
-
-    
-
 };
 
-struct GraphSettings{
-
-    //rfnoc graph
+struct GraphSettings
+{
+    // rfnoc graph
     uhd::rfnoc::rfnoc_graph::sptr graph;
-    //radio Global Variables
+    // radio Global Variables
     std::vector<uhd::rfnoc::radio_control::sptr> radio_ctrls;
     std::vector<uhd::rfnoc::block_id_t> radio_block_list;
-    //DDC/DUC Global Variables
+    // DDC/DUC Global Variables
     std::vector<uhd::rfnoc::ddc_block_control::sptr> ddc_ctrls;
     std::vector<uhd::rfnoc::duc_block_control::sptr> duc_ctrls;
     size_t ddc_chan;
     size_t duc_chan;
-    //Replay Global Variables
+    // Replay Global Variables
     std::vector<uhd::rfnoc::replay_block_control::sptr> replay_ctrls;
     std::vector<size_t> replay_chan_vector;
     std::vector<uhd::rfnoc::block_id_t> replay_block_list;
     uint32_t replay_buff_addr;
     uint32_t replay_buff_size;
-    //Streamer Variables
+    // Streamer Variables
     uhd::rx_streamer::sptr rx_stream;
     uhd::tx_streamer::sptr tx_stream;
     std::vector<size_t> streamer_channels;
     std::vector<uhd::tx_streamer::sptr> tx_stream_vector;
-    std::vector<uhd::rx_streamer::sptr> rx_stream_vector; 
-    //txrx settings
+    std::vector<uhd::rx_streamer::sptr> rx_stream_vector;
+    // txrx settings
     uhd::time_spec_t time_spec;
     uhd::time_spec_t time_adjustment;
-
-    
-    
-    
-
-    
-
 };
-
 
 
 #endif
