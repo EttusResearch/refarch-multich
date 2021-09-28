@@ -1,7 +1,7 @@
 #include "replaycontrol.hpp"
 #include "blocksettings.hpp"
 #include "receivefunctions.hpp"
-#include "recvtofile.hpp"
+#include "recvdata.hpp"
 #include "structures.hpp"
 #include "sync.hpp"
 #include <uhd/rfnoc/block_id.hpp>

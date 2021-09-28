@@ -11,8 +11,8 @@ add_library(cogrf_lib STATIC
     replaycontrol.cpp
     receivefunctions.hpp
     receivefunctions.cpp
-    recvtofile.hpp
-    recvtofile.cpp
+    recvdata.hpp
+    recvdata.cpp
     
     
     

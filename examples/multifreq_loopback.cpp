@@ -18,7 +18,7 @@ RX.
 #include "blocksettings.hpp"
 #include "graphassembly.hpp"
 #include "receivefunctions.hpp"
-#include "recvtofile.hpp"
+#include "recvdata.hpp"
 #include "replaycontrol.hpp"
 #include "structures.hpp"
 #include "sync.hpp"

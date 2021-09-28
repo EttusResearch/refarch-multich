@@ -1,4 +1,4 @@
-#include "recvtofile.hpp"
+#include "recvdata.hpp"
 #include "receivefunctions.hpp"
 #include "structures.hpp"
 #include <uhd/rfnoc/block_id.hpp>
