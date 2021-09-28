@@ -1,6 +1,4 @@
-#ifndef RECVTOFILE_H
-#define RECVTOFILE_H
-
+#include "recvdata.hpp"
 #include "receivefunctions.hpp"
 #include "structures.hpp"
 #include <uhd/rfnoc/block_id.hpp>
@@ -31,8 +29,7 @@
 using namespace std;
 
 
-template <typename samp_type>
-void recvToFile(uhd::rx_streamer::sptr rx_stream,
+void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
     const std::string& cpu_format,
     const std::string& wire_format,
     const std::string& file,
@@ -59,10 +56,10 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
 
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
-    std::vector<std::vector<samp_type>> buffs(
-        rx_channel_nums.size(), std::vector<samp_type>(samps_per_buff));
+    std::vector<std::vector<std::complex<short>>> buffs(
+        rx_channel_nums.size(), std::vector<std::complex<short>>(samps_per_buff));
     // create a vector of pointers to point to each of the channel buffers
-    std::vector<samp_type*> buff_ptrs;
+    std::vector<std::complex<short>*> buff_ptrs;
     for (size_t i = 0; i < buffs.size(); i++) {
         buff_ptrs.push_back(&buffs[i].front());
     }
@@ -123,7 +120,7 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
                            "  Dropped samples will not be written to the file.\n"
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
-                           % (rx_rate * sizeof(samp_type) / 1e6);
+                           % (rx_rate * sizeof(std::complex<short>) / 1e6);
             }
             continue;
         }
@@ -136,7 +133,7 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
 
         for (size_t i = 0; i < outfiles.size(); i++) {
             outfiles[i]->write(
-                (const char*)buff_ptrs[i], num_rx_samps * sizeof(samp_type));
+                (const char*)buff_ptrs[i], num_rx_samps * sizeof(std::complex<short>));
         }
     }
 
@@ -153,7 +150,7 @@ void recvToFile(uhd::rx_streamer::sptr rx_stream,
 }
 
 
-void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
+void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
     const std::string& cpu_format,
     const std::string& wire_format,
     const std::string& file,
@@ -206,11 +203,11 @@ void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
 
 
     const auto stop_time = start_time + uhd::time_spec_t(time_requested);
-
+    
 
     rx_stream->issue_stream_cmd(stream_cmd);
 
-    while (not signalSettings.stop_signal_called
+    while (not stop_signal_called
            and (num_requested_samples > num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0
                 or graphSettings.graph->get_mb_controller(0)
@@ -259,7 +256,7 @@ void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
 }
 
 
-void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
+void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     const std::string& cpu_format,
     const std::string& wire_format,
     const std::string& file,
@@ -342,7 +339,7 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
 
     rx_stream->issue_stream_cmd(stream_cmd);
 
-    while (not signalSettings.stop_signal_called
+    while (not stop_signal_called
            and (num_requested_samples > num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0
                 or graphSettings.graph->get_mb_controller(0)
@@ -401,6 +398,3 @@ void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         outfiles[i]->close();
     }
 }
-
-
-#endif

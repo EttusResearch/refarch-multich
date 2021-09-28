@@ -1,5 +1,14 @@
+#!/usr/bin/env python3
+
 """
-Plot samples from .dat file
+Copyright 2010-2012,2014-2015 Ettus Research LLC
+Copyright 2021 Ettus Research, a National Instruments Company
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Plot samples from .dat file. 
+DISCLAIMER: This is meant as an example and not as a analysis tool. 
+It is useful for determining if the data being received is noise or a signal. 
+
 """
 
 import numpy as np
@@ -12,7 +21,8 @@ def parse_args():
     """
     Parse the command line arguments
     Example command line syntax:
-    python readDatFile.py -f "/mnt/md0/CW_2.000000_GHz_9142021_145839_test.dat/test.tx_00_rx_00_run_00_cw_2e+09.dat" -s 250000000
+    python3 readDatFile.py -f <directory where files are> -s <rx sampling rate>
+    python3 readDatFile.py -f "/mnt/md0/CW_2.000000_GHz_9282021_113939_test.dat" -s 33330000
     """
 
     parser = argparse.ArgumentParser()
@@ -28,7 +38,7 @@ def main():
     """Plot samples from .dat file"""
     args = parse_args()
     subPlot = plt.subplot()
-    for file in os.listdir(os.getcwd()+"/"+args.file_path):
+    for file in os.listdir("/"+args.file_path):
         if file.endswith(".dat"):
             data_array = np.fromfile(args.file_path+"/"+file, dtype=np.int16)
             i,q = deinterleave_iq(data_array)

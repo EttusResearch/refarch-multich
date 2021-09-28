@@ -81,7 +81,6 @@ struct SignalSettings
     std::string file;
     int singleTX;
     double time_requested;
-    bool stop_signal_called;
 
 
     void addProgramOptions(boost::program_options::options_description& desc)

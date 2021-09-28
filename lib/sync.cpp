@@ -41,6 +41,7 @@ int SyncDevices::syncAllDevices(GraphSettings& graphSettings)
 void SyncDevices::killLOs(
     GraphSettings& graphSettings, const std::vector<std::string>& lo)
 {
+    std::cout << "Shutting Down LOs" << std::endl;
     int device = 0;
     while (device < lo.size()) {
 
@@ -60,6 +61,7 @@ void SyncDevices::killLOs(
 
         device++;
     }
+    std::cout << "Shutting Down LOs: Done!" << std::endl;
 }
 
 void SyncDevices::setLOsfromConfig(
