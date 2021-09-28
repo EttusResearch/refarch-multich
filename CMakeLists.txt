@@ -65,10 +65,7 @@ target_link_libraries(multicw_iterative PRIVATE UHD_BOOST cogrf_lib)
 # Post Build Include Configuration files
 ########################################################################
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/examples/runconfig.cfg 
-                ${CMAKE_CURRENT_BINARY_DIR}/)
-
-#TODO: Make this more repust and not error out the cmake if the file is missing.
+#TODO: Make this more robust and not error out the cmake if the file is missing.
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config/250e6_a1_500khz_250e6tx_16000_0701_2.dat 
         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 
