@@ -47,13 +47,6 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 
 volatile bool stop_signal_called = false;
 
-
-// Constants related to the Replay block
-const size_t replay_word_size = 8; // Size of words used by replay block
-const size_t sample_size      = 4; // Complex signed 16-bit is 32 bits per sample
-const size_t samples_per_word = 2; // Number of sc16 samples per word
-
-
 typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
 
 /***********************************************************************
@@ -280,6 +273,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     SyncDevices::killLOs(graphStruct, device.lo);
 
 
-    std::cout << std::endl << "Done!" << std::endl << std::endl;
+    std::cout << std::endl << "Closing USRP Sessions" << std::endl << std::endl;
     return EXIT_SUCCESS;
 }

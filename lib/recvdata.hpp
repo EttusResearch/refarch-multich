@@ -6,8 +6,8 @@
 //
 
 
-#ifndef RECVTOFILE_H
-#define RECVTOFILE_H
+#ifndef RECVDATA_H
+#define RECVDATA_H
 
 #include "structures.hpp"
 #include <uhd/rfnoc/block_id.hpp>

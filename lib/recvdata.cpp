@@ -203,11 +203,11 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
 
 
     const auto stop_time = start_time + uhd::time_spec_t(time_requested);
-
+    
 
     rx_stream->issue_stream_cmd(stream_cmd);
 
-    while (not signalSettings.stop_signal_called
+    while (not stop_signal_called
            and (num_requested_samples > num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0
                 or graphSettings.graph->get_mb_controller(0)
@@ -339,7 +339,7 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
 
     rx_stream->issue_stream_cmd(stream_cmd);
 
-    while (not signalSettings.stop_signal_called
+    while (not stop_signal_called
            and (num_requested_samples > num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0
                 or graphSettings.graph->get_mb_controller(0)
