@@ -69,8 +69,10 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
         graphSettings.graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
     graphSettings.time_spec = uhd::time_spec_t(now + signalSettings.rtime);
     int threadnum           = 0;
-    // Receive graphSettings.rx_stream_vector.size()
+    
+    std::signal(SIGINT, &ReplayControl::sig_int_handler);
 
+    // Receive graphSettings.rx_stream_vector.size()
     if (signalSettings.format == "sc16") {
         for (int i = 0; i < graphSettings.rx_stream_vector.size(); i = i + 2) {
             std::cout << "Spawning RX Thread.." << threadnum << std::endl;
@@ -99,7 +101,7 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
         throw std::runtime_error("Unknown type " + signalSettings.format);
     }
 
-
+    
     std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
 
     // Todo: This is the same If and else
@@ -107,7 +109,6 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
         // replay the entire buffer over and over
         std::cout << "Issuing replay command for " << signalSettings.samples_to_replay
                   << " samps in continuous mode..." << std::endl;
-
 
         graphSettings.replay_ctrls[signalSettings.singleTX]->config_play(
             graphSettings.replay_buff_addr,
@@ -146,24 +147,8 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
     }
 
     thread_group.join_all();
-    std::cout << "Complete (Press Ctrl+C to exit)..." << std::endl;
 
-
-    // If running in continuous mode, call signal handler if user says to stop.
-    if (signalSettings.nsamps <= 0) {
-        std::signal(SIGINT, &ReplayControl::sig_int_handler);
-
-
-        while (not stop_signal_called)
-            ;
-        std::cout << stop_signal_called << std::endl;
-
-        // Remove SIGINT handler
-        std::signal(SIGINT, SIG_DFL);
-    } else {
-        stop_signal_called = true;
-    }
-
+    std::signal(SIGINT, SIG_DFL);
 
     return EXIT_SUCCESS;
 }
@@ -260,11 +245,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     // Begin TX and RX
     singleTXLoopbackMultithread(graphStruct, signal, device);
-
-
-    while (not stop_signal_called)
-        ;
-
 
     std::cout << "Run complete." << std::endl;
     // Kill Replay

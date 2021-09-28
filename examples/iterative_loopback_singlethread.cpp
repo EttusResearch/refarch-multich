@@ -66,7 +66,8 @@ int runTXRXiterativeloopback(GraphSettings& graphSettings,
     for (size_t chan = 0; chan < graphSettings.radio_ctrls.size(); chan++) {
         rx_channel_nums.push_back(chan);
     }
-
+    // todo: add sig_int_handler to this to catch and return safe.
+     
     /************************************************************************
      * Start replay of data
      ***********************************************************************/
@@ -256,9 +257,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     SyncDevices::syncAllDevices(graphStruct);
     // Begin TX and RX
     runTXRXiterativeloopback(graphStruct, signal, device);
-    while (not stop_signal_called)
-        ;
-
 
     std::cout << "Run complete." << std::endl;
     // Kill Replay
