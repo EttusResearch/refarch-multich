@@ -6,18 +6,19 @@
 //
 
 /*******************************************************************************************************************************
-This example cycles over a range of frequencies as specfied. It runs a single TX->All RX loopback.
-This is a multi-threaded implementation. 
+This example cycles over a range of frequencies as specfied. It runs a single TX->All RX
+loopback. This is a multi-threaded implementation.
 
 This example works best by specifying the number of samples (non-continuous run) such as
-nsamps=16000. The TX and RX rates must match. Tests were performed at 250Ms/s for TX and RX. 
+nsamps=16000. The TX and RX rates must match. Tests were performed at 250Ms/s for TX and
+RX.
 ********************************************************************************************************************************/
 
 
-#include "recvtofile.hpp"
 #include "blocksettings.hpp"
 #include "graphassembly.hpp"
 #include "receivefunctions.hpp"
+#include "recvtofile.hpp"
 #include "replaycontrol.hpp"
 #include "structures.hpp"
 #include "sync.hpp"
@@ -60,14 +61,13 @@ typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
 
 /***********************************************************************
  * Loopback Function
- * 
+ *
  **********************************************************************/
 
 int singleTXLoopbackMultithread(GraphSettings& graphSettings,
     SignalSettings& signalSettings,
-    DeviceSettings& deviceSettings){
-
-
+    DeviceSettings& deviceSettings)
+{
     std::vector<size_t> rx_channel_nums;
     // thread group for multithreading
     boost::thread_group thread_group;
@@ -167,7 +167,7 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
 
         while (not stop_signal_called)
             ;
-        
+
 
         // Remove SIGINT handler
         std::signal(SIGINT, SIG_DFL);
@@ -177,7 +177,7 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
 
 
     return EXIT_SUCCESS;
-    }
+}
 
 
 /***********************************************************************
@@ -251,7 +251,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     SyncDevices::checkRXSensorLock(graphStruct);
     // Check TX Sensor Lock
     SyncDevices::checkTXSensorLock(graphStruct);
-    
+
     // Build Streams
     GraphAssembly::buildStreamsMultithread(
         graphStruct, device.streamargs, signal.format, signal.otw);

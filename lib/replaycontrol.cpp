@@ -160,8 +160,6 @@ int ReplayControl::importData(
 }
 
 
-
-
 void ReplayControl::stopReplay(GraphSettings& graphSettings)
 {
     /************************************************************************
@@ -178,15 +176,7 @@ void ReplayControl::stopReplay(GraphSettings& graphSettings)
 }
 
 
-
-
-
 void ReplayControl::sig_int_handler(int)
 {
     stop_signal_called = true;
 }
-
-
-
-
-

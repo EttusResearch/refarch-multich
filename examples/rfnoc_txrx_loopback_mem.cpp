@@ -13,10 +13,10 @@ continuously. The multithreaded version
 currently has each USRP in its own thread. This version uses one RX streamer per device.
 *******************************************************************************************************************/
 
-#include "recvtofile.hpp"
 #include "blocksettings.hpp"
 #include "graphassembly.hpp"
 #include "receivefunctions.hpp"
+#include "recvtofile.hpp"
 #include "replaycontrol.hpp"
 #include "structures.hpp"
 #include "sync.hpp"
@@ -58,13 +58,12 @@ typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
 
 /***********************************************************************
  * Loopback Function
- * 
+ *
  **********************************************************************/
 int singleTXLoopbackMultithread(GraphSettings& graphSettings,
     SignalSettings& signalSettings,
-    DeviceSettings& deviceSettings){
-
-
+    DeviceSettings& deviceSettings)
+{
     std::vector<size_t> rx_channel_nums;
     // thread group for multithreading
     boost::thread_group thread_group;
@@ -174,7 +173,7 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
 
 
     return EXIT_SUCCESS;
-    }
+}
 
 
 /***********************************************************************
@@ -268,8 +267,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     // Begin TX and RX
     singleTXLoopbackMultithread(graphStruct, signal, device);
-    
-    
+
+
     while (not stop_signal_called)
         ;
 

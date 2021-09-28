@@ -12,13 +12,14 @@ There are various options to this function, see the documentation for more
 details.
 
 This example works best by specifying the number of samples (non-continuous run) such as
-nsamps=16000. The TX and RX rates must match. Tests were performed at 250Ms/s for TX and RX. 
+nsamps=16000. The TX and RX rates must match. Tests were performed at 250Ms/s for TX and
+RX.
 ********************************************************************************************************************************/
 
-#include "recvtofile.hpp"
 #include "blocksettings.hpp"
 #include "graphassembly.hpp"
 #include "receivefunctions.hpp"
+#include "recvtofile.hpp"
 #include "replaycontrol.hpp"
 #include "structures.hpp"
 #include "sync.hpp"
@@ -60,15 +61,13 @@ typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
 
 /***********************************************************************
  * Loopback Function
- * 
+ *
  **********************************************************************/
 
 int runTXRXiterativeloopback(GraphSettings& graphSettings,
     SignalSettings& signalSettings,
     DeviceSettings& deviceSettings)
 {
-    
-
     // Make a vector of rx channels from 0 to n
     std::vector<size_t> rx_channel_nums;
     for (size_t chan = 0; chan < graphSettings.radio_ctrls.size(); chan++) {
@@ -138,7 +137,7 @@ int runTXRXiterativeloopback(GraphSettings& graphSettings,
 
 
             if (signalSettings.format == "sc16") {
-                    ReceiveControl::recvToFile(graphSettings.rx_stream,
+                ReceiveControl::recvToFile(graphSettings.rx_stream,
                     signalSettings.format,
                     signalSettings.otw,
                     signalSettings.rx_file,
@@ -197,7 +196,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // determine folder name to store data in, will move this eventually.
     // TODO: MAKE A Function
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
-    
+
     std::string month   = std::to_string(timeLocal.date().month());
     std::string day     = std::to_string(timeLocal.date().day());
     std::string year    = std::to_string(timeLocal.date().year());

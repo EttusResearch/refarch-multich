@@ -29,7 +29,6 @@
 using namespace std;
 
 
-
 void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
     const std::string& cpu_format,
     const std::string& wire_format,

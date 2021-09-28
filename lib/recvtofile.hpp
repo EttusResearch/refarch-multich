@@ -10,9 +10,9 @@
 #define RECVTOFILE_H
 
 #include "structures.hpp"
-#include <uhd/rfnoc_graph.hpp>
 #include <uhd/rfnoc/block_id.hpp>
 #include <uhd/rfnoc/mb_controller.hpp>
+#include <uhd/rfnoc_graph.hpp>
 #include <chrono>
 #include <csignal>
 #include <cstring>
@@ -22,9 +22,8 @@
 #include <thread>
 class ReceiveControl
 {
-    public:
-        
-        static void recvToFile(uhd::rx_streamer::sptr rx_stream,
+public:
+    static void recvToFile(uhd::rx_streamer::sptr rx_stream,
         const std::string& cpu_format,
         const std::string& wire_format,
         const std::string& file,
@@ -41,7 +40,7 @@ class ReceiveControl
         GraphSettings& graphSettings,
         double time_requested);
 
-        static void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
+    static void recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
         const std::string& cpu_format,
         const std::string& wire_format,
         const std::string& file,
@@ -59,7 +58,7 @@ class ReceiveControl
         double time_requested,
         int threadnum);
 
-        static void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
+    static void recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         const std::string& cpu_format,
         const std::string& wire_format,
         const std::string& file,

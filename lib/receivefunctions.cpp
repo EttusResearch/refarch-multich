@@ -37,8 +37,7 @@ std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn,
     boost::filesystem::create_directory(
         str(boost::format("%s%s") % "/mnt/md0/" % cw_folder));
 
-    boost::filesystem::path base_fn_fp(
-        "/mnt/md0/" + cw_folder + "/" + base_fn);
+    boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(
         str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_" % tx_chan_num % "_rx_"
             % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq
