@@ -113,7 +113,7 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
 
     std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
 
-    // BUG: This is the same If and else
+    // Todo: This is the same If and else
     if (signalSettings.nsamps <= 0) {
         // replay the entire buffer over and over
         std::cout << "Issuing replay command for " << signalSettings.samples_to_replay
@@ -202,7 +202,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     device.addAddresstoArgs();
 
     // determine folder name to store data in, will move this eventually.
-    // TODO: MAKE A Function
+
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
 
     std::string month   = std::to_string(timeLocal.date().month());
@@ -291,8 +291,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
 
     std::cout << "Run complete." << std::endl;
-    // Kill Replay
-    ReplayControl::stopReplay(graphStruct);
 
     // Kill LO
     SyncDevices::killLOs(graphStruct, device.lo);

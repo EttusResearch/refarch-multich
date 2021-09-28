@@ -12,7 +12,7 @@ enable_testing()
 # Configure Compiler
 ########################################################################
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_BUILD_TYPE "Release")
 
 ########################################################################
 # Find Packages and add to the project as a dependency

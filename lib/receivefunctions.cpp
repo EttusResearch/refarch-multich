@@ -28,7 +28,7 @@ std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn,
     const std::string& folder_name)
 {
     // Generates file names for single threaded implementation.
-    // BUG: This is not dynamic file creation!
+    // Todo: This is not dynamic file creation!
 
     std::string cw_folder =
         "CW_" + std::to_string(tx_freq * 1e-9) + "_GHz_" + folder_name;
@@ -59,7 +59,7 @@ std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& 
 
     std::string cw_folder =
         "CW_" + std::to_string(tx_freq * 1e-9) + "_GHz_" + folder_name;
-    // BUG: This is not dynamic file creation!
+    // Todo: This is not dynamic file creation!
     // Place each run into its own folder based on the CW
     // If using a multi-raid system, this code must be changed to accomodate.
     // Change /home/ts-cogrf/workarea/ and /home/ts-cogrf/workarea/ to accomodate your

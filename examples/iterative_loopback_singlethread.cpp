@@ -194,7 +194,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     device.addAddresstoArgs();
 
     // determine folder name to store data in, will move this eventually.
-    // TODO: MAKE A Function
+    
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
 
     std::string month   = std::to_string(timeLocal.date().month());

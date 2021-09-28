@@ -109,7 +109,7 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
 
     std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
 
-    // BUG: This is the same If and else
+    // Todo: This is the same If and else
     if (signalSettings.nsamps <= 0) {
         // replay the entire buffer over and over
         std::cout << "Issuing replay command for " << signalSettings.samples_to_replay
