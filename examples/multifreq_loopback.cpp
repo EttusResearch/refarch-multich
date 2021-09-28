@@ -5,6 +5,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
+/*******************************************************************************************************************************
+This example cycles over a range of frequencies as specfied. It runs a single TX->All RX loopback.
+This is a multi-threaded implementation. 
+
+This example works best by specifying the number of samples (non-continuous run) such as
+nsamps=16000. The TX and RX rates must match. Tests were performed at 250Ms/s for TX and RX. 
+********************************************************************************************************************************/
+
+
+#include "recvtofile.hpp"
 #include "blocksettings.hpp"
 #include "graphassembly.hpp"
 #include "receivefunctions.hpp"
@@ -46,6 +56,128 @@ const size_t samples_per_word = 2; // Number of sc16 samples per word
 
 
 typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
+
+
+/***********************************************************************
+ * Loopback Function
+ * 
+ **********************************************************************/
+
+int singleTXLoopbackMultithread(GraphSettings& graphSettings,
+    SignalSettings& signalSettings,
+    DeviceSettings& deviceSettings){
+
+
+    std::vector<size_t> rx_channel_nums;
+    // thread group for multithreading
+    boost::thread_group thread_group;
+
+    rx_channel_nums.push_back(0);
+    rx_channel_nums.push_back(1);
+
+
+    uhd::time_spec_t now =
+        graphSettings.graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
+    graphSettings.time_spec = uhd::time_spec_t(now + signalSettings.rtime);
+    int threadnum           = 0;
+    // Receive graphSettings.rx_stream_vector.size()
+
+    if (signalSettings.format == "sc16") {
+        for (int i = 0; i < graphSettings.rx_stream_vector.size(); i = i + 2) {
+            std::cout << "Spawning RX Thread.." << threadnum << std::endl;
+            thread_group.create_thread(std::bind(&ReceiveControl::recvToFileMultithread,
+                graphSettings.rx_stream_vector[i],
+                signalSettings.format,
+                signalSettings.otw,
+                signalSettings.rx_file,
+                signalSettings.spb,
+                signalSettings.nsamps,
+                graphSettings.time_spec,
+                rx_channel_nums,
+                signalSettings.rx_timeout,
+                deviceSettings.rx_rate,
+                signalSettings.singleTX,
+                signalSettings,
+                0,
+                deviceSettings,
+                graphSettings,
+                signalSettings.time_requested,
+                threadnum));
+            threadnum++;
+        }
+
+    } else {
+        throw std::runtime_error("Unknown type " + signalSettings.format);
+    }
+
+
+    std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
+
+    // BUG: This is the same If and else
+    if (signalSettings.nsamps <= 0) {
+        // replay the entire buffer over and over
+        std::cout << "Issuing replay command for " << signalSettings.samples_to_replay
+                  << " samps in continuous mode..." << std::endl;
+
+
+        graphSettings.replay_ctrls[signalSettings.singleTX]->config_play(
+            graphSettings.replay_buff_addr,
+            graphSettings.replay_buff_size,
+            graphSettings.replay_chan_vector[signalSettings.singleTX]);
+
+        uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
+        stream_cmd.num_samps  = signalSettings.nsamps;
+        stream_cmd.stream_now = false;
+        stream_cmd.time_spec  = graphSettings.time_spec;
+        graphSettings.replay_ctrls[signalSettings.singleTX]->issue_stream_cmd(
+            stream_cmd, graphSettings.replay_chan_vector[signalSettings.singleTX]);
+
+    } else {
+        std::cout << graphSettings.replay_ctrls[signalSettings.singleTX]->get_block_id()
+                  << " Port: "
+                  << graphSettings.replay_chan_vector[signalSettings.singleTX]
+                  << std::endl;
+        std::cout << graphSettings.replay_ctrls[signalSettings.singleTX]->get_block_id()
+                  << " Issuing replay command for " << signalSettings.nsamps
+                  << " samps..." << std::endl;
+
+        // Replay nsamps, wrapping back to the start of the buffer if nsamps is
+        // larger than the buffer size.
+        graphSettings.replay_ctrls[signalSettings.singleTX]->config_play(
+            graphSettings.replay_buff_addr,
+            graphSettings.replay_buff_size,
+            graphSettings.replay_chan_vector[signalSettings.singleTX]);
+
+        uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+        stream_cmd.num_samps  = signalSettings.nsamps;
+        stream_cmd.stream_now = false;
+        stream_cmd.time_spec  = graphSettings.time_spec;
+        graphSettings.replay_ctrls[signalSettings.singleTX]->issue_stream_cmd(
+            stream_cmd, graphSettings.replay_chan_vector[signalSettings.singleTX]);
+    }
+
+    thread_group.join_all();
+    std::cout << "Complete (Press Ctrl+C to exit)..." << std::endl;
+
+
+    // If running in continuous mode, call signal handler if user says to stop.
+    if (signalSettings.nsamps <= 0) {
+        std::signal(SIGINT, &ReplayControl::sig_int_handler);
+
+
+        while (not stop_signal_called)
+            ;
+        
+
+        // Remove SIGINT handler
+        std::signal(SIGINT, SIG_DFL);
+    } else {
+        stop_signal_called = true;
+    }
+
+
+    return EXIT_SUCCESS;
+    }
 
 
 /***********************************************************************
@@ -119,14 +251,12 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     SyncDevices::checkRXSensorLock(graphStruct);
     // Check TX Sensor Lock
     SyncDevices::checkTXSensorLock(graphStruct);
-    // Allow for some setup time
-    // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    
     // Build Streams
-    std::cout << graphStruct.radio_ctrls.size();
-    // GraphAssembly::buildStreams(graphStruct, device, signal);
-
+    GraphAssembly::buildStreamsMultithread(
+        graphStruct, device.streamargs, signal.format, signal.otw);
     // Connect Graph
-    GraphAssembly::connectGraph(graphStruct);
+    GraphAssembly::connectGraphMultithread(graphStruct);
     // Commit Graph
     GraphAssembly::commitGraph(graphStruct);
     // Allow for some setup time
@@ -150,7 +280,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         SyncDevices::checkTXSensorLock(graphStruct);
 
         // Begin TX and RX
-        ReplayControl::singleTXLoopbackMultithread(graphStruct, signal, device);
+        singleTXLoopbackMultithread(graphStruct, signal, device);
         // Kill Replay
         ReplayControl::stopReplay(graphStruct);
     };

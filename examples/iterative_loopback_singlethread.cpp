@@ -5,6 +5,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
+/*******************************************************************************************************************************
+This example iterates over each TX, transmitting to all RXs. A single timed command
+is sent to the USRP for each TX and each RX due to command queue limitations.
+There are various options to this function, see the documentation for more
+details.
+
+This example works best by specifying the number of samples (non-continuous run) such as
+nsamps=16000. The TX and RX rates must match. Tests were performed at 250Ms/s for TX and RX. 
+********************************************************************************************************************************/
+
+#include "recvtofile.hpp"
 #include "blocksettings.hpp"
 #include "graphassembly.hpp"
 #include "receivefunctions.hpp"
@@ -46,6 +57,118 @@ const size_t samples_per_word = 2; // Number of sc16 samples per word
 
 
 typedef std::function<uhd::sensor_value_t(const std::string&)> get_sensor_fn_t;
+
+/***********************************************************************
+ * Loopback Function
+ * 
+ **********************************************************************/
+
+int runTXRXiterativeloopback(GraphSettings& graphSettings,
+    SignalSettings& signalSettings,
+    DeviceSettings& deviceSettings)
+{
+    
+
+    // Make a vector of rx channels from 0 to n
+    std::vector<size_t> rx_channel_nums;
+    for (size_t chan = 0; chan < graphSettings.radio_ctrls.size(); chan++) {
+        rx_channel_nums.push_back(chan);
+    }
+
+    /************************************************************************
+     * Start replay of data
+     ***********************************************************************/
+    for (int run_num = 0; run_num < signalSettings.nruns; run_num++) {
+        stop_signal_called = false;
+        int tx_chan_num    = 0;
+
+
+        // Adjust times of tx/rx for looped and iterative configurations
+        // Determine what the timestamp of first transmission in a cycle should be.
+        if (run_num > 0) {
+            uhd::time_spec_t now = graphSettings.graph->get_mb_controller(0)
+                                       ->get_timekeeper(0)
+                                       ->get_time_now();
+            graphSettings.time_spec = uhd::time_spec_t(now + signalSettings.rep_delay);
+
+        } else {
+            uhd::time_spec_t now = graphSettings.graph->get_mb_controller(0)
+                                       ->get_timekeeper(0)
+                                       ->get_time_now();
+            graphSettings.time_spec = uhd::time_spec_t(now + signalSettings.rtime);
+        }
+
+        graphSettings.time_adjustment = uhd::time_spec_t(signalSettings.time_adjust);
+
+
+        std::cout << "TX in Iterative Mode" << std::endl;
+
+        for (int i_play = 0; i_play < graphSettings.replay_ctrls.size(); i_play++) {
+            // adjust time for replay blocks, first replay of next loop is delayed but all
+            // that follow are relative to the first This also accounts for the case where
+            // there is no delay between consecutive runs. There is always a min delay of
+            // signalSettings.rtime due to the nature of synchronization.
+            if ((i_play > 0 and run_num > 0) or signalSettings.rep_delay == 0) {
+                uhd::time_spec_t now = graphSettings.graph->get_mb_controller(0)
+                                           ->get_timekeeper(0)
+                                           ->get_time_now();
+                graphSettings.time_spec =
+                    uhd::time_spec_t(signalSettings.time_adjust + now);
+            }
+
+
+            graphSettings.replay_ctrls[i_play]->config_play(
+                graphSettings.replay_buff_addr,
+                graphSettings.replay_buff_size,
+                graphSettings.replay_chan_vector[i_play]);
+
+            uhd::stream_cmd_t stream_cmd(
+                uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+            stream_cmd.num_samps = signalSettings.nsamps;
+            std::cout << graphSettings.replay_ctrls[i_play]->get_block_id()
+                      << " Port: " << graphSettings.replay_chan_vector[i_play]
+                      << std::endl;
+            std::cout << graphSettings.replay_ctrls[i_play]->get_block_id()
+                      << " Issuing replay command for " << signalSettings.nsamps
+                      << " samps..." << std::endl;
+            stream_cmd.stream_now = false;
+            stream_cmd.time_spec  = graphSettings.time_spec;
+            graphSettings.replay_ctrls[i_play]->issue_stream_cmd(
+                stream_cmd, graphSettings.replay_chan_vector[i_play]);
+
+
+            if (signalSettings.format == "sc16") {
+                    ReceiveControl::recvToFile(graphSettings.rx_stream,
+                    signalSettings.format,
+                    signalSettings.otw,
+                    signalSettings.rx_file,
+                    signalSettings.spb,
+                    signalSettings.nsamps,
+                    graphSettings.time_spec,
+                    rx_channel_nums,
+                    signalSettings.rx_timeout,
+                    deviceSettings.rx_rate,
+                    tx_chan_num,
+                    signalSettings,
+                    run_num,
+                    deviceSettings,
+                    graphSettings,
+                    signalSettings.time_requested); // rx_usrp
+            } else {
+                throw std::runtime_error("Unknown type " + signalSettings.format);
+            }
+
+            graphSettings.time_spec += graphSettings.time_adjustment;
+            tx_chan_num++;
+        }
+
+
+        stop_signal_called = true;
+    }
+
+
+    return EXIT_SUCCESS;
+}
 
 
 /***********************************************************************
@@ -140,7 +263,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync time across devices
     SyncDevices::syncAllDevices(graphStruct);
     // Begin TX and RX
-    ReplayControl::runTXRXiterativeloopback(graphStruct, signal, device);
+    runTXRXiterativeloopback(graphStruct, signal, device);
     while (not stop_signal_called)
         ;
 

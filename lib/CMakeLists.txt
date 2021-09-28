@@ -12,6 +12,7 @@ add_library(cogrf_lib STATIC
     receivefunctions.hpp
     receivefunctions.cpp
     recvtofile.hpp
+    recvtofile.cpp
     
     
     

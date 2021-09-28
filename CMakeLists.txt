@@ -56,9 +56,13 @@ add_executable(iterative_loopback_singlethread examples/iterative_loopback_singl
 message(STATUS "Linking iterative_loopback_singlethread.")
 target_link_libraries(iterative_loopback_singlethread PRIVATE UHD_BOOST cogrf_lib)
 
-add_executable(multicw_iterative examples/multicw_iterative.cpp)
-message(STATUS "Linking multicw_iterative.")
-target_link_libraries(multicw_iterative PRIVATE UHD_BOOST cogrf_lib)
+add_executable(multifreq_loopback examples/multifreq_loopback.cpp)
+message(STATUS "Linking multifreq_loopback.")
+target_link_libraries(multifreq_loopback PRIVATE UHD_BOOST cogrf_lib)
+
+add_executable(rfnoc_txrx_loopback_mem examples/rfnoc_txrx_loopback_mem.cpp)
+message(STATUS "Linking rfnoc_txrx_loopback_mem.")
+target_link_libraries(rfnoc_txrx_loopback_mem PRIVATE UHD_BOOST cogrf_lib)
 
 
 ########################################################################
