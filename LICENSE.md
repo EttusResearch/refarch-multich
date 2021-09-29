@@ -2,10 +2,7 @@
 
 Please refer to the individual files to verify which license applies to them.
 
-UHD and MPM themselves, are, by default, licensed under the GPLv3. If you wish
-to obtain an alternative license, please contact info@ettus.com. Some of UHD's
-dependencies are shipped as part of the repository
-(see https://github.com/EttusResearch/uhd/tree/master/host/lib/deps for details).
+If you wish to obtain an alternative license, please contact info@ettus.com. 
 
 Individual source files in this repository may have different licenses than
 discussed above. Please refer to individual files and directories to verify
