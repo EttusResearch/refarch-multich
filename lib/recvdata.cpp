@@ -242,9 +242,6 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
 
         num_total_samps += num_rx_samps * rx_stream->get_num_channels();
     }
-    if (stop_signal_called) {
-        std::cout << stop_signal_called << std::endl;
-    }
 
 
     // Shut down receiver
@@ -371,7 +368,7 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
                 str(boost::format("Receiver error %s") % md.strerror()));
         }
 
-        num_total_samps += num_rx_samps;
+        num_total_samps += num_rx_samps * rx_stream->get_num_channels();
 
         for (size_t i = 0; i < outfiles.size(); i++) {
             outfiles[i]->write(
@@ -380,9 +377,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
 
         // output_file.write((const char*)buff_ptrs[0], num_rx_samps *
         // sizeof(std::complex<short>));
-    }
-    if (stop_signal_called) {
-        std::cout << stop_signal_called << std::endl;
     }
 
     // Shut down receiver
@@ -397,4 +391,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     for (size_t i = 0; i < outfiles.size(); i++) {
         outfiles[i]->close();
     }
+     std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
+              << " samples..." << std::endl;
 }

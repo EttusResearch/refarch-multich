@@ -74,7 +74,9 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
         graphSettings.graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
     graphSettings.time_spec = uhd::time_spec_t(now + signalSettings.rtime);
     int threadnum           = 0;
-    // Receive graphSettings.rx_stream_vector.size()
+
+    std::signal(SIGINT, &ReplayControl::sig_int_handler);
+
 
     if (signalSettings.format == "sc16") {
         for (int i = 0; i < graphSettings.rx_stream_vector.size(); i = i + 2) {
@@ -156,20 +158,20 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
 
     // If running in continuous mode, call signal handler if user says to stop.
     if (signalSettings.nsamps <= 0) {
-        std::signal(SIGINT, &ReplayControl::sig_int_handler);
+        
 
 
         while (not stop_signal_called)
             ;
 
 
-        // Remove SIGINT handler
-        std::signal(SIGINT, SIG_DFL);
+        
+        
     } else {
         stop_signal_called = true;
     }
-
-
+    // Remove SIGINT handler
+    std::signal(SIGINT, SIG_DFL);
     return EXIT_SUCCESS;
 }
 
@@ -278,11 +280,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         // Kill Replay
         ReplayControl::stopReplay(graphStruct);
     };
-
-
-    while (not stop_signal_called)
-        ;
-
 
     std::cout << "Run complete." << std::endl;
 
