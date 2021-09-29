@@ -1,6 +1,0 @@
-ssh -o StrictHostKeyChecking=no root@10.0.126.33
-vi /data/network/sfp0.network
-vi /data/network/sfp1.network 
-rm /data/network/sfp0.network~
-rm /data/network/sfp1.network~
-reboot now

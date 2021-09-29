@@ -1,6 +1,6 @@
-# Cognitive Radar Testbed Reference Architecture
+# Open Architecture for Radar and EW Research
 
-Welcome to the Cognitive Radar Testbed Reference Architecture software distribution. refarch-multich is the free and open-source reference architecture code for building a multi-channel USRP based Cognitive Radar Testbed, created and sold by NI.
+Welcome to the Open Architecture for Radar and EW Research software distribution. refarch-multich is the free and open-source reference architecture code for building a multi-channel USRP based Radar and EW Research Testbed, created by NI.
 
 refarch-multi supports Ubuntu 20.04 with the N320 and N321 Ettus USRP hardware.
 
@@ -16,14 +16,14 @@ refarch-multich is primarily developed and tested on Linux Ubuntu 20.04 version.
 
 ## Applications
 
-rearch-multich can be used to build stand-alone Cognitive Radar testbeds with USRP™ hardware, or with third-party applications. Some common use-cases for the framework are
+rearch-multich can be used to build stand-alone Radar and EW Research testbeds with USRP™ hardware, or with third-party applications. Some common use-cases for the framework are
 
 - 
 
 ## Directories
 
 **config/**
-Utilities to build a Cognitive Radar Testbed. Includes Setup Script, and Example Yaml File.
+Utilities to build a Radar and EW Research testbed. Includes Ring Buffer script, and example Yaml file.
 
 **lib/**
 The functions used to setup, configure, test, and use the Testbed.
@@ -37,6 +37,9 @@ Utilities to generate and test DAT files that are used in the example applicatio
 
 ## Instructions
 
+Read the Open Architecture for Radar and EW Research User Manual located on the Ettus KB website. 
+
+**quick start/**
 1. Clone or download this repository to the directory of your choice.
 2. Open a terminal in the root folder.
 3. Make the setup script executable using the command `sudo chmod +x setup_script.sh`
