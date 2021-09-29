@@ -39,7 +39,7 @@ Utilities to generate and test DAT files that are used in the example applicatio
 
 Read the Open Architecture for Radar and EW Research User Manual located on the Ettus KB website. 
 
-**quick start/**
+**quick start**
 1. Clone or download this repository to the directory of your choice.
 2. Open a terminal in the root folder.
 3. Make the setup script executable using the command `sudo chmod +x setup_script.sh`
