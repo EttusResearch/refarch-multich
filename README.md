@@ -6,19 +6,20 @@ refarch-multich supports Ubuntu 20.04 with the N320 and N321 Ettus USRP hardware
 
 ## Documentation
 
-For technical documentation related to USRP™ hardware or UHD system design, check out the [UHD and USRP Manual](http://files.ettus.com/manual/). That is where you can find [Installation Instructions](http://files.ettus.com/manual/page_install.html), help on how to [build UHD from source](http://files.ettus.com/manual/page_build_guide.html) on different platforms, development guidelines and reference documentation as well as device usage guidance.
-
-Additionally, be sure to check out the Ettus Research [FAQ](https://kb.ettus.com/Technical_FAQ), and the [Knowledge Base](http://kb.ettus.com/) for useful application notes and tutorials.
+For getting started assistance, check out the User Manual located at the [Knowledge Base](http://kb.ettus.com/). For technical documentation related to USRP™ hardware or UHD system design, check out the [UHD and USRP Manual](http://files.ettus.com/manual/).
 
 ## OS Support
 
-refarch-multich is primarily developed and tested on Linux Ubuntu 20.04 version. Other operating systems will most likely work, too, but have not been tested and are not officially supported.
+refarch-multich is developed and tested on Linux Ubuntu 20.04 version. We have not tested and are not officially supporting other operating systems or versions but if UHD is able to be built on your system this architecture will likely work.
 
 ## Applications
 
 rearch-multich can be used to build stand-alone Radar and EW Research testbeds with USRP™ hardware, or with third-party applications. Some common use-cases for the framework are
 
-- 
+- Cognative Radar Testbed
+- Antenna Array
+- Beamforming Algorithms 
+- Waveform Testing
 
 ## Directories
 
