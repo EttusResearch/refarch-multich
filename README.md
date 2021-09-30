@@ -2,7 +2,7 @@
 
 Welcome to the Open Architecture for Radar and EW Research software distribution. refarch-multich is the free and open-source reference architecture code for building a multi-channel USRP based Radar and EW Research Testbed, created by NI.
 
-refarch-multi supports Ubuntu 20.04 with the N320 and N321 Ettus USRP hardware.
+refarch-multich supports Ubuntu 20.04 with the N320 and N321 Ettus USRP hardware.
 
 ## Documentation
 
