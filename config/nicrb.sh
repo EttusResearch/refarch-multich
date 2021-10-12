@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+# Copyright 2010-2012,2014-2015 Ettus Research LLC
+# Copyright 2021 Ettus Research, a National Instruments Company
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
 set_static(){
 link_name=("enp225s0f0" "enp225s0f1" "enp225s0f2" "enp225s0f3" "enp193s0f0" "enp193s0f1" "enp193s0f2" "enp193s0f3" "enp1s0f0" "enp1s0f1" "enp1s0f2" "enp1s0f3" "enp37s0f0" "enp37s0f1" "enp37s0f2" "enp37s0f3")
 for link in "${link_name[@]}"

@@ -1,5 +1,11 @@
 #!/bin/bash
-###instructions:
+#
+# Copyright 2010-2012,2014-2015 Ettus Research LLC
+# Copyright 2021 Ettus Research, a National Instruments Company
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
 ###1) open a terminal and set working directory to tools directory
 ###2) execute the this script with root priveleges "sudo ./setup_script.sh"
 
