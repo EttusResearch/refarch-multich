@@ -39,6 +39,7 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <boost/math/special_functions/round.hpp>
 #include <boost/program_options.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/fiber/numa/all.hpp>
 #include <chrono>
 #include <csignal>
 #include <fstream>
