@@ -6,12 +6,11 @@
 //
 
 /*******************************************************************************************************************
-Channel to Channel Loopback to Disk
+Channel to Channel Loopback to Memory
 single TX -> ALL RX.
 If the user sets the number of samples to zero, this function will stream
-continuously. WARNING: This can quickly create large files. The multithreaded version
-currently has each USRP in its own thread. Receiving and Writing are not yet
-seperate. This version uses one RX streamer per device.
+continuously. The multithreaded version
+currently has each USRP in its own thread. This version uses one RX streamer per device.
 *******************************************************************************************************************/
 
 #include "blocksettings.hpp"
@@ -70,13 +69,14 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
         graphSettings.graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
     graphSettings.time_spec = uhd::time_spec_t(now + signalSettings.rtime);
     int threadnum           = 0;
-    // Receive graphSettings.rx_stream_vector.size()
+    
     std::signal(SIGINT, &ReplayControl::sig_int_handler);
 
+    // Receive graphSettings.rx_stream_vector.size()
     if (signalSettings.format == "sc16") {
         for (int i = 0; i < graphSettings.rx_stream_vector.size(); i = i + 2) {
             std::cout << "Spawning RX Thread.." << threadnum << std::endl;
-            thread_group.create_thread(std::bind(&ReceiveControl::recvToFileMultithread,
+            thread_group.create_thread(std::bind(&ReceiveControl::recvToMemMultithread,
                 graphSettings.rx_stream_vector[i],
                 signalSettings.format,
                 signalSettings.otw,
@@ -101,7 +101,7 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
         throw std::runtime_error("Unknown type " + signalSettings.format);
     }
 
-
+    
     std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
 
     // Todo: This is the same If and else
@@ -109,7 +109,6 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
         // replay the entire buffer over and over
         std::cout << "Issuing replay command for " << signalSettings.samples_to_replay
                   << " samps in continuous mode..." << std::endl;
-
 
         graphSettings.replay_ctrls[signalSettings.singleTX]->config_play(
             graphSettings.replay_buff_addr,
@@ -149,8 +148,8 @@ int singleTXLoopbackMultithread(GraphSettings& graphSettings,
 
     thread_group.join_all();
 
-    // Remove SIGINT handler
     std::signal(SIGINT, SIG_DFL);
+
     return EXIT_SUCCESS;
 }
 
