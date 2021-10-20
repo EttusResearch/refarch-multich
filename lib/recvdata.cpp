@@ -220,7 +220,7 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
 
     const auto stop_time = start_time + uhd::time_spec_t(time_requested);
     
-
+    std::complex<short> previous=0;
     rx_stream->issue_stream_cmd(stream_cmd);
     int loop_num =0;
     while (not stop_signal_called
@@ -262,10 +262,15 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                 str(boost::format("Receiver error %s") % md.strerror()));
             break;
         }
-
+        /*for (auto i: buffs){
+            for(auto j : i){
+                previous = j+previous;
+            }
+        }*/
+        
         num_total_samps += num_rx_samps * rx_stream->get_num_channels();
     }
-
+    std::cout << previous << std::endl;
 
     // Shut down receiver
     stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
