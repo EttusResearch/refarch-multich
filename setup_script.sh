@@ -118,7 +118,7 @@ if [[ $VAR == *"libuhd"* ]]; then
     return 0
   else
     echo ""
-    echo "Warning: you dont have the correct version Looking for UHD4.1.0. Instead found"
+    echo "Warning: you dont have the correct version Looking for UHD4.0.0. Instead found"
     echo $VAR
     echo "A minimum version of 4.0.0 is required"
     echo ""
@@ -173,6 +173,7 @@ network_buffers_update(){
         echo 'net.core.wmem_default=33554432' >> /etc/sysctl.conf
         echo 'net.core.rmem_default=33554432' >> /etc/sysctl.conf
     fi
+    sysctl -p > /dev/null
 }
 
 cpu_governor(){
