@@ -104,7 +104,7 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
 
     rx_stream->issue_stream_cmd(stream_cmd);
 
-
+    int loop_num=0;
     while (not stop_signal_called
            and (num_requested_samples > num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0
@@ -123,7 +123,7 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
             if (overflow_message) {
                 overflow_message = false;
-                string tempstr ="\n thread:"+to_string(threadnum)+'\n'+"loop_num:"+to_string(loop_num)+'\n';
+                string tempstr ="\n thread:"+to_string(1)+'\n'+"loop_num:"+to_string(loop_num)+'\n';
                 std::cout<<tempstr;
 
             }
@@ -147,6 +147,7 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
         }
 
         num_total_samps += num_rx_samps;
+        loop_num += 1;
 
         for (size_t i = 0; i < outfiles.size(); i++) {
             outfiles[i]->write(
@@ -203,9 +204,8 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
 
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
-    int samps_per_buff_mult=samps_per_buff;
     std::vector<boost::circular_buffer<std::complex<short>>> buffs(
-        rx_channel_nums.size(), boost::circular_buffer<std::complex<short>>(samps_per_buff_mult+1));
+        rx_channel_nums.size(), boost::circular_buffer<std::complex<short>>(samps_per_buff+1));
     // create a vector of pointers to point to each of the channel buffers
     std::vector<std::complex<short>*> buff_ptrs;
     for (size_t i = 0; i < buffs.size(); i++) {
@@ -239,7 +239,7 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                            ->get_timekeeper(0)
                            ->get_time_now()
                        <= stop_time)) {
-        size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff_mult, md, timeout);
+        size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
         loop_num += 1;
 
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
