@@ -113,9 +113,8 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
                            ->get_time_now()
                        <= stop_time)) {
         size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
-
+        loop_num += 1;
         std::cout << "Recv: " << num_rx_samps << std::endl;
-        
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
             break;
@@ -147,7 +146,6 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
         }
 
         num_total_samps += num_rx_samps;
-        loop_num += 1;
 
         for (size_t i = 0; i < outfiles.size(); i++) {
             outfiles[i]->write(
@@ -229,7 +227,7 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
 
     const auto stop_time = start_time + uhd::time_spec_t(time_requested);
     
-    std::complex<short> previous=0;
+
     rx_stream->issue_stream_cmd(stream_cmd);
     int loop_num =0;
     while (not stop_signal_called
@@ -271,15 +269,10 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                 str(boost::format("Receiver error %s") % md.strerror()));
             break;
         }
-        /*for (auto i: buffs){
-            for(auto j : i){
-                previous = j+previous;
-            }
-        }*/
         
         num_total_samps += num_rx_samps * rx_stream->get_num_channels();
     }
-    std::cout << previous << std::endl;
+
 
     // Shut down receiver
     stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
@@ -333,8 +326,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     int rx_identifier = threadnum;
     
     std::vector<std::shared_ptr<std::ofstream>> outfiles;
-    //std::cout<<buffs.size()<<";"<<rx_channel_nums.size()<<std::endl<<std::flush;
-    //std::cout<<buffs.size()<<";"<<outfiles.size() <<std::endl<<std::flush;
     for (size_t i = 0; i < buffs.size(); i++) {
         // rx_identifier * 2 + i in order to get correct channel number in filename
         const std::string this_filename =
@@ -388,6 +379,7 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
                            ->get_time_now()
                        <= stop_time)) {
         size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
+        loop_num += 1;
 
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
@@ -417,6 +409,7 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
             throw std::runtime_error(
                 str(boost::format("Receiver error %s") % md.strerror()));
         }
+
         num_total_samps += num_rx_samps * rx_stream->get_num_channels();
 
         for (size_t i = 0; i < outfiles.size(); i++) {
@@ -433,7 +426,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         }
         */
         //thread_group.join_all();
-        loop_num += 1;
     
     }
     if (stop_signal_called){
