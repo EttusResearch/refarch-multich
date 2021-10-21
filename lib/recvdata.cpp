@@ -113,7 +113,9 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
                            ->get_time_now()
                        <= stop_time)) {
         size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
+
         std::cout << "Recv: " << num_rx_samps << std::endl;
+        
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
             break;
@@ -121,6 +123,11 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
             if (overflow_message) {
                 overflow_message = false;
+                string tempstr ="\n thread:"+to_string(threadnum)+'\n'+"loop_num:"+to_string(loop_num)+'\n';
+                std::cout<<tempstr;
+
+            }
+            if(md.out_of_sequence != true){
                 std::cerr
                     << boost::format(
                            "Got an overflow indication. Please consider the following:\n"
@@ -129,12 +136,14 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
                            % (rx_rate * sizeof(std::complex<short>) / 1e6);
-            }
+                    break;
+                }
             continue;
         }
         if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
             throw std::runtime_error(
                 str(boost::format("Receiver error %s") % md.strerror()));
+            break;
         }
 
         num_total_samps += num_rx_samps;
@@ -242,7 +251,10 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                 overflow_message = false;
                 string tempstr ="\n thread:"+to_string(threadnum)+'\n'+"loop_num:"+to_string(loop_num)+'\n';
                 std::cout<<tempstr;
-                /*std::cerr
+
+            }
+            if(md.out_of_sequence != true){
+                std::cerr
                     << boost::format(
                            "Got an overflow indication. Please consider the following:\n"
                            "  Your write medium must sustain a rate of %fMB/s.\n"
@@ -250,9 +262,6 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
                            % (rx_rate * sizeof(std::complex<short>) / 1e6);
-            */
-            }
-            if(md.out_of_sequence != true){
                     break;
                 }
             continue;
@@ -389,7 +398,10 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
                 overflow_message = false;
                 string tempstr ="\n thread:"+to_string(threadnum)+'\n'+"loop_num:"+to_string(loop_num)+'\n';
                 std::cout<<tempstr;
-                /*std::cerr
+            
+            }
+            if(md.out_of_sequence != true){
+                std::cerr
                     << boost::format(
                            "Got an overflow indication. Please consider the following:\n"
                            "  Your write medium must sustain a rate of %fMB/s.\n"
@@ -397,9 +409,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
                            % (rx_rate * sizeof(std::complex<short>) / 1e6);
-            */
-            }
-            if(md.out_of_sequence != true){
                     break;
                 }
             continue;
@@ -408,7 +417,13 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
             throw std::runtime_error(
                 str(boost::format("Receiver error %s") % md.strerror()));
         }
+        num_total_samps += num_rx_samps * rx_stream->get_num_channels();
 
+        for (size_t i = 0; i < outfiles.size(); i++) {
+            outfiles[i]->write(
+                (const char*)buff_ptrs[i], num_rx_samps * sizeof(std::complex<short>));
+        }
+        /*
         num_total_samps += num_rx_samps;
         boost::thread_group thread_group;
         //Notice that this makes threads every loop, should move outside the loop. - Dylan 
@@ -416,7 +431,8 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
             thread_group.create_thread(std::bind(&write_file, outfiles[i], buff_ptrs[i], num_rx_samps));
 
         }
-        thread_group.join_all();
+        */
+        //thread_group.join_all();
         loop_num += 1;
     
     }
