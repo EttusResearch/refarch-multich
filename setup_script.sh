@@ -42,9 +42,9 @@ main(){
     #Only get the Tag release not all changes --depth 1
     mkdir -p uhd_GitSource
     cd uhd_GitSource
-    git clone --branch UHD-4.0 https://github.com/EttusResearch/uhd.git
+    git clone --branch UHD-4.1 https://github.com/EttusResearch/uhd.git
     cd uhd
-    git checkout a7948beeef648fecd9646bbeaa63126d55cf1fc3
+    git checkout 25d617cad7db69fa04699df5f93ece06b0a61199
 
 
     #Build the UHD driver and install it to system
@@ -120,9 +120,9 @@ if [[ $VAR == *"libuhd"* ]]; then
     echo ""
     echo "Warning: you dont have the correct version Looking for UHD4.1.0. Instead found"
     echo $VAR
-    echo "A minimum version of 4.0.0 is required"
+    echo "A minimum version of 4.1.0 is required"
     echo ""
-    tempText="Would you like to install UHD 4.0.0? "
+    tempText="Would you like to install UHD 4.1.0? "
     if user_input "$tempText"; then
       return 1
     else
@@ -135,7 +135,7 @@ if [[ $VAR == *"libuhd"* ]]; then
     fi
   fi
 else
-  tempText="Would you like to install UHD 4.0.0?"
+  tempText="Would you like to install UHD 4.1.0?"
   if user_input "$tempText"; then
     return 1
   else
