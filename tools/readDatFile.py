@@ -41,7 +41,6 @@ def main():
     for file in os.listdir("/"+args.file_path):
         if file.endswith(".dat"):
             data_array = np.fromfile(args.file_path+"/"+file, dtype=np.int16)
-
             i,q = deinterleave_iq(data_array)
             i = i[:1000]
             q = q[:1000]
@@ -52,8 +51,6 @@ def main():
             plt.xlabel('time')
             plt.savefig("delme"+file+".png")
             subPlot.clear()
-
-            
 
 if __name__ == "__main__":
     main()

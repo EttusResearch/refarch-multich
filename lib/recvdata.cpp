@@ -269,7 +269,6 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                 str(boost::format("Receiver error %s") % md.strerror()));
             break;
         }
-        
         num_total_samps += num_rx_samps * rx_stream->get_num_channels();
     }
 
@@ -304,13 +303,10 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     // Receive to file multi-threaded implementation.
 
     uhd::set_thread_priority_safe();
-
     int num_total_samps = 0;
-
+    unique_ptr<char[]> buf(new char[samps_per_buff]);
     uhd::stream_args_t stream_args(cpu_format, wire_format);
     stream_args.channels = rx_channel_nums;
-    
-    unique_ptr<char[]> buf(new char[samps_per_buff]);
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
     std::vector<boost::circular_buffer<std::complex<short>>> buffs(
@@ -324,7 +320,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     // Correctly lable output files based on run method, single TX->single RX or single TX
     // -> All RX
     int rx_identifier = threadnum;
-    
     std::vector<std::shared_ptr<std::ofstream>> outfiles;
     for (size_t i = 0; i < buffs.size(); i++) {
         // rx_identifier * 2 + i in order to get correct channel number in filename
@@ -341,7 +336,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         //outstream->rdbuf()->pubsetbuf(buf.get(), samps_per_buff*4); // Important
 
         //outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
-
         std::ofstream* outstream = new std::ofstream;
         outstream->rdbuf()->pubsetbuf(buf.get(), samps_per_buff); // Important
         outstream->open(this_filename.c_str(),std::ofstream::binary);

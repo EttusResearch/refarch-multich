@@ -118,10 +118,8 @@ if [[ $VAR == *"libuhd"* ]]; then
     return 0
   else
     echo ""
-    echo "Warning: you dont have the correct version Looking for UHD4.0.0. Instead found"
+    echo "Warning: You dont have the correct version looking for UHD4.0.0. Instead found"
     echo $VAR
-    echo "A minimum version of 4.0.0 is required"
-    echo ""
     tempText="Would you like to install UHD 4.0.0? "
     if user_input "$tempText"; then
       return 1
