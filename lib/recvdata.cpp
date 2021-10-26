@@ -76,12 +76,14 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
     // (use shared_ptr because ofstream is non-copyable)
     std::vector<boost::shared_ptr<std::ofstream>> outfiles;
     for (size_t i = 0; i < buffs.size(); i++) {
-        const std::string this_filename = ReceiveFunctions::generateOutFilename(file,
-            i,
-            tx_chan_num,
-            numrepeat,
-            deviceSettings.tx_freq,
-            deviceSettings.folder_name);
+        const std::string this_filename = ReceiveFunctions::generateRxFilename(file,
+                i,
+                tx_chan_num,
+                numrepeat,
+                deviceSettings.tx_freq,
+                deviceSettings.folder_name,
+                signalSettings.rx_file_streamers,
+                signalSettings.rx_file_location);
         outfiles.push_back(boost::shared_ptr<std::ofstream>(
             new std::ofstream(this_filename.c_str(), std::ofstream::binary)));
     }
@@ -324,13 +326,14 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     for (size_t i = 0; i < buffs.size(); i++) {
         // rx_identifier * 2 + i in order to get correct channel number in filename
         const std::string this_filename =
-            ReceiveFunctions::generateOutFilenameMultithread(file,
+            ReceiveFunctions::generateRxFilename(file,
                 rx_identifier * 2 + i,
                 tx_chan_num,
                 numrepeat,
                 deviceSettings.tx_freq,
                 deviceSettings.folder_name,
-                threadnum);
+                signalSettings.rx_file_streamers,
+                signalSettings.rx_file_location);
         //std::ofstream* outstream =
         //    new std::ofstream(this_filename.c_str(), std::ofstream::binary);
         //outstream->rdbuf()->pubsetbuf(buf.get(), samps_per_buff*4); // Important

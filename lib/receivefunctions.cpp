@@ -26,75 +26,54 @@
 
 // This function generates output file names for the received data.
 
+std::map<int,std::string> getStreamerFileLocation(
+    std::vector<std::string> rx_file_streamers,
+    std::vector<std::string> rx_file_location){
 
-std::string ReceiveFunctions::generateOutFilename(const std::string& base_fn,
-    const size_t& rx_chan_num,
-    const int& tx_chan_num,
-    const int& run_num,
-    const double& tx_freq,
-    const std::string& folder_name)
-{
-    // Generates file names for single threaded implementation.
-    // Todo: This is not dynamic file creation!
-
-    std::string cw_folder =
-        "CW_" + std::to_string(tx_freq * 1e-9) + "_GHz_" + folder_name;
-
-    // Place each run into its own folder based on the CW
-    boost::filesystem::create_directory(
-        str(boost::format("%s%s") % "/mnt/md0/" % cw_folder));
-
-    boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
-    base_fn_fp.replace_extension(boost::filesystem::path(
-        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_" % tx_chan_num % "_rx_"
-            % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq
-            % base_fn_fp.extension().string())));
-
-    return base_fn_fp.string();
+    std::map<int,std::string> usrpFileMap;
+    for(int i =0; i< rx_file_streamers.size(); i++){
+        size_t pos = 0;
+        int n;
+        std::string usrpStringArray = rx_file_streamers[i];
+        while (1) {
+            try {
+                int n = std::stoi(usrpStringArray,&pos);
+                usrpFileMap[n]=rx_file_location[i];
+                usrpStringArray = usrpStringArray.substr(pos);
+            }
+            catch (...) {break;}
+        }
+    }
+    return usrpFileMap;
 }
 
-
-std::string ReceiveFunctions::generateOutFilenameMultithread(const std::string& base_fn,
+std::string ReceiveFunctions::generateRxFilename(const std::string& base_fn,
     const size_t& rx_chan_num,
     const int& tx_chan_num,
     const int& run_num,
     const double& tx_freq,
-    const std::string& folder_name,
-    const int& threadnum)
+    const std::string folder_name,
+    const std::vector<std::string> rx_streamer_string,
+    const std::vector<std::string> rx_file_location)
 {
     // Generates filenames for multithreaded implementation.
+    if (rx_file_location.size() != rx_streamer_string.size()){
+        throw std::runtime_error(
+            "The number of Streamers file locations must match the number of Folder Names");
+    }
+    std::map<int,std::string> streamer_files = getStreamerFileLocation(rx_streamer_string, rx_file_location);
 
     std::string cw_folder =
         "CW_" + std::to_string(tx_freq * 1e-9) + "_GHz_" + folder_name;
-    // Todo: This is not dynamic file creation!
-    // Place each run into its own folder based on the CW
-    // If using a multi-raid system, this code must be changed to accomodate.
-    // Change /home/ts-cogrf/workarea/ and /home/ts-cogrf/workarea/ to accomodate your
-    // file structure. 1st RAID
-    boost::filesystem::create_directory(
-        str(boost::format("%s%s") % "/mnt/md0/" % cw_folder));
-    // 2nd RAID
-    boost::filesystem::create_directory(
-        str(boost::format("%s%s") % "/mnt/md1/" % cw_folder));
 
-    boost::filesystem::path base_fn_fp;
+    boost::filesystem::create_directory(
+        str(boost::format("%s%s") % streamer_files[rx_chan_num] % cw_folder));
+    
+    boost::filesystem::path base_fn_fp(streamer_files[rx_chan_num] + cw_folder + "/" + base_fn);
+    base_fn_fp.replace_extension(boost::filesystem::path(
+        str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_" % tx_chan_num
+            % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq 
+            % base_fn_fp.extension().string())));
+    return base_fn_fp.string();
 
-    // Direct half of the USRPs to one RAID and half to the other.
-    // TODO: THis is hard coded. Need modular.
-    //if (3 < threadnum || threadnum < 12 ) {
-    if (threadnum > 7 ) {
-        boost::filesystem::path base_fn_fp("/mnt/md0/" + cw_folder + "/" + base_fn);
-        base_fn_fp.replace_extension(boost::filesystem::path(
-            str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num
-                % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq % "_thread_"
-                % threadnum % base_fn_fp.extension().string())));
-        return base_fn_fp.string();
-    } else {
-        boost::filesystem::path base_fn_fp("/mnt/md1/" + cw_folder + "/" + base_fn);
-        base_fn_fp.replace_extension(boost::filesystem::path(
-            str(boost::format("%s%02d%s%02d%s%02d%s%02d%s%d%s") % "tx_" % tx_chan_num
-                % "_rx_" % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq % "_thread_"
-                % threadnum % base_fn_fp.extension().string())));
-        return base_fn_fp.string();
-    }
 }
