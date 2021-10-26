@@ -425,9 +425,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         //thread_group.join_all();
     
     }
-    if (stop_signal_called){
-        std::cout << stop_signal_called << std::endl;
-    }
 
     // Shut down receiver
     stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
