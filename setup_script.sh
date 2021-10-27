@@ -114,7 +114,7 @@ user_input(){
 find_UHD_install(){
 VAR=$(ldconfig -p | grep "libuhd.so.4")
 if [[ $VAR == *"libuhd"* ]]; then
-  if [[ $VAR == *"libuhd.so.4.0.0"* ]]; then
+  if [[ $VAR == *"libuhd.so.4.1.0"* ]]; then
     return 0
   else
     echo ""
