@@ -43,8 +43,7 @@ struct ProgramMetaData
         namespace po = boost::program_options;
         // clang-format off
         desc.add_options()
-        ("cfgFile", po::value<std::string>(&cfgFile), "relative path to configuration file")
-        ;
+        ("cfgFile", po::value<std::string>(&cfgFile), "relative path to configuration file");
         // clang-format on
     }
 

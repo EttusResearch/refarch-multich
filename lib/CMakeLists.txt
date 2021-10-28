@@ -20,9 +20,8 @@ add_library(cogrf_lib STATIC
     receivefunctions.cpp
     recvdata.hpp
     recvdata.cpp
-    
-    
-    
+    ArchUSRP.hpp
+    ArchUSRP.cpp
     )
 target_link_libraries(cogrf_lib PRIVATE UHD_BOOST)
 
