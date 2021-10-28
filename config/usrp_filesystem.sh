@@ -5,6 +5,7 @@
 main(){
     check_root
 
+    rm usrp_config.txt
     echo "Determining USRP IP Addresses"
     sudo uhd_find_devices > usrp_config.txt
     echo 'Information Stored in usrp_config.txt'

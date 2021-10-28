@@ -1,39 +1,38 @@
 #!/bin/bash
 
+#Reboot All USRPS
 main(){
     check_root
 
+    rm usrp_config.txt
     echo "Determining USRP IP Addresses"
-    #uhd_find_devices > usrp_config.txt
+    uhd_find_devices > usrp_config.txt
     echo 'Information Stored in usrp_config.txt'
     
     FILENAME="usrp_config.txt"
    
 
-    #while read -r line; do
-    #  if [[ $line =~ ^[A-Za-z0-9:]+[" "]+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    #    ip=$line
-    #   echo "$ip" 
-    # fi
-    #done < "$FILENAME"
-
     #loop over ip addresses
     myarr=($(awk '$1 ~ /addr:/ && $1 !~ /mgmt_addr/ {print $2}' usrp_config.txt))
 
     COUNTER=100
-    for i in "${myarr[@]}"
-    do
+    echo 'WARNING: This proceedure reboots ALL USRPs connected to this host.'
+    tempText="Would you like to reboot all USRPs?"
+    if user_input "$tempText"; then
+      for i in "${myarr[@]}"
+      do
 
-      echo "Rebooting USRP: "$i
-      
-      
-      ssh root@$i 'reboot'
-      
+        echo "Rebooting USRP: "$i
+        
+        
+        ssh root@$i 'reboot'
+        
 
-      #rm sfp1.network
-      let COUNTER++
-    done 
-
+    
+        let COUNTER++
+        done
+    fi 
+  
     exit 0
 }
 
@@ -47,9 +46,10 @@ check_root(){
   fi
 }
 
+#requests User input function
 user_input(){
   echo ""
-  echo "ENTER USRP SFP ADDRESS: "
+  echo "Please answer yes or no: "
   while true; do
       read -p "$1" yn
       case $yn in
@@ -59,6 +59,7 @@ user_input(){
       esac
   done
 }
+
 
 
 main "$@"; exit

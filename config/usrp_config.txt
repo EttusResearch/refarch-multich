@@ -5,7 +5,7 @@ Device Address:
     serial: 31A5C47
     addr: 192.168.100.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.34
     mgmt_addr: 192.168.100.2
     product: n320
@@ -19,7 +19,7 @@ Device Address:
     serial: 31A5C5F
     addr: 192.168.101.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.24
     mgmt_addr: 192.168.101.2
     product: n320
@@ -33,7 +33,7 @@ Device Address:
     serial: 31B0FBA
     addr: 192.168.102.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.25
     mgmt_addr: 192.168.102.2
     product: n320
@@ -47,8 +47,8 @@ Device Address:
     serial: 31EDB76
     addr: 192.168.103.2
     claimed: False
-    fpga: HG
-    mgmt_addr: 10.0.126.45
+    fpga: XG
+    mgmt_addr: 10.0.126.37
     mgmt_addr: 192.168.103.2
     product: n320
     type: n3xx
@@ -61,7 +61,7 @@ Device Address:
     serial: 31EDB77
     addr: 192.168.104.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.42
     mgmt_addr: 192.168.104.2
     product: n320
@@ -75,7 +75,7 @@ Device Address:
     serial: 31EDB79
     addr: 192.168.105.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.49
     mgmt_addr: 192.168.105.2
     product: n320
@@ -89,7 +89,7 @@ Device Address:
     serial: 31EDEDD
     addr: 192.168.106.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.44
     mgmt_addr: 192.168.106.2
     product: n320
@@ -103,7 +103,7 @@ Device Address:
     serial: 31F2904
     addr: 192.168.107.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.47
     mgmt_addr: 192.168.107.2
     product: n320
@@ -117,7 +117,7 @@ Device Address:
     serial: 31F2906
     addr: 192.168.108.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.28
     mgmt_addr: 192.168.108.2
     product: n320
@@ -131,7 +131,7 @@ Device Address:
     serial: 31F2BA2
     addr: 192.168.109.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.39
     mgmt_addr: 192.168.109.2
     product: n320
@@ -145,7 +145,7 @@ Device Address:
     serial: 31F43BB
     addr: 192.168.110.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.46
     mgmt_addr: 192.168.110.2
     product: n320
@@ -159,7 +159,7 @@ Device Address:
     serial: 31F9378
     addr: 192.168.111.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.50
     mgmt_addr: 192.168.111.2
     product: n320
@@ -173,7 +173,7 @@ Device Address:
     serial: 31F937A
     addr: 192.168.112.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.40
     mgmt_addr: 192.168.112.2
     product: n320
@@ -187,7 +187,7 @@ Device Address:
     serial: 31F937D
     addr: 192.168.113.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.41
     mgmt_addr: 192.168.113.2
     product: n320
@@ -201,7 +201,7 @@ Device Address:
     serial: 31F9383
     addr: 192.168.114.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.48
     mgmt_addr: 192.168.114.2
     product: n320
@@ -215,7 +215,7 @@ Device Address:
     serial: 31FFD85
     addr: 192.168.115.2
     claimed: False
-    fpga: HG
+    fpga: XG
     mgmt_addr: 10.0.126.43
     mgmt_addr: 192.168.115.2
     product: n320

@@ -1,10 +1,11 @@
 #!/bin/bash
 
-#
+#Updates the FPGA Images on Each USRP
 
 main(){
     check_root
 
+    rm usrp_config.txt
     echo "Determining USRP IP Addresses"
     sudo uhd_find_devices > usrp_config.txt
     echo 'Information Stored in usrp_config.txt'
@@ -18,16 +19,21 @@ main(){
     
     sudo uhd_images_downloader
     
-    for i in "${myarr[@]}"
-    do
+    echo 'WARNING: This proceedure updates ALL USRPs connected to this host.'
+    tempText="Would you like to update the FPGA Images of all USRPs?"
+    if user_input "$tempText"; then
+    
+      for i in "${myarr[@]}"
+      do
 
-      echo "USRP: "$i
-     
-      update_image "$i" &
-     
+        echo "USRP: "$i
       
-    done
-    wait  
+        update_image "$i" &
+      
+        
+      done
+      wait
+    fi  
 
     exit 0
 }
@@ -47,6 +53,20 @@ update_image(){
 
   local i=$1
   uhd_image_loader --args "type=n3xx,addr=$i,fpga=XG"
+}
+
+#requests User input function
+user_input(){
+  echo ""
+  echo "Please answer yes or no: "
+  while true; do
+      read -p "$1" yn
+      case $yn in
+          [Yy]* ) return 0;;
+          [Nn]* ) return 1;;
+          * ) echo "Please answer yes or no: ";;
+      esac
+  done
 }
 
 
