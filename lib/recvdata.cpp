@@ -27,6 +27,7 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <boost/circular_buffer.hpp>
 
 #ifdef __linux__
 #    include <unistd.h>
@@ -103,7 +104,7 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
 
     rx_stream->issue_stream_cmd(stream_cmd);
 
-
+    int loop_num=0;
     while (not stop_signal_called
            and (num_requested_samples > num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0
@@ -112,6 +113,7 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
                            ->get_time_now()
                        <= stop_time)) {
         size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
+        loop_num += 1;
         std::cout << "Recv: " << num_rx_samps << std::endl;
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
@@ -120,6 +122,11 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
             if (overflow_message) {
                 overflow_message = false;
+                string tempstr ="\n thread:"+to_string(1)+'\n'+"loop_num:"+to_string(loop_num)+'\n';
+                std::cout<<tempstr;
+
+            }
+            if(md.out_of_sequence != true){
                 std::cerr
                     << boost::format(
                            "Got an overflow indication. Please consider the following:\n"
@@ -128,12 +135,14 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
                            % (rx_rate * sizeof(std::complex<short>) / 1e6);
-            }
+                    break;
+                }
             continue;
         }
         if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
             throw std::runtime_error(
                 str(boost::format("Receiver error %s") % md.strerror()));
+            break;
         }
 
         num_total_samps += num_rx_samps;
@@ -156,6 +165,13 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
     std::cout << "Recv Complete...(Press Ctrl+C to exit)" << std::endl;
 }
 
+void write_file(
+    std::shared_ptr<std::ofstream> outfile, 
+    std::complex<short>* buff_ptr,
+    size_t num_rx_samps)
+    {
+        outfile->write((const char*)buff_ptr, num_rx_samps * sizeof(std::complex<short>));
+    }
 
 void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
     const std::string& cpu_format,
@@ -186,8 +202,8 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
 
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
-    std::vector<std::vector<std::complex<short>>> buffs(
-        rx_channel_nums.size(), std::vector<std::complex<short>>(samps_per_buff));
+    std::vector<boost::circular_buffer<std::complex<short>>> buffs(
+        rx_channel_nums.size(), boost::circular_buffer<std::complex<short>>(samps_per_buff+1));
     // create a vector of pointers to point to each of the channel buffers
     std::vector<std::complex<short>*> buff_ptrs;
     for (size_t i = 0; i < buffs.size(); i++) {
@@ -213,7 +229,7 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
     
 
     rx_stream->issue_stream_cmd(stream_cmd);
-
+    int loop_num =0;
     while (not stop_signal_called
            and (num_requested_samples > num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0
@@ -222,7 +238,7 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                            ->get_time_now()
                        <= stop_time)) {
         size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
-
+        loop_num += 1;
 
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
@@ -231,6 +247,11 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
             if (overflow_message) {
                 overflow_message = false;
+                string tempstr ="\n thread:"+to_string(threadnum)+'\n'+"loop_num:"+to_string(loop_num)+'\n';
+                std::cout<<tempstr;
+
+            }
+            if(md.out_of_sequence != true){
                 std::cerr
                     << boost::format(
                            "Got an overflow indication. Please consider the following:\n"
@@ -239,14 +260,15 @@ void ReceiveControl::recvToMemMultithread(uhd::rx_streamer::sptr rx_stream,
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
                            % (rx_rate * sizeof(std::complex<short>) / 1e6);
-            }
+                    break;
+                }
             continue;
         }
         if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
             throw std::runtime_error(
                 str(boost::format("Receiver error %s") % md.strerror()));
+            break;
         }
-
         num_total_samps += num_rx_samps * rx_stream->get_num_channels();
     }
 
@@ -281,17 +303,14 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     // Receive to file multi-threaded implementation.
 
     uhd::set_thread_priority_safe();
-
     int num_total_samps = 0;
-
+    unique_ptr<char[]> buf(new char[samps_per_buff]);
     uhd::stream_args_t stream_args(cpu_format, wire_format);
     stream_args.channels = rx_channel_nums;
-
-    unique_ptr<char[]> buf(new char[samps_per_buff]);
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
-    std::vector<std::vector<std::complex<short>>> buffs(
-        rx_channel_nums.size(), std::vector<std::complex<short>>(samps_per_buff));
+    std::vector<boost::circular_buffer<std::complex<short>>> buffs(
+        rx_channel_nums.size(), boost::circular_buffer<std::complex<short>>(samps_per_buff));
     // create a vector of pointers to point to each of the channel buffers
     std::vector<std::complex<short>*> buff_ptrs;
     for (size_t i = 0; i < buffs.size(); i++) {
@@ -301,7 +320,6 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     // Correctly lable output files based on run method, single TX->single RX or single TX
     // -> All RX
     int rx_identifier = threadnum;
-
     std::vector<std::shared_ptr<std::ofstream>> outfiles;
     for (size_t i = 0; i < buffs.size(); i++) {
         // rx_identifier * 2 + i in order to get correct channel number in filename
@@ -313,10 +331,14 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
                 deviceSettings.tx_freq,
                 deviceSettings.folder_name,
                 threadnum);
-        std::ofstream* outstream =
-            new std::ofstream(this_filename.c_str(), std::ofstream::binary);
-        outstream->rdbuf()->pubsetbuf(buf.get(), samps_per_buff); // Important
+        //std::ofstream* outstream =
+        //    new std::ofstream(this_filename.c_str(), std::ofstream::binary);
+        //outstream->rdbuf()->pubsetbuf(buf.get(), samps_per_buff*4); // Important
 
+        //outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
+        std::ofstream* outstream = new std::ofstream;
+        outstream->rdbuf()->pubsetbuf(buf.get(), samps_per_buff); // Important
+        outstream->open(this_filename.c_str(),std::ofstream::binary);
         outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
     }
     UHD_ASSERT_THROW(outfiles.size() == buffs.size());
@@ -342,7 +364,7 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
     const auto stop_time = start_time + uhd::time_spec_t(time_requested);
 
     rx_stream->issue_stream_cmd(stream_cmd);
-
+    int loop_num =0;
     while (not stop_signal_called
            and (num_requested_samples > num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0
@@ -351,6 +373,7 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
                            ->get_time_now()
                        <= stop_time)) {
         size_t num_rx_samps = rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout);
+        loop_num += 1;
 
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
@@ -359,6 +382,11 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
             if (overflow_message) {
                 overflow_message = false;
+                string tempstr ="\n thread:"+to_string(threadnum)+'\n'+"loop_num:"+to_string(loop_num)+'\n';
+                std::cout<<tempstr;
+            
+            }
+            if(md.out_of_sequence != true){
                 std::cerr
                     << boost::format(
                            "Got an overflow indication. Please consider the following:\n"
@@ -367,7 +395,8 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
                            % (rx_rate * sizeof(std::complex<short>) / 1e6);
-            }
+                    break;
+                }
             continue;
         }
         if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
@@ -381,9 +410,20 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
             outfiles[i]->write(
                 (const char*)buff_ptrs[i], num_rx_samps * sizeof(std::complex<short>));
         }
+        /*
+        num_total_samps += num_rx_samps;
+        boost::thread_group thread_group;
+        //Notice that this makes threads every loop, should move outside the loop. - Dylan 
+        for (size_t i = 0; i < outfiles.size(); i++) {
+            thread_group.create_thread(std::bind(&write_file, outfiles[i], buff_ptrs[i], num_rx_samps));
 
-        // output_file.write((const char*)buff_ptrs[0], num_rx_samps *
-        // sizeof(std::complex<short>));
+        }
+        */
+        //thread_group.join_all();
+    
+    }
+    if (stop_signal_called){
+        std::cout << stop_signal_called << std::endl;
     }
 
     // Shut down receiver
