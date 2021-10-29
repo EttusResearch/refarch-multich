@@ -54,7 +54,7 @@ main(){
 }
 
 check_root(){
-    if [ `whoami` == root ]; then
+    if [ `whoami` == 'root' ]; then
     echo "(1) already root"
   else
     echo "Error: Please run this as root with the following command"
