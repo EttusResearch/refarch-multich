@@ -12,8 +12,6 @@ main(){
     echo 'Information Stored in usrp_config.txt'
     
     FILENAME="usrp_config.txt"
-   
-
 
     #loop over ip addresses
     myarr=($(awk '$1 ~ /addr:/ && $1 !~ /mgmt_addr/ {print $2}' usrp_config.txt))
@@ -80,6 +78,5 @@ user_input(){
       esac
   done
 }
-
 
 main "$@"; exit
