@@ -5,34 +5,27 @@
 
 main(){
     check_root
-
     rm usrp_config.txt
     echo "Determining USRP IP Addresses"
     uhd_find_devices > usrp_config.txt
     echo 'Information Stored in usrp_config.txt'
-    
     FILENAME="usrp_config.txt"
-
     #loop over ip addresses
     myarr=($(awk '$1 ~ /addr:/ && $1 !~ /mgmt_addr/ {print $2}' usrp_config.txt))
-
     rm USRP_IP.txt
     rm sfp1.network
-
     echo 'WARNING: This proceedure updates ALL USRPs connected to this host.'
     tempText="Would you like to update the SFP1 IP address of all USRPs?"
     if user_input "$tempText"; then
       COUNTER=100
       for i in "${myarr[@]}"
       do
-
         echo "USRP: "$i
         #echo "ENTER SFP ADDRESS"
         #read sfp_address
         sfp_address=192.168.$COUNTER.2
         echo "SFP1 ADDRESS: " $sfp_address
 
-        
         printf "[Match]\n" > sfp1.network
         printf "Name=sfp1\n" >>sfp1.network
         printf "\n" >> sfp1.network
@@ -48,7 +41,6 @@ main(){
         
         ssh root@$i 'rm /data/network/sfp1.network'
         scp sfp1.network root@$i:/data/network 
-        
         let COUNTER++
       done 
     fi
