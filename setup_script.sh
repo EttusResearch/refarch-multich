@@ -42,9 +42,9 @@ main(){
     #Only get the Tag release not all changes --depth 1
     mkdir -p uhd_GitSource
     cd uhd_GitSource
-    git clone --branch UHD-4.0 https://github.com/EttusResearch/uhd.git
+    git clone --branch UHD-4.1 https://github.com/EttusResearch/uhd.git
     cd uhd
-    git checkout a7948beeef648fecd9646bbeaa63126d55cf1fc3
+    git checkout 25d617cad7db69fa04699df5f93ece06b0a61199
 
 
     #Build the UHD driver and install it to system
@@ -114,13 +114,15 @@ user_input(){
 find_UHD_install(){
 VAR=$(ldconfig -p | grep "libuhd.so.4")
 if [[ $VAR == *"libuhd"* ]]; then
-  if [[ $VAR == *"libuhd.so.4.0.0"* ]]; then
+  if [[ $VAR == *"libuhd.so.4.1.0"* ]]; then
     return 0
   else
     echo ""
     echo "Warning: You dont have the correct version looking for UHD4.0.0. Instead found"
     echo $VAR
-    tempText="Would you like to install UHD 4.0.0? "
+
+    tempText="Would you like to install UHD 4.1.0? "
+
     if user_input "$tempText"; then
       return 1
     else
@@ -133,7 +135,7 @@ if [[ $VAR == *"libuhd"* ]]; then
     fi
   fi
 else
-  tempText="Would you like to install UHD 4.0.0?"
+  tempText="Would you like to install UHD 4.1.0?"
   if user_input "$tempText"; then
     return 1
   else
