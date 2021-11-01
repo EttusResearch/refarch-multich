@@ -7,10 +7,10 @@
 #
 
 set_static(){
-link_name=("enp225s0f0" "enp225s0f1" "enp225s0f2" "enp225s0f3" "enp193s0f0" "enp193s0f1" "enp193s0f2" "enp193s0f3" "enp1s0f0" "enp1s0f1" "enp1s0f2" "enp1s0f3" "enp37s0f0" "enp37s0f1" "enp37s0f2" "enp37s0f3")
+link_name=("ens10f4" "ens10f5" "ens10f6" "ens10f7" "ens10f0" "ens10f1" "ens10f2" "ens10f3" "ens4f4" "ens4f5" "ens4f6" "ens4f7" "ens4f0" "ens4f1" "ens4f2" "ens4f3")
 for link in "${link_name[@]}"
 do
-    sudo ethtool -G $link tx 4096 rx 4096
+    sudo ethtool -G $link tx 8160 rx 8160
 done
 }
 main(){
