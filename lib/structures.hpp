@@ -77,7 +77,7 @@ struct SignalSettings
     // Load from disk
     std::string rx_file;
     std::vector<std::string> rx_file_location;
-    std::vector<std::string> rx_file_streamers;
+    std::vector<std::string> rx_file_channels;
     std::string otw;
     std::string type;
     size_t spb, nruns;
@@ -101,7 +101,7 @@ struct SignalSettings
         desc.add_options()
         ("rx-file", po::value<std::string>(&rx_file)->default_value("test.dat"), "name of the file to write binary samples to")
         ("rx-file-location", po::value<std::vector<std::string>>(&rx_file_location))
-        ("rx-file-streamers",po::value<std::vector<std::string>>(&rx_file_streamers))
+        ("rx-file-channels",po::value<std::vector<std::string>>(&rx_file_channels))
         ("otw", po::value<std::string>(&otw)->default_value("sc16"), "specify the over-the-wire sample mode")
         ("type", po::value<std::string>(&type)->default_value("short"), "sample type in file: double, float, or short")
         ("spb", po::value<size_t>(&spb)->default_value(0), "samples per buffer, 0 for default")

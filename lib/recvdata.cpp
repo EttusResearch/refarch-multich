@@ -82,7 +82,7 @@ void ReceiveControl::recvToFile(uhd::rx_streamer::sptr rx_stream,
                 numrepeat,
                 deviceSettings.tx_freq,
                 deviceSettings.folder_name,
-                signalSettings.rx_file_streamers,
+                signalSettings.rx_file_channels,
                 signalSettings.rx_file_location);
         outfiles.push_back(boost::shared_ptr<std::ofstream>(
             new std::ofstream(this_filename.c_str(), std::ofstream::binary)));
@@ -332,7 +332,7 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
                 numrepeat,
                 deviceSettings.tx_freq,
                 deviceSettings.folder_name,
-                signalSettings.rx_file_streamers,
+                signalSettings.rx_file_channels,
                 signalSettings.rx_file_location);
         //std::ofstream* outstream =
         //    new std::ofstream(this_filename.c_str(), std::ofstream::binary);
@@ -344,6 +344,7 @@ void ReceiveControl::recvToFileMultithread(uhd::rx_streamer::sptr rx_stream,
         outstream->open(this_filename.c_str(),std::ofstream::binary);
         outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
     }
+    
     UHD_ASSERT_THROW(outfiles.size() == buffs.size());
     UHD_ASSERT_THROW(buffs.size() == rx_channel_nums.size());
 
