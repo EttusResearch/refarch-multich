@@ -5,94 +5,96 @@
 #include <boost/circular_buffer.hpp>
 #include <thread>
 #include <fstream>
+#include <csignal>
+#include <stdio.h>
 
 
-ArchUSRP::ArchUSRP(int argc, char* argv[]){
+RefArch::RefArch(int argc, char* argv[]){
     this->addProgramOptions();
     this->storeProgramOptions(argc, argv);
     this->addAddresstoArgs();
 }
 
 //structures
-void ArchUSRP::addProgramOptions(){
+void RefArch::addProgramOptions(){
     namespace po = boost::program_options;
         // clang-format off
         //TODO: Verify we are still using the comments for each value in
         //or if we can delete and push explaination to top of each structure
 
-        desc.add_options()
-        ("cfgFile", po::value<std::string>(&cfgFile), "relative path to configuration file")
-        ("args", po::value<std::string>(&args)->default_value(""), "uhd transmit device address args")
-        ("tx-rate", po::value<double>(&tx_rate)->default_value(200e6), "rate of transmit outgoing samples")
-        ("rx-rate", po::value<double>(&rx_rate)->default_value(25e6), "rate of receive incoming samples")
-        ("tx-gain", po::value<double>(&tx_gain)->default_value(0), "gain for the transmit RF chain")
-        ("rx-gain", po::value<double>(&rx_gain)->default_value(0), "gain for the receive RF chain")
-        ("ref", po::value<std::string>(&ref)->default_value("external"), "clock reference (internal, external, mimo)")
-        ("tx-freq", po::value<double>(&tx_freq)->default_value(2000e6), "transmit RF center frequency in Hz")
-        ("rx-freq", po::value<double>(&rx_freq)->default_value(2000e6), "receive RF center frequency in Hz")
-        ("address", po::value<std::vector<std::string>>(&address), "uhd transmit device address args")
-        ("tx-ant", po::value<std::string>(&tx_ant)->default_value("TX/RX"), "transmit antenna selection")
-        ("rx-ant", po::value<std::string>(&rx_ant)->default_value("RX2"), "receive antenna selection")
-        ("streamargs", po::value<std::string>(&streamargs)->default_value(""), "stream args")
-        ("tx-bw", po::value<double>(&tx_bw)->default_value(0), "analog transmit filter bandwidth in Hz")
-        ("rx-bw", po::value<double>(&rx_bw)->default_value(0), "analog receive filter bandwidth in Hz")
-        ("lo", po::value<std::vector<std::string>>(&lo), "device LO settings")
-        ("rx-file", po::value<std::string>(&rx_file)->default_value("test.dat"), "name of the file to write binary samples to")
-        ("rx-file-location", po::value<std::vector<std::string>>(&rx_file_location))
-        ("rx-file-streamers",po::value<std::vector<std::string>>(&rx_file_streamers))
-        ("otw", po::value<std::string>(&otw)->default_value("sc16"), "specify the over-the-wire sample mode")
-        ("type", po::value<std::string>(&type)->default_value("short"), "sample type in file: double, float, or short")
-        ("spb", po::value<size_t>(&spb)->default_value(0), "samples per buffer, 0 for default")
-        ("rx_timeout", po::value<double>(&rx_timeout)->default_value(double(3)), "number of seconds before rx streamer times out")
-        ("format", po::value<std::string>(&format)->default_value("sc16"), "File sample format: sc16, fc32, or fc64")
-        ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"), "name of the file to transmit")
-        ("nsamps", po::value<size_t>(&nsamps)->default_value(16000), "number of samples to play (0 for infinite)")
-        ("replay_time",po::value<double>(&rtime)->default_value(2.0), "Replay Block Time Delay (seconds)")
-        ("nruns", po::value<size_t>(&nruns)->default_value(1), "number of repeats")
-        ("repeat_delay", po::value<double>(&rep_delay)->default_value(0), "delay between repeats (seconds)")
-        ("time_adjust",po::value<double>(&time_adjust)->default_value(2.0), "If tramsmitting in iterative mode, seperation between per-channel transmission (seconds).")
-        ("singleTX",po::value<int>(&singleTX)->default_value(0), "TX Channel)")
-        ("time_requested", po::value<double>(&time_requested)->default_value(0.0), "Single Loopback Continous Time Limit (s).")
+        RA_desc.add_options()
+        ("cfgFile", po::value<std::string>(&RA_cfgFile), "relative path to configuration file")
+        ("args", po::value<std::string>(&RA_args)->default_value(""), "uhd transmit device address args")
+        ("tx-rate", po::value<double>(&RA_tx_rate)->default_value(200e6), "rate of transmit outgoing samples")
+        ("rx-rate", po::value<double>(&RA_rx_rate)->default_value(25e6), "rate of receive incoming samples")
+        ("tx-gain", po::value<double>(&RA_tx_gain)->default_value(0), "gain for the transmit RF chain")
+        ("rx-gain", po::value<double>(&RA_rx_gain)->default_value(0), "gain for the receive RF chain")
+        ("ref", po::value<std::string>(&RA_ref)->default_value("external"), "clock reference (internal, external, mimo)")
+        ("tx-freq", po::value<double>(&RA_tx_freq)->default_value(2000e6), "transmit RF center frequency in Hz")
+        ("rx-freq", po::value<double>(&RA_rx_freq)->default_value(2000e6), "receive RF center frequency in Hz")
+        ("address", po::value<std::vector<std::string>>(&RA_address), "uhd transmit device address args")
+        ("tx-ant", po::value<std::string>(&RA_tx_ant)->default_value("TX/RX"), "transmit antenna selection")
+        ("rx-ant", po::value<std::string>(&RA_rx_ant)->default_value("RX2"), "receive antenna selection")
+        ("streamargs", po::value<std::string>(&RA_streamargs)->default_value(""), "stream args")
+        ("tx-bw", po::value<double>(&RA_tx_bw)->default_value(0), "analog transmit filter bandwidth in Hz")
+        ("rx-bw", po::value<double>(&RA_rx_bw)->default_value(0), "analog receive filter bandwidth in Hz")
+        ("lo", po::value<std::vector<std::string>>(&RA_lo), "device LO settings")
+        ("rx-file", po::value<std::string>(&RA_rx_file)->default_value("test.dat"), "name of the file to write binary samples to")
+        ("rx-file-location", po::value<std::vector<std::string>>(&RA_rx_file_location))
+        ("rx-file-streamers",po::value<std::vector<std::string>>(&RA_rx_file_streamers))
+        ("otw", po::value<std::string>(&RA_otw)->default_value("sc16"), "specify the over-the-wire sample mode")
+        ("type", po::value<std::string>(&RA_type)->default_value("short"), "sample type in file: double, float, or short")
+        ("spb", po::value<size_t>(&RA_spb)->default_value(0), "samples per buffer, 0 for default")
+        ("rx_timeout", po::value<double>(&RA_rx_timeout)->default_value(double(3)), "number of seconds before rx streamer times out")
+        ("format", po::value<std::string>(&RA_format)->default_value("sc16"), "File sample format: sc16, fc32, or fc64")
+        ("file", po::value<std::string>(&RA_file)->default_value("usrp_samples.dat"), "name of the file to transmit")
+        ("nsamps", po::value<size_t>(&RA_nsamps)->default_value(16000), "number of samples to play (0 for infinite)")
+        ("replay_time",po::value<double>(&RA_rtime)->default_value(2.0), "Replay Block Time Delay (seconds)")
+        ("nruns", po::value<size_t>(&RA_nruns)->default_value(1), "number of repeats")
+        ("repeat_delay", po::value<double>(&RA_rep_delay)->default_value(0), "delay between repeats (seconds)")
+        ("time_adjust",po::value<double>(&RA_time_adjust)->default_value(2.0), "If tramsmitting in iterative mode, seperation between per-channel transmission (seconds).")
+        ("singleTX",po::value<int>(&RA_singleTX)->default_value(0), "TX Channel)")
+        ("time_requested", po::value<double>(&RA_time_requested)->default_value(0.0), "Single Loopback Continous Time Limit (s).")
         ;
         // clang-format on
 }
-void ArchUSRP::addAddresstoArgs(){
-    argsWithAddress = "" + args;
-    for (const auto& addr : address) {
-        argsWithAddress += ", " + addr;
+void RefArch::addAddresstoArgs(){
+    RA_argsWithAddress = "" + RA_args;
+    for (const auto& addr : RA_address) {
+        RA_argsWithAddress += ", " + addr;
     }
-    args = argsWithAddress;
+    RA_args = RA_argsWithAddress;
 }
-void ArchUSRP::storeProgramOptions(int argc, char* argv[]){
+void RefArch::storeProgramOptions(int argc, char* argv[]){
     namespace po = boost::program_options;
     // store program options from cmd line
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+    po::store(po::parse_command_line(argc, argv, RA_desc), RA_vm);
+    po::notify(RA_vm);
     // store program options from config file
-    if (vm.count("cfgFile")) {
-        std::cout << "Load cfg_file: " << cfgFile << std::endl;
+    if (RA_vm.count("cfgFile")) {
+        std::cout << "Load cfg_file: " << RA_cfgFile << std::endl;
         // standard streams don't accept a standard string, so pass the string using
         // c_str()
-        po::store(po::parse_config_file(cfgFile.c_str(), desc), vm);
-        po::notify(vm);
+        po::store(po::parse_config_file(RA_cfgFile.c_str(), RA_desc), RA_vm);
+        po::notify(RA_vm);
     }
 }
 //sync
-void ArchUSRP::setSources(){
+void RefArch::setSources(){
     // Set clock reference
     std::cout << "Locking motherboard reference/time sources..." << std::endl;
     // Lock mboard clocks
-    for (size_t i = 0; i < graph->get_num_mboards(); ++i) {
-        graph->get_mb_controller(i)->set_clock_source(ref);
-        graph->get_mb_controller(i)->set_time_source(ref);
+    for (size_t i = 0; i < RA_graph->get_num_mboards(); ++i) {
+        RA_graph->get_mb_controller(i)->set_clock_source(RA_ref);
+        RA_graph->get_mb_controller(i)->set_time_source(RA_ref);
     }
 }
-int ArchUSRP::syncAllDevices()
+int RefArch::syncAllDevices()
 {
     // Synchronize Devices
     bool sync_result;
-    const uhd::time_spec_t timeSpec = 0.0;
-    sync_result = graph->synchronize_devices(timeSpec, true);
+    const uhd::time_spec_t syncTime = 0.0;
+    sync_result = RA_graph->synchronize_devices(syncTime, true);
     // wait for one sec to ensure rising edge is found
     //TODO: Double check this
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -103,41 +105,41 @@ int ArchUSRP::syncAllDevices()
     }
     return EXIT_SUCCESS;
 }
-void ArchUSRP::killLOs(){
+void RefArch::killLOs(){
     std::cout << "Shutting Down LOs" << std::endl;
     int device = 0;
-    while (device < lo.size()) {
-        if (lo[device] == "source" or lo[device] == "distributor") {
-            graph->get_tree()->access<bool>(
+    while (device < RA_lo.size()) {
+        if (RA_lo[device] == "source" or RA_lo[device] == "distributor") {
+            RA_graph->get_tree()->access<bool>(
                 str(boost::format("%s%d%s") % "blocks/" % device % 
                 "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_0/export"))
                 .set(false);
-            graph->get_tree()->access<bool>(
+            RA_graph->get_tree()->access<bool>(
                 str(boost::format("%s%d%s") % "blocks/" % device % 
                 "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_1/export"))
                 .set(false);
-            graph->get_tree()->access<bool>(
+            RA_graph->get_tree()->access<bool>(
                 str(boost::format("%s%d%s") % "blocks/" % device % 
                 "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_2/export"))
                 .set(false);
-            graph->get_tree()->access<bool>(
+            RA_graph->get_tree()->access<bool>(
                 str(boost::format("%s%d%s") % "blocks/" % device % 
                 "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_3/export"))
                 .set(false);
 
-            graph->get_tree()->access<bool>(
+            RA_graph->get_tree()->access<bool>(
                 str(boost::format("%s%d%s") % "blocks/" % device % 
                 "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_0/export"))
                 .set(false);
-            graph->get_tree()->access<bool>(
+            RA_graph->get_tree()->access<bool>(
                 str(boost::format("%s%d%s") % "blocks/" % device % 
                 "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_1/export"))
                 .set(false);
-            graph->get_tree()->access<bool>(
+            RA_graph->get_tree()->access<bool>(
                 str(boost::format("%s%d%s") % "blocks/" % device % 
                 "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_2/export"))
                 .set(false);
-            graph->get_tree()->access<bool>(
+            RA_graph->get_tree()->access<bool>(
                 str(boost::format("%s%d%s") % "blocks/" % device % 
                 "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_3/export"))
                 .set(false);
@@ -146,22 +148,22 @@ void ArchUSRP::killLOs(){
     }
     std::cout << "Shutting Down LOs: Done!" << std::endl;
 }
-void ArchUSRP::setLOsfromConfig()
+void RefArch::setLOsfromConfig()
 {
     // Set LOs per config from config file
     int device = 0;
-    while (device < lo.size()) {
-        if (lo[device] == "source") {
-            ArchUSRP::setSource(device);
-        } else if (lo[device] == "terminal") {
-            ArchUSRP::setTerminal(device);
-        } else if (lo[device] == "distributor") {
-            ArchUSRP::setDistributor(device);
+    while (device < RA_lo.size()) {
+        if (RA_lo[device] == "source") {
+            RefArch::setSource(device);
+        } else if (RA_lo[device] == "terminal") {
+            RefArch::setTerminal(device);
+        } else if (RA_lo[device] == "distributor") {
+            RefArch::setDistributor(device);
         }
     device++;
     }
 }
-void ArchUSRP::setSource(int device)
+void RefArch::setSource(int device)
 {
     std::cout << "Setting Device# " << device << " Radio# " << device * 2 << ", Radio# "
               << device * 2 + 1 << " to: "
@@ -169,124 +171,124 @@ void ArchUSRP::setSource(int device)
     // Set Device to System LO Source
     // No difference between RX and TX LOs, just used RX.
     // TODO: Hardcoded number of channels per device.
-    radio_ctrls[device * 2]->set_tx_lo_export_enabled(false, "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_tx_lo_export_enabled(false, "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_tx_lo_export_enabled(false, "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_tx_lo_export_enabled(false, "lo1", 0);
 
-    radio_ctrls[device * 2]->set_rx_lo_export_enabled(true, "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_rx_lo_export_enabled(true, "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_rx_lo_export_enabled(true, "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_rx_lo_export_enabled(true, "lo1", 0);
 
     // TODO: this did not clean up nice. Reformat.
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_0/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_1/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_2/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_3/export"))
         .set(true);
 
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_0/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_1/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_2/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_3/export"))
         .set(true);
 
-    radio_ctrls[device * 2]->set_tx_lo_source("external", "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_tx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_tx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_tx_lo_source("external", "lo1", 0);
 
-    radio_ctrls[device * 2]->set_rx_lo_source("external", "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_rx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_rx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_rx_lo_source("external", "lo1", 0);
 }
-void ArchUSRP::setTerminal(int device)
+void RefArch::setTerminal(int device)
 {
     // TODO: Hardcoded number of channels per device.
     std::cout << "Setting Device# " << device << " Radio# " << device * 2 << ", Radio# "
               << device * 2 + 1 << " to: "
               << "terminal" << std::endl;
-    radio_ctrls[device * 2]->set_tx_lo_source("external", "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_tx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_tx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_tx_lo_source("external", "lo1", 0);
 
-    radio_ctrls[device * 2]->set_rx_lo_source("external", "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_rx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_rx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_rx_lo_source("external", "lo1", 0);
 }
-void ArchUSRP::setDistributor(int device)
+void RefArch::setDistributor(int device)
 {
     // TODO: Hardcoded number of channels per device.
     std::cout << "Setting Device# " << device << " Radio# " << device * 2 << ", Radio# "
               << device * 2 + 1 << " to: "
               << "distributor" << std::endl;
 
-    radio_ctrls[device * 2]->set_tx_lo_source("external", "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_tx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_tx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_tx_lo_source("external", "lo1", 0);
 
-    radio_ctrls[device * 2]->set_rx_lo_source("external", "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_rx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_rx_lo_source("external", "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_rx_lo_source("external", "lo1", 0);
 
-    radio_ctrls[device * 2]->set_tx_lo_export_enabled(false, "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_tx_lo_export_enabled(false, "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_tx_lo_export_enabled(false, "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_tx_lo_export_enabled(false, "lo1", 0);
 
-    radio_ctrls[device * 2]->set_rx_lo_export_enabled(false, "lo1", 0);
-    radio_ctrls[device * 2 + 1]->set_rx_lo_export_enabled(false, "lo1", 0);
+    RA_radio_ctrls[device * 2]->set_rx_lo_export_enabled(false, "lo1", 0);
+    RA_radio_ctrls[device * 2 + 1]->set_rx_lo_export_enabled(false, "lo1", 0);
 
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_0/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_1/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_2/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/tx_frontends/0/los/lo1/lo_distribution/LO_OUT_3/export"))
         .set(true);
 
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_0/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_1/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_2/export"))
         .set(true);
-    graph->get_tree()->access<bool>(
+    RA_graph->get_tree()->access<bool>(
         str(boost::format("%s%d%s") % "blocks/" % device % 
         "/Radio#0/dboard/rx_frontends/0/los/lo1/lo_distribution/LO_OUT_3/export"))
         .set(true);
 
 }
-void ArchUSRP::checkRXSensorLock()
+void RefArch::checkRXSensorLock()
 {
     // Check Locked RX Sensors
     std::vector<std::string> rx_sensor_names;
-    for (auto& rctrl : radio_ctrls) {
+    for (auto& rctrl : RA_radio_ctrls) {
         rx_sensor_names = rctrl->get_rx_sensor_names(0);
         for (auto& name : rx_sensor_names) {
             uhd::sensor_value_t rx_sensor_value = rctrl->get_rx_sensor(name, 0);
@@ -299,11 +301,11 @@ void ArchUSRP::checkRXSensorLock()
         }
     }
 }
-void ArchUSRP::checkTXSensorLock()
+void RefArch::checkTXSensorLock()
 {
     // Check Locked TX Sensors
     std::vector<std::string> tx_sensor_names;
-    for (auto& rctrl : radio_ctrls) {
+    for (auto& rctrl : RA_radio_ctrls) {
         tx_sensor_names = rctrl->get_tx_sensor_names(0);
         for (auto& name : tx_sensor_names) {
             uhd::sensor_value_t tx_sensor_value = rctrl->get_tx_sensor(name, 0);
@@ -317,7 +319,7 @@ void ArchUSRP::checkTXSensorLock()
     }
 }
 //replaycontrol
-int ArchUSRP::importData()
+int RefArch::importData()
 {
     // Constants related to the Replay block
     const size_t replay_word_size = 8; // Size of words used by replay block
@@ -327,7 +329,7 @@ int ArchUSRP::importData()
      * Read the data to replay
      ***********************************************************************/
     // Open the file
-    std::ifstream infile(file.c_str(), std::ifstream::binary);
+    std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     if (!infile.is_open()) {
         std::cerr << "Could not open specified file" << std::endl;
         exit(0);
@@ -340,18 +342,18 @@ int ArchUSRP::importData()
 
     // Calculate the number of 64-bit words and samples to replay
     size_t words_to_replay = file_size / replay_word_size;
-    samples_to_replay      = file_size / sample_size;
-    replay_buff_addr = 0;
-    replay_buff_size = samples_to_replay * sample_size;
+    RA_samples_to_replay      = file_size / sample_size;
+    RA_replay_buff_addr = 0;
+    RA_replay_buff_size = RA_samples_to_replay * sample_size;
 
     // Create buffer
-    std::vector<char> tx_buffer(samples_to_replay * sample_size);
+    std::vector<char> tx_buffer(RA_samples_to_replay * sample_size);
     char* tx_buf_ptr = &tx_buffer[0];
 
     // Read file into buffer, rounded down to number of words
-    infile.read(tx_buf_ptr, samples_to_replay * sample_size);
+    infile.read(tx_buf_ptr, RA_samples_to_replay * sample_size);
     infile.close();
-    for (int i = 0; i < replay_ctrls.size(); i = i + 2) {
+    for (int i = 0; i < RA_replay_ctrls.size(); i = i + 2) {
         /************************************************************************
          * Configure replay block
          ***********************************************************************/
@@ -359,21 +361,21 @@ int ArchUSRP::importData()
         // size to the file we want to play back (rounded down to a multiple of
         // 64-bit words). Note that it is allowed to playback a different size or
         // location from what was recorded.
-        std::cout << replay_ctrls[i]->get_block_id() << std::endl;
-        replay_ctrls[i]->record(
-            replay_buff_addr, replay_buff_size, 0);
+        std::cout << RA_replay_ctrls[i]->get_block_id() << std::endl;
+        RA_replay_ctrls[i]->record(
+            RA_replay_buff_addr, RA_replay_buff_size, 0);
         // Display replay configuration
-        std::cout << "Replay file size:     " << replay_buff_size
-                  << " bytes (" << words_to_replay << " qwords, " << samples_to_replay
+        std::cout << "Replay file size:     " << RA_replay_buff_size
+                  << " bytes (" << words_to_replay << " qwords, " << RA_samples_to_replay
                   << " samples)" << std::endl
                   << "Record base address:  0x" << std::hex
-                  << replay_ctrls[i]->get_record_offset(0) << std::dec
+                  << RA_replay_ctrls[i]->get_record_offset(0) << std::dec
                   << std::endl
                   << "Record buffer size:   "
-                  << replay_ctrls[i]->get_record_size(0) << " bytes"
+                  << RA_replay_ctrls[i]->get_record_size(0) << " bytes"
                   << std::endl
                   << "Record fullness:      "
-                  << replay_ctrls[i]->get_record_fullness(0) << " bytes"
+                  << RA_replay_ctrls[i]->get_record_fullness(0) << " bytes"
                   << std::endl
                   << std::endl;
         // Restart record buffer repeatedly until no new data appears on the Replay
@@ -381,23 +383,23 @@ int ArchUSRP::importData()
         uint32_t fullness;
         std::cout << "Emptying record buffer..." << std::endl;
         do {
-            std::chrono::system_clock::time_point time_spec;
+            std::chrono::system_clock::time_point replay_start_time;
             std::chrono::system_clock::duration time_diff;
-            replay_ctrls[i]->record_restart(0);
+            RA_replay_ctrls[i]->record_restart(0);
             // Make sure the record buffer doesn't start to fill again
-            time_spec = std::chrono::system_clock::now();
+            replay_start_time = std::chrono::system_clock::now();
             do {
-                fullness = replay_ctrls[i]->get_record_fullness(0);
+                fullness = RA_replay_ctrls[i]->get_record_fullness(0);
                 if (fullness != 0)
                     std::cout << "BREAK" << std::endl;
                 break;
-                time_diff = std::chrono::system_clock::now() - time_spec;
+                time_diff = std::chrono::system_clock::now() - replay_start_time;
                 time_diff =
                     std::chrono::duration_cast<std::chrono::milliseconds>(time_diff);
             } while (time_diff.count() < 250);
         } while (fullness);
         std::cout << "Record fullness:      "
-                  << replay_ctrls[i]->get_record_fullness(0) << " bytes"
+                  << RA_replay_ctrls[i]->get_record_fullness(0) << " bytes"
                   << std::endl
                   << std::endl;
 
@@ -409,9 +411,9 @@ int ArchUSRP::importData()
         tx_md.start_of_burst = true;
         tx_md.end_of_burst   = true;
         size_t num_tx_samps =
-            tx_stream_vector[i]->send(tx_buf_ptr, samples_to_replay, tx_md);
-        if (num_tx_samps != samples_to_replay) {
-            std::cout << "ERROR: Unable to send " << samples_to_replay << " samples"
+            RA_tx_stream_vector[i]->send(tx_buf_ptr, RA_samples_to_replay, tx_md);
+        if (num_tx_samps != RA_samples_to_replay) {
+            std::cout << "ERROR: Unable to send " << RA_samples_to_replay << " samples"
                       << std::endl;
             return EXIT_FAILURE;
         }
@@ -420,32 +422,32 @@ int ArchUSRP::importData()
          * Wait for data to be stored in on-board memory
          ***********************************************************************/
         std::cout << "Waiting for recording to complete..." << std::endl;
-        while (replay_ctrls[i]->get_record_fullness(0)
-               < replay_buff_size);
+        while (RA_replay_ctrls[i]->get_record_fullness(0)
+               < RA_replay_buff_size);
         std::cout << "Record fullness:      "
-                  << replay_ctrls[i]->get_record_fullness(0) << " bytes"
+                  << RA_replay_ctrls[i]->get_record_fullness(0) << " bytes"
                   << std::endl
                   << std::endl;
     }
     return EXIT_SUCCESS;
 }
-void ArchUSRP::stopReplay()
+void RefArch::stopReplay()
 {
     /************************************************************************
      * Issue stop command
      ***********************************************************************/
     std::cout << "Stopping replay..." << std::endl;
-    for (int i_kill = 0; i_kill < replay_ctrls.size(); i_kill++) {
-        replay_ctrls[i_kill]->stop(
-            replay_chan_vector[i_kill]);
+    for (int i_kill = 0; i_kill < RA_replay_ctrls.size(); i_kill++) {
+        RA_replay_ctrls[i_kill]->stop(
+            RA_replay_chan_vector[i_kill]);
     }
 }
-void ArchUSRP::sig_int_handler(int)
+void RefArch::sigIntHandler(int)
 {
-    stop_signal_called = true;
+    RA_stop_signal_called = true;
 }
 //receivefunctions
-std::map<int,std::string> ArchUSRP::getStreamerFileLocation(
+std::map<int,std::string> RefArch::getStreamerFileLocation(
     std::vector<std::string> rx_file_streamers,
     std::vector<std::string> rx_file_location){
     std::map<int,std::string> usrpFileMap;
@@ -464,7 +466,7 @@ std::map<int,std::string> ArchUSRP::getStreamerFileLocation(
     }
     return usrpFileMap;
 }
-std::string ArchUSRP::generateRxFilename(const std::string& base_fn,
+std::string RefArch::generateRxFilename(const std::string& base_fn,
     const size_t& rx_chan_num,
     const int& tx_chan_num,
     const int& run_num,
@@ -491,17 +493,17 @@ std::string ArchUSRP::generateRxFilename(const std::string& base_fn,
     return base_fn_fp.string();
 }
 //graphassembly
-void ArchUSRP::buildGraph()
+void RefArch::buildGraph()
 {
     /************************************************************************
      * Create device and block controls
      ***********************************************************************/
     // If multiple USRPs are used, they are linked into a single RFNoc graph here.
     std::cout << std::endl;
-    std::cout << "Creating the RFNoC graph with args: " << args << "..." << std::endl;
-    graph = uhd::rfnoc::rfnoc_graph::make(args);
+    std::cout << "Creating the RFNoC graph with args: " << RA_args << "..." << std::endl;
+    RA_graph = uhd::rfnoc::rfnoc_graph::make(RA_args);
 }
-void ArchUSRP::buildRadios()
+void RefArch::buildRadios()
 {
     /************************************************************************
      * Seek radio blocks on each USRP and assemble a vector of radio
@@ -509,19 +511,19 @@ void ArchUSRP::buildRadios()
      ***********************************************************************/
     std::cout << "Building Radios..." << std::endl;
     // Make radio controllers for multiple channels/devices
-    radio_block_list = graph->find_blocks("Radio");
+    RA_radio_block_list = RA_graph->find_blocks("Radio");
     // Iterate over each radio block found on each device
-    for (auto& elem : radio_block_list) {
+    for (auto& elem : RA_radio_block_list) {
         // Create a vector of radio control objects for controlling the radio blocks
-        radio_ctrls.push_back(
-            graph->get_block<uhd::rfnoc::radio_control>(elem));
+        RA_radio_ctrls.push_back(
+            RA_graph->get_block<uhd::rfnoc::radio_control>(elem));
         std::cout << "Using radio " << elem << std::endl;
     }
     // Sort the vectors
-    sort(radio_ctrls.begin(), radio_ctrls.end());
-    sort(radio_block_list.begin(), radio_block_list.end());
+    sort(RA_radio_ctrls.begin(), RA_radio_ctrls.end());
+    sort(RA_radio_block_list.begin(), RA_radio_block_list.end());
 }
-void ArchUSRP::buildDDCDUC()
+void RefArch::buildDDCDUC()
 {
     /*************************************************************************
      * Seek DDCs & DUCs on each USRP and assemble a vector of DDC & DUC controllers.
@@ -530,10 +532,10 @@ void ArchUSRP::buildDDCDUC()
     std::vector<std::string> ddc_sources;
     std::vector<std::string> duc_destinations;
     // Enumerate blocks in the chain
-    auto edges = graph->enumerate_static_connections();
+    auto edges = RA_graph->enumerate_static_connections();
 
     // vector of string identifiers for DDC destinations
-    for (auto& rctrl : radio_ctrls) {
+    for (auto& rctrl : RA_radio_ctrls) {
         ddc_sources.push_back(rctrl->get_block_id());
         duc_destinations.push_back(rctrl->get_block_id());
     }
@@ -541,8 +543,8 @@ void ArchUSRP::buildDDCDUC()
     size_t ddc_source_port = 0;
     size_t duc_dst_port    = 0;
     auto chain             = std::vector<uhd::rfnoc::graph_edge_t>();
-    ddc_chan = 0;
-    duc_chan = 0;
+    RA_ddc_chan = 0;
+    RA_duc_chan = 0;
 
     // Find DDCs connected to the radios
     // There is a single channel (src_port) included on the stock DDCs & DUCs on the N3xx
@@ -555,8 +557,8 @@ void ArchUSRP::buildDDCDUC()
                 auto blockid = uhd::rfnoc::block_id_t(edge.dst_blockid);
                 if (blockid.match("DDC")) {
                     // When a DUC is found, assemble a vector of DDC controllers.
-                    ddc_ctrls.push_back(
-                        graph->get_block<uhd::rfnoc::ddc_block_control>(
+                    RA_ddc_ctrls.push_back(
+                        RA_graph->get_block<uhd::rfnoc::ddc_block_control>(
                             blockid));
                 }
             }
@@ -566,160 +568,160 @@ void ArchUSRP::buildDDCDUC()
                 auto blockid = uhd::rfnoc::block_id_t(edge.src_blockid);
                 if (blockid.match("DUC")) {
                     // When a DUC is found, assemble a vector of DUC controllers.
-                    duc_ctrls.push_back(
-                        graph->get_block<uhd::rfnoc::duc_block_control>(
+                    RA_duc_ctrls.push_back(
+                        RA_graph->get_block<uhd::rfnoc::duc_block_control>(
                             blockid));
                 }
             }
         }
         chain.push_back(edge);
     }
-    sort(ddc_ctrls.begin(), ddc_ctrls.end());
-    sort(duc_ctrls.begin(), duc_ctrls.end());
+    sort(RA_ddc_ctrls.begin(), RA_ddc_ctrls.end());
+    sort(RA_duc_ctrls.begin(), RA_duc_ctrls.end());
     // For Display Purposes
-    for (auto& dctrl : ddc_ctrls) {
+    for (auto& dctrl : RA_ddc_ctrls) {
         std::cout << "Using DDC " << dctrl->get_block_id() << ", Channel "
-                  << ddc_chan << std::endl;
+                  << RA_ddc_chan << std::endl;
     }
     // For Display Purposes
-    for (auto& dctrl : duc_ctrls) {
+    for (auto& dctrl : RA_duc_ctrls) {
         std::cout << "Using DUC " << dctrl->get_block_id() << ", Channel "
-                  << duc_chan << std::endl;
+                  << RA_duc_chan << std::endl;
     }
 }
-void ArchUSRP::buildReplay()
+void RefArch::buildReplay()
 {
     /****************************************************************************
      * Seek Replay blocks on each USRP and assemble a vector of Replay Block Controllers
      ***************************************************************************/
     // Check what replay blocks exist on the device(s)
-    replay_block_list = graph->find_blocks("Replay");
-    for (auto& replay_id : replay_block_list) {
+    RA_replay_block_list = RA_graph->find_blocks("Replay");
+    for (auto& replay_id : RA_replay_block_list) {
         // The double entry is intended. There are two channels on each replay block.
-        replay_ctrls.push_back(
-            graph->get_block<uhd::rfnoc::replay_block_control>(replay_id));
-        replay_ctrls.push_back(
-            graph->get_block<uhd::rfnoc::replay_block_control>(replay_id));
+        RA_replay_ctrls.push_back(
+            RA_graph->get_block<uhd::rfnoc::replay_block_control>(replay_id));
+        RA_replay_ctrls.push_back(
+            RA_graph->get_block<uhd::rfnoc::replay_block_control>(replay_id));
     }
-    sort(replay_ctrls.begin(), replay_ctrls.end());
+    sort(RA_replay_ctrls.begin(), RA_replay_ctrls.end());
     // Each replay block has two channels, 0 and 1.
     // Vector of replay channels.
-    for (int i_chan = 0; i_chan < replay_ctrls.size() * 2; i_chan++) {
+    for (int i_chan = 0; i_chan < RA_replay_ctrls.size() * 2; i_chan++) {
         if (i_chan % 2 == 0) {
-            replay_chan_vector.push_back(0);
+            RA_replay_chan_vector.push_back(0);
         } else {
-            replay_chan_vector.push_back(1);
+            RA_replay_chan_vector.push_back(1);
         }
     }
     // For Display Purposes
     int count_replay_chan = 0;
-    for (auto& rctrl : replay_ctrls) {
+    for (auto& rctrl : RA_replay_ctrls) {
         std::cout << "Using Replay " << rctrl->get_block_id() << ", Channel "
-                  << replay_chan_vector[count_replay_chan] << std::endl;
+                  << RA_replay_chan_vector[count_replay_chan] << std::endl;
         count_replay_chan++;
     }
 }
-void ArchUSRP::buildStreams()
+void RefArch::buildStreams()
 {
     // Build streams for single threaded implementation.
     // Constants related to the Replay block
     const size_t replay_word_size = 8; // Size of words used by replay block
     const size_t sample_size      = 4; // Complex signed 16-bit is 32 bits per sample
     const size_t samples_per_word = 2; // Number of sc16 samples per word
-    uhd::device_addr_t streamer_args(streamargs);
+    uhd::device_addr_t streamer_args(RA_streamargs);
     // create a receive streamer
-    uhd::stream_args_t stream_args(format, otw);
+    uhd::stream_args_t stream_args(RA_format, RA_otw);
     stream_args.args = streamer_args;
     std::cout << "Using streamer args: " << stream_args.args.to_string() << std::endl;
-    rx_stream = graph->create_rx_streamer(
-        radio_ctrls.size(), stream_args);
+    RA_rx_stream = RA_graph->create_rx_streamer(
+        RA_radio_ctrls.size(), stream_args);
 
     /************************************************************************
      * Set up streamer to Replay blocks
      ***********************************************************************/
-    for (int i_s2r = 0; i_s2r < replay_ctrls.size(); i_s2r = i_s2r + 2) {
+    for (int i_s2r = 0; i_s2r < RA_replay_ctrls.size(); i_s2r = i_s2r + 2) {
         streamer_args["block_id"] =
-            replay_ctrls[i_s2r]->get_block_id().to_string();
+            RA_replay_ctrls[i_s2r]->get_block_id().to_string();
         streamer_args["block_port"] = std::to_string(0);
         stream_args.args            = streamer_args;
         stream_args.channels        = {0};
 
-        tx_stream = graph->create_tx_streamer(
+        RA_tx_stream = RA_graph->create_tx_streamer(
             stream_args.channels.size(), stream_args);
-        size_t tx_spp = tx_stream->get_max_num_samps();
+        size_t tx_spp = RA_tx_stream->get_max_num_samps();
         // Make sure that stream SPP is a multiple of the Replay Block Word Size
         if (tx_spp % samples_per_word != 0) {
             // Round SPP down to a multiple of the word size
             tx_spp                  = (tx_spp / samples_per_word) * samples_per_word;
             streamer_args["spp"]    = std::to_string(tx_spp);
             stream_args.args        = streamer_args;
-            tx_stream = graph->create_tx_streamer(
+            RA_tx_stream = RA_graph->create_tx_streamer(
                 stream_args.channels.size(), stream_args);
         }
         // Vector of tx streamers, duplicate for vector length padding.
-        tx_stream_vector.push_back(tx_stream);
-        tx_stream_vector.push_back(tx_stream);
+        RA_tx_stream_vector.push_back(RA_tx_stream);
+        RA_tx_stream_vector.push_back(RA_tx_stream);
     }
 }
-void ArchUSRP::connectGraph()
+void RefArch::connectGraph()
 {
     // This is the connect function for single threaded implementation.
     UHD_LOG_INFO("CogRF", "Connecting graph...");
     // Connect Graph
-    for (int i = 0; i < radio_ctrls.size(); i++) {
+    for (int i = 0; i < RA_radio_ctrls.size(); i++) {
         // connect radios to ddc
-        graph->connect(radio_block_list[i],
+        RA_graph->connect(RA_radio_block_list[i],
             0,
-            ddc_ctrls[i]->get_block_id(),
+            RA_ddc_ctrls[i]->get_block_id(),
             0);
-        std::cout << "Connected " << radio_block_list[i] << " to "
-                  << ddc_ctrls[i]->get_block_id() << std::endl;
-        graph->connect(
-            ddc_ctrls[i]->get_block_id(), 0, rx_stream, i);
-        std::cout << "Connected " << ddc_ctrls[i]->get_block_id() << " to "
-                  << rx_stream << " Port " << i << std::endl;
+        std::cout << "Connected " << RA_radio_block_list[i] << " to "
+                  << RA_ddc_ctrls[i]->get_block_id() << std::endl;
+        RA_graph->connect(
+            RA_ddc_ctrls[i]->get_block_id(), 0, RA_rx_stream, i);
+        std::cout << "Connected " << RA_ddc_ctrls[i]->get_block_id() << " to "
+                  << RA_rx_stream << " Port " << i << std::endl;
     }
     int pos2 = 0;
-    if (duc_ctrls.size() > 0) {
-        for (auto& rctrl : radio_ctrls) {
-            graph->connect(duc_ctrls[pos2]->get_block_id(),
-                duc_chan,
+    if (RA_duc_ctrls.size() > 0) {
+        for (auto& rctrl : RA_radio_ctrls) {
+            RA_graph->connect(RA_duc_ctrls[pos2]->get_block_id(),
+                RA_duc_chan,
                 rctrl->get_block_id(),
                 0);
-            std::cout << "Connected " << duc_ctrls[pos2]->get_block_id()
-                      << " port " << duc_chan << " to radio "
+            std::cout << "Connected " << RA_duc_ctrls[pos2]->get_block_id()
+                      << " port " << RA_duc_chan << " to radio "
                       << rctrl->get_block_id() << " port " << 0 << std::endl;
             pos2++;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        for (int i_r2d = 0; i_r2d < duc_ctrls.size(); i_r2d++) {
+        for (int i_r2d = 0; i_r2d < RA_duc_ctrls.size(); i_r2d++) {
             // Catch timeout exception issue.
             while (true) {
                 try {
-                    graph->connect(
-                        replay_ctrls[i_r2d]->get_block_id(),
-                        replay_chan_vector[i_r2d],
-                        duc_ctrls[i_r2d]->get_block_id(),
-                        duc_chan);
+                    RA_graph->connect(
+                        RA_replay_ctrls[i_r2d]->get_block_id(),
+                        RA_replay_chan_vector[i_r2d],
+                        RA_duc_ctrls[i_r2d]->get_block_id(),
+                        RA_duc_chan);
                     break;
                 } catch (...) {
                     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
             }
-            std::cout << "Connected " << replay_ctrls[i_r2d]->get_block_id()
-                      << " port " << replay_chan_vector[i_r2d] << " to DUC "
-                      << duc_ctrls[i_r2d]->get_block_id() << " port "
-                      << duc_chan << std::endl;
+            std::cout << "Connected " << RA_replay_ctrls[i_r2d]->get_block_id()
+                      << " port " << RA_replay_chan_vector[i_r2d] << " to DUC "
+                      << RA_duc_ctrls[i_r2d]->get_block_id() << " port "
+                      << RA_duc_chan << std::endl;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     } else {
         int pos2 = 0;
-        for (auto& replctrl : replay_ctrls) {
-            for (auto& rctrl : radio_ctrls) {
+        for (auto& replctrl : RA_replay_ctrls) {
+            for (auto& rctrl : RA_radio_ctrls) {
                 while (true) {
                     try {
-                        graph->connect(replctrl->get_block_id(),
-                            replay_chan_vector[pos2],
+                        RA_graph->connect(replctrl->get_block_id(),
+                            RA_replay_chan_vector[pos2],
                             rctrl->get_block_id(),
                             0);
                         break;
@@ -731,94 +733,94 @@ void ArchUSRP::connectGraph()
             }
         }
     }
-    for (int i_s2r = 0; i_s2r < replay_ctrls.size(); i_s2r = i_s2r + 2) {
-        graph->connect(tx_stream_vector[i_s2r],
+    for (int i_s2r = 0; i_s2r < RA_replay_ctrls.size(); i_s2r = i_s2r + 2) {
+        RA_graph->connect(RA_tx_stream_vector[i_s2r],
             0,
-            replay_ctrls[i_s2r]->get_block_id(),
+            RA_replay_ctrls[i_s2r]->get_block_id(),
             0);
-        std::cout << "Streamer: " << tx_stream_vector[i_s2r]
-                  << " connected to " << replay_ctrls[i_s2r]->get_block_id()
+        std::cout << "Streamer: " << RA_tx_stream_vector[i_s2r]
+                  << " connected to " << RA_replay_ctrls[i_s2r]->get_block_id()
                   << std::endl;
     }
 }
-void ArchUSRP::commitGraph()
+void RefArch::commitGraph()
 {
     UHD_LOG_INFO("CogRF", "Committing graph...");
-    graph->commit();
+    RA_graph->commit();
     UHD_LOG_INFO("CogRF", "Commit complete.");
 }
-void ArchUSRP::connectGraphMultithread()
+void RefArch::connectGraphMultithread()
 {
     // This is the function that connects the graph for the multithreaded implementation
     // The difference is that each channel gets its own RX streamer.
     UHD_LOG_INFO("CogRF", "Connecting graph...");
     // Connect Graph
-    for (int i = 0; i < radio_ctrls.size(); i++) {
+    for (int i = 0; i < RA_radio_ctrls.size(); i++) {
         // connect radios to ddc
-        graph->connect(radio_block_list[i],
+        RA_graph->connect(RA_radio_block_list[i],
             0,
-            ddc_ctrls[i]->get_block_id(),
+            RA_ddc_ctrls[i]->get_block_id(),
             0);
-        std::cout << "Connected " << radio_block_list[i] << " to "
-                  << ddc_ctrls[i]->get_block_id() << std::endl;
+        std::cout << "Connected " << RA_radio_block_list[i] << " to "
+                  << RA_ddc_ctrls[i]->get_block_id() << std::endl;
     }
-    for (int j = 0; j < ddc_ctrls.size(); j++) {
+    for (int j = 0; j < RA_ddc_ctrls.size(); j++) {
         // Connect DDC to streamers
         // Reusing replay chan vector, need a vector of zeros and ones
-        graph->connect(ddc_ctrls[j]->get_block_id(),
+        RA_graph->connect(RA_ddc_ctrls[j]->get_block_id(),
             0,
-            rx_stream_vector[j],
-            replay_chan_vector[j]);
-        std::cout << "Connected " << ddc_ctrls[j]->get_block_id() << " to "
-                  << rx_stream_vector[j] << " Port "
-                  << replay_chan_vector[j] << std::endl;
+            RA_rx_stream_vector[j],
+            RA_replay_chan_vector[j]);
+        std::cout << "Connected " << RA_ddc_ctrls[j]->get_block_id() << " to "
+                  << RA_rx_stream_vector[j] << " Port "
+                  << RA_replay_chan_vector[j] << std::endl;
     }
     int pos2 = 0;
-    if (duc_ctrls.size() > 0) {
-        for (auto& rctrl : radio_ctrls) {
-            graph->connect(duc_ctrls[pos2]->get_block_id(),
-                duc_chan,
+    if (RA_duc_ctrls.size() > 0) {
+        for (auto& rctrl : RA_radio_ctrls) {
+            RA_graph->connect(RA_duc_ctrls[pos2]->get_block_id(),
+                RA_duc_chan,
                 rctrl->get_block_id(),
                 0);
-            std::cout << "Connected " << duc_ctrls[pos2]->get_block_id()
-                      << " port " << duc_chan << " to radio "
+            std::cout << "Connected " << RA_duc_ctrls[pos2]->get_block_id()
+                      << " port " << RA_duc_chan << " to radio "
                       << rctrl->get_block_id() << " port " << 0 << std::endl;
             pos2++;
         }
-        for (int i_r2d = 0; i_r2d < duc_ctrls.size(); i_r2d++) {
-            graph->connect(
-                replay_ctrls[i_r2d]->get_block_id(),
-                replay_chan_vector[i_r2d],
-                duc_ctrls[i_r2d]->get_block_id(),
-                duc_chan);
-            std::cout << "Connected " << replay_ctrls[i_r2d]->get_block_id()
-                      << " port " << replay_chan_vector[i_r2d] << " to DUC "
-                      << duc_ctrls[i_r2d]->get_block_id() << " port "
-                      << duc_chan << std::endl;
+        for (int i_r2d = 0; i_r2d < RA_duc_ctrls.size(); i_r2d++) {
+            RA_graph->connect(
+                RA_replay_ctrls[i_r2d]->get_block_id(),
+                RA_replay_chan_vector[i_r2d],
+                RA_duc_ctrls[i_r2d]->get_block_id(),
+                RA_duc_chan);
+            std::cout << "Connected " << RA_replay_ctrls[i_r2d]->get_block_id()
+                      << " port " << RA_replay_chan_vector[i_r2d] << " to DUC "
+                      << RA_duc_ctrls[i_r2d]->get_block_id() << " port "
+                      << RA_duc_chan << std::endl;
         }
     } else {
         int pos2 = 0;
-        for (auto& replctrl : replay_ctrls) {
-            for (auto& rctrl : radio_ctrls) {
-                graph->connect(replctrl->get_block_id(),
-                    replay_chan_vector[pos2],
+        for (auto& replctrl : RA_replay_ctrls) {
+            for (auto& rctrl : RA_radio_ctrls) {
+                RA_graph->connect(replctrl->get_block_id(),
+                    RA_replay_chan_vector[pos2],
                     rctrl->get_block_id(),
                     0);
                 pos2++;
             }
         }
     }
-    for (int i_s2r = 0; i_s2r < replay_ctrls.size(); i_s2r = i_s2r + 2) {
-        graph->connect(tx_stream_vector[i_s2r],
+    for (int i_s2r = 0; i_s2r < RA_replay_ctrls.size(); i_s2r = i_s2r + 2) {
+        RA_graph->connect(RA_tx_stream_vector[i_s2r],
             0,
-            replay_ctrls[i_s2r]->get_block_id(),
+            RA_replay_ctrls[i_s2r]->get_block_id(),
             0);
-        std::cout << "Streamer: " << tx_stream_vector[i_s2r]
-                  << " connected to " << replay_ctrls[i_s2r]->get_block_id()
+        std::cout << "Streamer: " << RA_tx_stream_vector[i_s2r]
+                  << " connected to " << RA_replay_ctrls[i_s2r]->get_block_id()
                   << std::endl;
     }
 }
-void ArchUSRP::buildStreamsMultithread()
+void RefArch::buildStreamsMultithread()
 {
     // Build Streams for multithreaded implementation
     // Each Channel gets its own RX streamer.
@@ -826,182 +828,182 @@ void ArchUSRP::buildStreamsMultithread()
     const size_t replay_word_size = 8; // Size of words used by replay block
     const size_t sample_size      = 4; // Complex signed 16-bit is 32 bits per sample
     const size_t samples_per_word = 2; // Number of sc16 samples per word
-    uhd::device_addr_t streamer_args(streamargs);
+    uhd::device_addr_t streamer_args(RA_streamargs);
     // create a receive streamer
-    uhd::stream_args_t stream_args(format, otw); 
+    uhd::stream_args_t stream_args(RA_format, RA_otw); 
     stream_args.args = streamer_args;
     std::cout << "Using streamer args: " << stream_args.args.to_string() << std::endl;
     // One stream per channel
-    for (int rx_count = 0; rx_count < radio_ctrls.size() / 2; rx_count++) {
-        rx_stream = graph->create_rx_streamer(2, stream_args);
-        rx_stream_vector.push_back(rx_stream);
-        rx_stream_vector.push_back(rx_stream);
+    for (int rx_count = 0; rx_count < RA_radio_ctrls.size() / 2; rx_count++) {
+        RA_rx_stream = RA_graph->create_rx_streamer(2, stream_args);
+        RA_rx_stream_vector.push_back(RA_rx_stream);
+        RA_rx_stream_vector.push_back(RA_rx_stream);
     }
     /************************************************************************
      * Set up streamer to Replay blocks
      ***********************************************************************/
-    for (int i_s2r = 0; i_s2r < replay_ctrls.size(); i_s2r = i_s2r + 2) {
+    for (int i_s2r = 0; i_s2r < RA_replay_ctrls.size(); i_s2r = i_s2r + 2) {
         streamer_args["block_id"] =
-            replay_ctrls[i_s2r]->get_block_id().to_string();
+            RA_replay_ctrls[i_s2r]->get_block_id().to_string();
         streamer_args["block_port"] = std::to_string(0);
         stream_args.args            = streamer_args;
         stream_args.channels        = {0};
-        tx_stream = graph->create_tx_streamer(
+        RA_tx_stream = RA_graph->create_tx_streamer(
             stream_args.channels.size(), stream_args);
-        size_t tx_spp = tx_stream->get_max_num_samps();
+        size_t tx_spp = RA_tx_stream->get_max_num_samps();
         // Make sure that stream SPP is a multiple of the Replay Block Word Size
         if (tx_spp % samples_per_word != 0) {
             // Round SPP down to a multiple of the word size
             tx_spp                  = (tx_spp / samples_per_word) * samples_per_word;
             streamer_args["spp"]    = std::to_string(tx_spp);
             stream_args.args        = streamer_args;
-            tx_stream = graph->create_tx_streamer(
+            RA_tx_stream = RA_graph->create_tx_streamer(
                 stream_args.channels.size(), stream_args);
         }
         // Vector of tx streamers, duplicate for vector length padding.
-        tx_stream_vector.push_back(tx_stream);
-        tx_stream_vector.push_back(tx_stream);
+        RA_tx_stream_vector.push_back(RA_tx_stream);
+        RA_tx_stream_vector.push_back(RA_tx_stream);
     }
 }
 //blocksettings
-int ArchUSRP::setRadioRates()
+int RefArch::setRadioRates()
 {
     /************************************************************************
      * Set up radio, DDCs, and DUCs
      ***********************************************************************/
     // set the RX sample rate
-    if (rx_rate <= 0.0) {
+    if (RA_rx_rate <= 0.0) {
         std::cerr << "Please specify a valid RX sample rate" << std::endl;
         return EXIT_FAILURE;
     }
     // set the TX sample rate
-    if (tx_rate <= 0.0) {
+    if (RA_tx_rate <= 0.0) {
         std::cerr << "Please specify a valid TX sample rate" << std::endl;
         return EXIT_FAILURE;
     }
     // Set DDC & DUC Sample Rates
-    std::cout << boost::format("Setting RX Rate: %f Msps...") % (rx_rate / 1e6)
+    std::cout << boost::format("Setting RX Rate: %f Msps...") % (RA_rx_rate / 1e6)
               << std::endl;
     // set rates for each DDC Block
     // TODO: Look at rates here. rate == ....
     // TODO: Fix Display
-    if (ddc_ctrls.size() > 0) {
+    if (RA_ddc_ctrls.size() > 0) {
         int count_rx = 0;
-        for (uhd::rfnoc::ddc_block_control::sptr ddcctrl : ddc_ctrls) {
+        for (uhd::rfnoc::ddc_block_control::sptr ddcctrl : RA_ddc_ctrls) {
             std::cout << "DDC block found" << std::endl;
-            double radio_rate = radio_ctrls[count_rx]->get_rate();
-            int decim = (int)(radio_rate / rx_rate);
+            double radio_rate = RA_radio_ctrls[count_rx]->get_rate();
+            int decim = (int)(radio_rate / RA_rx_rate);
             std::cout << boost::format("Setting decimation value to %d") % decim
                       << std::endl;
-            ddcctrl->set_property<int>("decim", decim, ddc_chan);
-            decim = ddcctrl->get_property<int>("decim", ddc_chan);
+            ddcctrl->set_property<int>("decim", decim, RA_ddc_chan);
+            decim = ddcctrl->get_property<int>("decim", RA_ddc_chan);
             std::cout << boost::format("Actual decimation value is %d") % decim
                       << std::endl;
-            rx_rate = radio_rate / decim;
+            RA_rx_rate = radio_rate / decim;
             count_rx++;
         }
     } else {
-        for (auto& rctrl : radio_ctrls) {
-            rx_rate = rctrl->set_rate(rx_rate);
-            std::cout << boost::format("Actual RX Rate: %f Msps...") % (rx_rate / 1e6)
+        for (auto& rctrl : RA_radio_ctrls) {
+            RA_rx_rate = rctrl->set_rate(RA_rx_rate);
+            std::cout << boost::format("Actual RX Rate: %f Msps...") % (RA_rx_rate / 1e6)
                       << std::endl
                       << std::endl;
         }
     }
-    std::cout << "Actual RX Rate: " << (rx_rate / 1e6) << " Msps..." << std::endl
+    std::cout << "Actual RX Rate: " << (RA_rx_rate / 1e6) << " Msps..." << std::endl
               << std::endl;
     std::cout << std::resetiosflags(std::ios::fixed);
-    std::cout << "Setting TX Rate: " << (tx_rate / 1e6) << " Msps..." << std::endl;
-    if (duc_ctrls.size() > 0) {
+    std::cout << "Setting TX Rate: " << (RA_tx_rate / 1e6) << " Msps..." << std::endl;
+    if (RA_duc_ctrls.size() > 0) {
         int radio = 0;
-        for (uhd::rfnoc::duc_block_control::sptr dctrl : duc_ctrls) {
+        for (uhd::rfnoc::duc_block_control::sptr dctrl : RA_duc_ctrls) {
             std::cout << "DUC block found." << dctrl->get_block_id() << std::endl;
-            dctrl->set_input_rate(tx_rate, duc_chan);
+            dctrl->set_input_rate(RA_tx_rate, RA_duc_chan);
             dctrl->set_output_rate(
-                radio_ctrls[radio]->get_rate(), duc_chan);
+                RA_radio_ctrls[radio]->get_rate(), RA_duc_chan);
             std::cout << dctrl->get_block_id() << " Interpolation value is "
-                      << dctrl->get_property<int>("interp", duc_chan)
+                      << dctrl->get_property<int>("interp", RA_duc_chan)
                       << std::endl;
-            tx_rate = dctrl->get_input_rate(duc_chan);
+            RA_tx_rate = dctrl->get_input_rate(RA_duc_chan);
             radio++;
         }
     } else {
-        for (uhd::rfnoc::radio_control::sptr rctrl : radio_ctrls) {
-            tx_rate = rctrl->set_rate(tx_rate);
+        for (uhd::rfnoc::radio_control::sptr rctrl : RA_radio_ctrls) {
+            RA_tx_rate = rctrl->set_rate(RA_tx_rate);
         }
     }
-    std::cout << "Actual TX Rate: " << (tx_rate / 1e6) << " Msps..." << std::endl
+    std::cout << "Actual TX Rate: " << (RA_tx_rate / 1e6) << " Msps..." << std::endl
               << std::endl
               << std::resetiosflags(std::ios::fixed);
     return EXIT_SUCCESS;
 }
-void ArchUSRP::tuneRX()
+void RefArch::tuneRX()
 {
-    for (auto& rctrl : radio_ctrls) {
+    for (auto& rctrl : RA_radio_ctrls) {
         // Set USRP RX Frequency for All Devices
         std::cout << std::fixed;
         std::cout << rctrl->get_block_id() << " Setting RX Freq: " << std::fixed
-                  << (rx_freq / 1e6) << " MHz..." << std::endl;
+                  << (RA_rx_freq / 1e6) << " MHz..." << std::endl;
 
-        rctrl->set_rx_frequency(rx_freq, 0);
+        rctrl->set_rx_frequency(RA_rx_freq, 0);
         std::cout << rctrl->get_block_id()
                   << " Actual RX Freq: " << (rctrl->get_rx_frequency(0) / 1e6)
                   << " MHz..." << std::endl
                   << std::endl;
     }
 }
-void ArchUSRP::tuneTX()
+void RefArch::tuneTX()
 {
-    for (auto& rctrl : radio_ctrls) {
+    for (auto& rctrl : RA_radio_ctrls) {
         // Set USRP TX Frequency for All devices
         std::cout << std::fixed;
         std::cout << rctrl->get_block_id() << " Setting TX Freq: " << std::fixed
-                  << (tx_freq / 1e6) << " MHz..." << std::endl;
-        rctrl->set_tx_frequency(tx_freq, 0);
+                  << (RA_tx_freq / 1e6) << " MHz..." << std::endl;
+        rctrl->set_tx_frequency(RA_tx_freq, 0);
         std::cout << rctrl->get_block_id()
                   << " Actual TX Freq: " << (rctrl->get_tx_frequency(0) / 1e6)
                   << " MHz..." << std::endl
                   << std::endl;
     }
 }
-void ArchUSRP::setRXGain()
+void RefArch::setRXGain()
 {
     // Set RX Gain of all Devices (Appears that max in UHD Is 65)
-    for (auto& rctrl : radio_ctrls) {
+    for (auto& rctrl : RA_radio_ctrls) {
         std::cout << std::fixed;
-        std::cout << rctrl->get_block_id() << " Setting RX Gain: " << rx_gain << " dB..."
+        std::cout << rctrl->get_block_id() << " Setting RX Gain: " << RA_rx_gain << " dB..."
                   << std::endl;
-        rctrl->set_rx_gain(rx_gain, 0);
+        rctrl->set_rx_gain(RA_rx_gain, 0);
         std::cout << rctrl->get_block_id() << " Actual RX Gain: " << rctrl->get_rx_gain(0)
                   << " dB..." << std::endl
                   << std::endl;
         std::cout << std::resetiosflags(std::ios::fixed);
     }
 }
-void ArchUSRP::setTXGain()
+void RefArch::setTXGain()
 {
     // Set TX Gain of all devices (Appears that max in UHD is 65)
-    for (auto& rctrl : radio_ctrls) {
+    for (auto& rctrl : RA_radio_ctrls) {
         std::cout << std::fixed;
-        std::cout << rctrl->get_block_id() << " Setting TX Gain: " << tx_gain << " dB..."
+        std::cout << rctrl->get_block_id() << " Setting TX Gain: " << RA_tx_gain << " dB..."
                   << std::endl;
-        rctrl->set_tx_gain(tx_gain, 0);
+        rctrl->set_tx_gain(RA_tx_gain, 0);
         std::cout << rctrl->get_block_id() << " Actual TX Gain: " << rctrl->get_tx_gain(0)
                   << " dB..." << std::endl
                   << std::endl;
         std::cout << std::resetiosflags(std::ios::fixed);
     }
 }
-void ArchUSRP::setRXBw()
+void RefArch::setRXBw()
 {
     // Set RX BandWidth for all devices
-    if (rx_bw > 0) {
-        for (auto& rctrl : radio_ctrls) {
+    if (RA_rx_bw > 0) {
+        for (auto& rctrl : RA_radio_ctrls) {
             std::cout << std::fixed;
             std::cout << rctrl->get_block_id()
-                      << " Setting RX Bandwidth: " << (rx_bw / 1e6) << " MHz..."
+                      << " Setting RX Bandwidth: " << (RA_rx_bw / 1e6) << " MHz..."
                       << std::endl;
-            rctrl->set_rx_bandwidth(rx_bw, 0);
+            rctrl->set_rx_bandwidth(RA_rx_bw, 0);
             std::cout << rctrl->get_block_id()
                       << " Actual RX Bandwidth: " << (rctrl->get_rx_bandwidth(0) / 1e6)
                       << " MHz..." << std::endl
@@ -1010,16 +1012,16 @@ void ArchUSRP::setRXBw()
         }
     }
 }
-void ArchUSRP::setTXBw()
+void RefArch::setTXBw()
 {
     // Set TX BandWidth for all devices
-    if (tx_bw > 0) {
-        for (auto& rctrl : radio_ctrls) {
+    if (RA_tx_bw > 0) {
+        for (auto& rctrl : RA_radio_ctrls) {
             std::cout << std::fixed;
             std::cout << rctrl->get_block_id()
-                      << " Setting TX Bandwidth: " << (tx_bw / 1e6) << " MHz..."
+                      << " Setting TX Bandwidth: " << (RA_tx_bw / 1e6) << " MHz..."
                       << std::endl;
-            rctrl->set_tx_bandwidth(tx_bw, 0);
+            rctrl->set_tx_bandwidth(RA_tx_bw, 0);
             std::cout << rctrl->get_block_id()
                       << " Actual TX Bandwidth: " << (rctrl->get_tx_bandwidth(0) / 1e6)
                       << " MHz..." << std::endl
@@ -1028,29 +1030,29 @@ void ArchUSRP::setTXBw()
         }
     }
 }
-void ArchUSRP::setRXAnt()
+void RefArch::setRXAnt()
 {
     // Set RX Antenna for all devices
-    for (auto& rctrl : radio_ctrls) {
-        rctrl->set_rx_antenna(rx_ant, 0);
+    for (auto& rctrl : RA_radio_ctrls) {
+        rctrl->set_rx_antenna(RA_rx_ant, 0);
     }
 }
-void ArchUSRP::setTXAnt()
+void RefArch::setTXAnt()
 {
     // Set TX Antenna for all devices
-    for (auto& rctrl : radio_ctrls) {
-        rctrl->set_tx_antenna(tx_ant, 0);
+    for (auto& rctrl : RA_radio_ctrls) {
+        rctrl->set_tx_antenna(RA_tx_ant, 0);
     }
 }
 //recvdata
-void ArchUSRP::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer){
+void RefArch::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer){
     // Receive to memory only, multi-threaded implementation.
     uhd::set_thread_priority_safe(0.9F);
     int num_total_samps = 0;
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
     std::vector<boost::circular_buffer<std::complex<short>>> buffs(
-        rx_channel_nums, boost::circular_buffer<std::complex<short>>(spb+1));
+        rx_channel_nums, boost::circular_buffer<std::complex<short>>(RA_spb+1));
     // create a vector of pointers to point to each of the channel buffers
     std::vector<std::complex<short>*> buff_ptrs;
     for (size_t i = 0; i < buffs.size(); i++) {
@@ -1058,25 +1060,25 @@ void ArchUSRP::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr r
     }
     bool overflow_message = true;
     // setup streaming
-    uhd::stream_cmd_t stream_cmd((nsamps == 0)
+    uhd::stream_cmd_t stream_cmd((RA_nsamps == 0)
                                      ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
                                      : uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
-    stream_cmd.num_samps  = nsamps;
+    stream_cmd.num_samps  = RA_nsamps;
     stream_cmd.stream_now = false;
-    stream_cmd.time_spec  = time_spec;
+    stream_cmd.time_spec  = RA_start_time;
     md.has_time_spec      = true;
-    md.time_spec          = time_spec;
-    const auto stop_time = time_spec + uhd::time_spec_t(time_requested);
+    md.time_spec          = RA_start_time;
+    const auto stop_time = RA_start_time + uhd::time_spec_t(RA_time_requested);
     rx_streamer->issue_stream_cmd(stream_cmd);
     int loop_num =0;
-    while (not stop_signal_called
-           and (nsamps > num_total_samps or nsamps == 0)
-           and (time_requested == 0.0
-                or graph->get_mb_controller(0)
+    while (not RA_stop_signal_called
+           and (RA_nsamps > num_total_samps or RA_nsamps == 0)
+           and (RA_time_requested == 0.0
+                or RA_graph->get_mb_controller(0)
                            ->get_timekeeper(0)
                            ->get_time_now()
                        <= stop_time)) {
-        size_t num_rx_samps = rx_streamer->recv(buff_ptrs, spb, md, rx_timeout);
+        size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
         loop_num += 1;
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
@@ -1096,7 +1098,7 @@ void ArchUSRP::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr r
                            "  Dropped samples will not be written to the file.\n"
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
-                           % (rx_rate * sizeof(std::complex<short>) / 1e6);
+                           % (RA_rx_rate * sizeof(std::complex<short>) / 1e6);
                     break;
                 }
             continue;
@@ -1114,7 +1116,63 @@ void ArchUSRP::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr r
     std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
               << " samples..." << std::endl;
 }
-void ArchUSRP::passthru(void* arg ,int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer ){
-    ArchUSRP* archUsrpPassthru = (ArchUSRP*) arg;
-    archUsrpPassthru->recv(rx_channel_nums,threadnum, rx_streamer);
-}
+void RefArch::spawnReceiveThreads()
+    {
+        uhd::time_spec_t now =
+            RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
+        RA_start_time = uhd::time_spec_t(now + RA_rtime);
+        int threadnum = 0;
+        
+        std::signal(SIGINT, this->sigIntHandler);
+        std::vector<std::thread> vectorThread;
+        // Receive RA_rx_stream_vector.size()
+        if (RA_format == "sc16") {
+            for (int i = 0; i < RA_rx_stream_vector.size(); i = i + 2) {
+                std::cout << "Spawning RX Thread.." << threadnum << std::endl;
+                std::thread t ( [this]
+                    (int threadnum,uhd::rx_streamer::sptr rx_streamer)
+                    {recv(2,threadnum,rx_streamer);}, 
+                    threadnum,RA_rx_stream_vector[i]);
+
+                vectorThread.push_back(std::move(t));
+                threadnum++;
+            }
+        } else {
+            throw std::runtime_error("Unknown type " + RA_format);
+        }
+        std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
+    uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
+    if (RA_nsamps <= 0){
+        // replay the entire buffer over and over
+        std::cout << "Issuing replay command for " << RA_samples_to_replay
+                  << " samps in continuous mode..."<< std::endl;
+    }
+    else {
+        // Replay nsamps, wrapping back to the start of the buffer if nsamps is
+        // larger than the buffer size.
+        stream_cmd.stream_mode=uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE;
+        
+        std::cout << RA_replay_ctrls[RA_singleTX]->get_block_id()
+                  << " Port: "
+                  << RA_replay_chan_vector[RA_singleTX]
+                  << std::endl
+                  << RA_replay_ctrls[RA_singleTX]->get_block_id()
+                  << " Issuing replay command for " << RA_nsamps
+                  << " samps..." << std::endl;
+    }
+        RA_replay_ctrls[RA_singleTX]->config_play(
+            RA_replay_buff_addr,
+            RA_replay_buff_size,
+            RA_replay_chan_vector[RA_singleTX]);
+        stream_cmd.num_samps  = RA_nsamps;
+        stream_cmd.stream_now = false;
+        stream_cmd.time_spec  = RA_start_time;
+        RA_replay_ctrls[RA_singleTX]->issue_stream_cmd(
+            stream_cmd, RA_replay_chan_vector[RA_singleTX]);
+        for (auto &i : vectorThread){
+            i.join();
+        }
+        std::signal(SIGINT, SIG_DFL);
+
+        return;
+    }

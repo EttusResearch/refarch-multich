@@ -19,104 +19,12 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <csignal>
 #include <thread>
 
-bool ArchUSRP::stop_signal_called=false;
-/***********************************************************************
- * Loopback Function
- **********************************************************************/
-class rfnoc_txrx_loopback_mem: public ArchUSRP{
-    public:
-
-    using ArchUSRP::ArchUSRP;
-
-    void example()
-    {
-        uhd::time_spec_t now =
-            graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
-        time_spec = uhd::time_spec_t(now + rtime);
-        int threadnum = 0;
-        
-        std::signal(SIGINT, this->sig_int_handler);
-        std::vector<std::thread> vectorThread;
-        // Receive rx_stream_vector.size()
-        if (format == "sc16") {
-            for (int i = 0; i < rx_stream_vector.size(); i = i + 2) {
-                std::cout << "Spawning RX Thread.." << threadnum << std::endl;
-                /*std::thread t (passthru,
-                    this,
-                    2,
-                    threadnum,
-                    rx_stream_vector[i]);*/
-                std::thread t ( [this]
-                    (int threadnum,uhd::rx_streamer::sptr rx_streamer)
-                    {recv(2,threadnum,rx_streamer);}, 
-                    threadnum,rx_stream_vector[i]);
-
-                vectorThread.push_back(std::move(t));
-                threadnum++;
-            }
-        } else {
-            throw std::runtime_error("Unknown type " + format);
-        }
-        std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
-        // Todo: This is the same If and else
-        if (nsamps <= 0) {
-            // replay the entire buffer over and over
-            std::cout << "Issuing replay command for " << samples_to_replay
-                    << " samps in continuous mode..." << std::endl;
-
-            replay_ctrls[singleTX]->config_play(
-                replay_buff_addr,
-                replay_buff_size,
-                replay_chan_vector[singleTX]);
-
-            uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
-            stream_cmd.num_samps  = nsamps;
-            stream_cmd.stream_now = false;
-            stream_cmd.time_spec  = time_spec;
-            replay_ctrls[singleTX]->issue_stream_cmd(
-                stream_cmd, replay_chan_vector[singleTX]);
-
-        } else {
-            std::cout << replay_ctrls[singleTX]->get_block_id()
-                    << " Port: "
-                    << replay_chan_vector[singleTX]
-                    << std::endl;
-            std::cout << replay_ctrls[singleTX]->get_block_id()
-                    << " Issuing replay command for " << nsamps
-                    << " samps..." << std::endl;
-
-            // Replay nsamps, wrapping back to the start of the buffer if nsamps is
-            // larger than the buffer size.
-            replay_ctrls[singleTX]->config_play(
-                replay_buff_addr,
-                replay_buff_size,
-                replay_chan_vector[singleTX]);
-
-            uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
-            stream_cmd.num_samps  = nsamps;
-            stream_cmd.stream_now = false;
-            stream_cmd.time_spec  = time_spec;
-            replay_ctrls[singleTX]->issue_stream_cmd(
-                stream_cmd, replay_chan_vector[singleTX]);
-        }
-        for (auto &i : vectorThread){
-            i.join();
-        }
-        std::signal(SIGINT, SIG_DFL);
-
-        return;
-    }
-
-};
-
-/***********************************************************************
- * Main function
- **********************************************************************/
+bool RefArch::RA_stop_signal_called=false;
 
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    rfnoc_txrx_loopback_mem usrpSystem(argc, argv);
+    RefArch usrpSystem(argc, argv);
     
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
@@ -166,7 +74,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     usrpSystem.syncAllDevices();
     // Begin TX and RX
     // INFO: Comment what each initilization does what type of data is stored in each.
-    usrpSystem.example();
+    usrpSystem.spawnReceiveThreads();
     std::cout << "Run complete." << std::endl;
     // Kill Replay
     usrpSystem.stopReplay();

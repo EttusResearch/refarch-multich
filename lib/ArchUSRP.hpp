@@ -10,10 +10,9 @@
 
 //TODO: Need to rethink how to control the stop_signal
 
-
-class ArchUSRP {
+class RefArch {
 public:
-    ArchUSRP(int argc, char* argv[]);
+    RefArch(int argc, char* argv[]);
 
 
     //SyncDevices
@@ -27,7 +26,7 @@ public:
     //Replaycontrol
     int virtual importData();
     void virtual stopReplay();
-    void static sig_int_handler(int); //This has to be a void static. Can't override
+    void static sigIntHandler(int); //This has to be a void static. Can't override
 
     //recievefunctions
     std::string virtual generateRxFilename(const std::string& base_fn,
@@ -60,14 +59,12 @@ public:
     void virtual setTXBw();
     void virtual setRXAnt();
     void virtual setTXAnt();
-    void static passthru(void* arg, int rx_channel_nums, int threadnum, 
-        uhd::rx_streamer::sptr rx_streamer);
 
-    //Example
-    void virtual example() =0;
+    //Spawns threads and transmitter
+    void virtual spawnReceiveThreads();
 
     void virtual recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer);
-    bool static stop_signal_called; 
+    bool static RA_stop_signal_called; 
 
 protected:
 ///////////////////////////
@@ -76,81 +73,78 @@ protected:
     /////////////////
     //GraphSettings//
     /////////////////
-    uhd::rfnoc::rfnoc_graph::sptr graph;
+    uhd::rfnoc::rfnoc_graph::sptr RA_graph;
     // radio Global Variables
-    std::vector<uhd::rfnoc::radio_control::sptr> radio_ctrls;
-    std::vector<uhd::rfnoc::block_id_t> radio_block_list;
+    std::vector<uhd::rfnoc::radio_control::sptr> RA_radio_ctrls;
+    std::vector<uhd::rfnoc::block_id_t> RA_radio_block_list;
     // DDC/DUC Global Variables
-    std::vector<uhd::rfnoc::ddc_block_control::sptr> ddc_ctrls;
-    std::vector<uhd::rfnoc::duc_block_control::sptr> duc_ctrls;
-    size_t ddc_chan;
-    size_t duc_chan;
+    std::vector<uhd::rfnoc::ddc_block_control::sptr> RA_ddc_ctrls;
+    std::vector<uhd::rfnoc::duc_block_control::sptr> RA_duc_ctrls;
+    size_t RA_ddc_chan;
+    size_t RA_duc_chan;
     // Replay Global Variables
-    std::vector<uhd::rfnoc::replay_block_control::sptr> replay_ctrls;
-    std::vector<size_t> replay_chan_vector;
-    std::vector<uhd::rfnoc::block_id_t> replay_block_list;
-    uint32_t replay_buff_addr;
-    uint32_t replay_buff_size;
+    std::vector<uhd::rfnoc::replay_block_control::sptr> RA_replay_ctrls;
+    std::vector<size_t> RA_replay_chan_vector;
+    std::vector<uhd::rfnoc::block_id_t> RA_replay_block_list;
+    uint32_t RA_replay_buff_addr;
+    uint32_t RA_replay_buff_size;
     // Streamer Variables
-    uhd::rx_streamer::sptr rx_stream;
-    uhd::tx_streamer::sptr tx_stream;
-    std::vector<size_t> streamer_channels;
-    std::vector<uhd::tx_streamer::sptr> tx_stream_vector;
-    std::vector<uhd::rx_streamer::sptr> rx_stream_vector;
+    uhd::rx_streamer::sptr RA_rx_stream;
+    uhd::tx_streamer::sptr RA_tx_stream;
+    std::vector<uhd::tx_streamer::sptr> RA_tx_stream_vector;
+    std::vector<uhd::rx_streamer::sptr> RA_rx_stream_vector;
     // txrx settings
-    uhd::time_spec_t time_spec;
-    uhd::time_spec_t time_adjustment;
+    uhd::time_spec_t RA_start_time;
 
     //////////////////
     //DeviceSettings//
     //////////////////
     // Runtime
-    std::string argsWithAddress;
-    std::string folder_name;
+    std::string RA_argsWithAddress;
 
     // Load from disk
-    std::string args;
-    double tx_rate, tx_freq, tx_gain, tx_bw;
-    double rx_rate, rx_freq, rx_gain, rx_bw;
-    std::string ref;
+    std::string RA_args;
+    double RA_tx_rate, RA_tx_freq, RA_tx_gain, RA_tx_bw;
+    double RA_rx_rate, RA_rx_freq, RA_rx_gain, RA_rx_bw;
+    std::string RA_ref;
 
-    std::string tx_ant, rx_ant;
-    std::string streamargs;
-    std::vector<std::string> address;
-    std::vector<std::string> lo;
+    std::string RA_tx_ant, RA_rx_ant;
+    std::string RA_streamargs;
+    std::vector<std::string> RA_address;
+    std::vector<std::string> RA_lo;
 
     //////////////////
     //SignalSettings//
     //////////////////
     // Runtime
-    size_t samples_to_replay;
+    size_t RA_samples_to_replay;
 
     // Load from disk
-    std::string rx_file;
-    std::vector<std::string> rx_file_location;
-    std::vector<std::string> rx_file_streamers;
-    std::string otw;
-    std::string type;
-    size_t spb, nruns;
-    double rx_timeout;
-    double time_adjust;
-    size_t nsamps;
-    double rtime;
-    double rep_delay; // replay block time
-    std::string format;
-    std::string file;
-    int singleTX;
-    double time_requested;
+    std::string RA_rx_file;
+    std::vector<std::string> RA_rx_file_location;
+    std::vector<std::string> RA_rx_file_streamers;
+    std::string RA_otw;
+    std::string RA_type;
+    size_t RA_spb, RA_nruns;
+    double RA_rx_timeout;
+    double RA_time_adjust;
+    size_t RA_nsamps;
+    double RA_rtime;
+    double RA_rep_delay; // replay block time
+    std::string RA_format;
+    std::string RA_file;
+    int RA_singleTX;
+    double RA_time_requested;
 
     //////////////////
     //ProgramMetaData//
     //////////////////
     // Input argument
-    std::string cfgFile;
+    std::string RA_cfgFile;
 
     // runtime
-    boost::program_options::options_description desc;
-    boost::program_options::variables_map vm;
+    boost::program_options::options_description RA_desc;
+    boost::program_options::variables_map RA_vm;
 
     //Structures
     void virtual addProgramOptions(); //todo: find way of adding additional variables
@@ -163,8 +157,8 @@ private:
     void setDistributor(int device);
 
     std::map<int,std::string> getStreamerFileLocation(
-        std::vector<std::string> rx_file_streamers,
-        std::vector<std::string> rx_file_location);
+        std::vector<std::string> RA_rx_file_streamers,
+        std::vector<std::string> RA_rx_file_location);
 };
 
 #endif

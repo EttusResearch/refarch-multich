@@ -75,6 +75,10 @@ add_executable(Arch_rfnoc_txrx_loopback_mem examples/Arch_rfnoc_txrx_loopback_me
 message(STATUS "Linking Arch_rfnoc_txrx_loopback_mem.")
 target_link_libraries(Arch_rfnoc_txrx_loopback_mem PRIVATE UHD_BOOST cogrf_lib)
 
+add_executable(Arch_rfnoc_txrx_loopback examples/Arch_rfnoc_txrx_loopback.cpp)
+message(STATUS "Linking Arch_rfnoc_txrx_loopback.")
+target_link_libraries(Arch_rfnoc_txrx_loopback PRIVATE UHD_BOOST cogrf_lib)
+
 ########################################################################
 # Post Build Include Configuration files
 ########################################################################
