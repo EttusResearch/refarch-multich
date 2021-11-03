@@ -6,7 +6,7 @@
 #
 
 ### Make the library ###
-add_library(cogrf_lib STATIC 
+add_library(Arch_lib STATIC 
     graphassembly.cpp 
     graphassembly.hpp
     structures.hpp
@@ -23,11 +23,11 @@ add_library(cogrf_lib STATIC
     ArchUSRP.hpp
     ArchUSRP.cpp
     )
-target_link_libraries(cogrf_lib PRIVATE UHD_BOOST)
+target_link_libraries(Arch_lib PRIVATE UHD_BOOST)
 
 # The following line is will automatically add the correct 
 # include directories with "target_link_libraries"
-target_include_directories(cogrf_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(Arch_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 

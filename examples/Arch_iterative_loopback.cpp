@@ -22,18 +22,18 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <boost/circular_buffer.hpp>
 #include <memory>
 #include <fstream>
+#include <csignal>
 
 
 bool RefArch::RA_stop_signal_called=false;
 
-class recvToFile : public RefArch{
+class iterative_loopback : public RefArch{
     using RefArch::RefArch;
     public:
     std::string folder_name;
-
+    int run_number;
     void localTime(){
         boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
-
         std::string month   = std::to_string(timeLocal.date().month());
         month = std::string(2 - month.length(), '0') + month;
         std::string day     = std::to_string(timeLocal.date().day());
@@ -45,29 +45,27 @@ class recvToFile : public RefArch{
         minute = std::string(2 - minute.length(), '0') + minute;
         std::string seconds = std::to_string(timeLocal.time_of_day().seconds());
         seconds = std::string(2 - seconds.length(), '0') + seconds;
-        
         folder_name= month + day + year + "_" + hour + minute + seconds + "_" + RA_rx_file;
     }
 
     void recv(int rx_channel_nums, int threadnum, 
         uhd::rx_streamer::sptr rx_streamer) 
         override {
-        
+
         uhd::set_thread_priority_safe(0.9F);
         int num_total_samps = 0;
         std::unique_ptr<char[]> buf(new char[RA_spb]);
         // Prepare buffers for received samples and metadata
         uhd::rx_metadata_t md;
         std::vector<boost::circular_buffer<std::complex<short>>> buffs(
-            rx_channel_nums, boost::circular_buffer<std::complex<short>>(RA_spb));
+            rx_channel_nums, boost::circular_buffer<std::complex<short>>(RA_spb+1));
         // create a vector of pointers to point to each of the channel buffers
         std::vector<std::complex<short>*> buff_ptrs;
         for (size_t i = 0; i < buffs.size(); i++) {
             buff_ptrs.push_back(&buffs[i].front());
         }
-        
         // Correctly lable output files based on run method, single TX->single RX or single TX
-        // -> All RX
+    // -> All RX
         int rx_identifier = threadnum;
         std::vector<std::shared_ptr<std::ofstream>> outfiles;
         for (size_t i = 0; i < buffs.size(); i++) {
@@ -76,32 +74,19 @@ class recvToFile : public RefArch{
                 generateRxFilename(RA_file,
                     rx_identifier * 2 + i,
                     RA_singleTX,
-                    0,
+                    run_number, //Cleanup: The only thing different between this function and to-file.
                     RA_tx_freq,
                     folder_name,
-                    RA_rx_file_streamers,
+                    RA_rx_file_channels,
                     RA_rx_file_location);
-            std::cout << this_filename << std::endl;
-            //std::ofstream* outstream =
-            //    new std::ofstream(this_filename.c_str(), std::ofstream::binary);
-            //outstream->rdbuf()->pubsetbuf(buf.get(), samps_per_buff*4); // Important
-
-            //outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
             std::ofstream* outstream = new std::ofstream;
             outstream->rdbuf()->pubsetbuf(buf.get(), RA_spb); // Important
             outstream->open(this_filename.c_str(),std::ofstream::binary);
             outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
         }
         UHD_ASSERT_THROW(outfiles.size() == buffs.size());
-        //For some reason this is failing
-        //UHD_ASSERT_THROW(buffs.size() == rx_channel_nums.size());
-
-
-        // ofstream output_file(this_filename, ios::out | ios::binary);
-
-
+        UHD_ASSERT_THROW(buffs.size() == rx_channel_nums);
         bool overflow_message = true;
-
         // setup streaming
         uhd::stream_cmd_t stream_cmd((RA_nsamps == 0)
                                             ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
@@ -111,10 +96,8 @@ class recvToFile : public RefArch{
         stream_cmd.time_spec  = RA_start_time;
         md.has_time_spec      = true;
         md.time_spec          = RA_start_time;
-
         const auto stop_time = RA_start_time + uhd::time_spec_t(RA_time_requested);
-            std::cout<<"issue_stream_cmd: "<<threadnum<<std::endl<<std::flush;
-        RA_rx_stream->issue_stream_cmd(stream_cmd);
+        rx_streamer->issue_stream_cmd(stream_cmd);
         int loop_num =0;
         while (not RA_stop_signal_called
                 and (RA_nsamps > num_total_samps or RA_nsamps == 0)
@@ -123,11 +106,8 @@ class recvToFile : public RefArch{
                                 ->get_timekeeper(0)
                                 ->get_time_now()
                             <= stop_time)) {
-            std::cout<<"forLoop: "<<threadnum<<std::endl<<std::flush;
-            size_t num_rx_samps = RA_rx_stream->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
-            std::cout<<"Samples: "<<threadnum<<std::endl<<std::flush;
+            size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
-
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
                 std::cout << boost::format("Timeout while streaming") << std::endl;
                 break;
@@ -137,7 +117,6 @@ class recvToFile : public RefArch{
                     overflow_message = false;
                     std::string tempstr ="\n thread:"+std::to_string(threadnum)+'\n'+"loop_num:"+std::to_string(loop_num)+'\n';
                     std::cout<<tempstr;
-                
                 }
                 if(md.out_of_sequence != true){
                     std::cerr
@@ -156,18 +135,22 @@ class recvToFile : public RefArch{
                 throw std::runtime_error(
                     str(boost::format("Receiver error %s") % md.strerror()));
             }
-            num_total_samps += num_rx_samps * RA_rx_stream->get_num_channels();
-            std::cout<<"Trying to Write: "<<threadnum<<std::endl<<std::flush;
+            num_total_samps += num_rx_samps * rx_streamer->get_num_channels();
             for (size_t i = 0; i < outfiles.size(); i++) {
                 outfiles[i]->write(
                     (const char*)buff_ptrs[i], num_rx_samps * sizeof(std::complex<short>));
             }
-            std::cout<<"Wrote; "<<threadnum<<std::endl<<std::flush;
         }
-    }
+         // Shut down receiver
+        stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
+        rx_streamer->issue_stream_cmd(stream_cmd);
 
-
-
+        for (size_t i = 0; i < outfiles.size(); i++) {
+            outfiles[i]->close();
+        }
+        std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
+                << " samples..." << std::endl;
+        }
 };
 /***********************************************************************
  * Main function
@@ -175,8 +158,8 @@ class recvToFile : public RefArch{
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    recvToFile usrpSystem(argc, argv);
-    
+    iterative_loopback usrpSystem(argc, argv);
+
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
     // Sync Device Clocks
@@ -227,7 +210,21 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // INFO: Comment what each initilization does what type of data is stored in each.
     usrpSystem.localTime();
 
-    usrpSystem.spawnReceiveThreads();
+    int saved_user_delay_time = usrpSystem.RA_delay_start_time;
+    for (usrpSystem.run_number = 0; 
+            usrpSystem.run_number < usrpSystem.RA_nruns; 
+            usrpSystem.run_number++){
+        for (usrpSystem.RA_singleTX = 0; 
+                usrpSystem.RA_singleTX < usrpSystem.RA_replay_ctrls.size(); 
+                usrpSystem.RA_singleTX++){
+            usrpSystem.spawnReceiveThreads();
+            //Next iteration use saved_user_delay_time
+            usrpSystem.RA_delay_start_time = saved_user_delay_time;
+        }
+        //Next iteration use RA_rep_delay
+        usrpSystem.RA_delay_start_time = usrpSystem.RA_rep_delay;
+    }
+    
     std::cout << "Run complete." << std::endl;
     // Kill Replay
     usrpSystem.stopReplay();

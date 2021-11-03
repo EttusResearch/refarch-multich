@@ -76,7 +76,7 @@ class recvToFile : public RefArch{
                     0,
                     RA_tx_freq,
                     folder_name,
-                    RA_rx_file_streamers,
+                    RA_rx_file_channels,
                     RA_rx_file_location);
             std::ofstream* outstream = new std::ofstream;
             outstream->rdbuf()->pubsetbuf(buf.get(), RA_spb); // Important

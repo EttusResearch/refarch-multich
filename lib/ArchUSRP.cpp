@@ -41,7 +41,7 @@ void RefArch::addProgramOptions(){
         ("lo", po::value<std::vector<std::string>>(&RA_lo), "device LO settings")
         ("rx-file", po::value<std::string>(&RA_rx_file)->default_value("test.dat"), "name of the file to write binary samples to")
         ("rx-file-location", po::value<std::vector<std::string>>(&RA_rx_file_location))
-        ("rx-file-streamers",po::value<std::vector<std::string>>(&RA_rx_file_streamers))
+        ("rx-file-channels",po::value<std::vector<std::string>>(&RA_rx_file_channels))
         ("otw", po::value<std::string>(&RA_otw)->default_value("sc16"), "specify the over-the-wire sample mode")
         ("type", po::value<std::string>(&RA_type)->default_value("short"), "sample type in file: double, float, or short")
         ("spb", po::value<size_t>(&RA_spb)->default_value(0), "samples per buffer, 0 for default")
@@ -49,7 +49,7 @@ void RefArch::addProgramOptions(){
         ("format", po::value<std::string>(&RA_format)->default_value("sc16"), "File sample format: sc16, fc32, or fc64")
         ("file", po::value<std::string>(&RA_file)->default_value("usrp_samples.dat"), "name of the file to transmit")
         ("nsamps", po::value<size_t>(&RA_nsamps)->default_value(16000), "number of samples to play (0 for infinite)")
-        ("replay_time",po::value<double>(&RA_rtime)->default_value(2.0), "Replay Block Time Delay (seconds)")
+        ("replay_time",po::value<double>(&RA_delay_start_time)->default_value(2.0), "Replay Block Time Delay (seconds)")
         ("nruns", po::value<size_t>(&RA_nruns)->default_value(1), "number of repeats")
         ("repeat_delay", po::value<double>(&RA_rep_delay)->default_value(0), "delay between repeats (seconds)")
         ("time_adjust",po::value<double>(&RA_time_adjust)->default_value(2.0), "If tramsmitting in iterative mode, seperation between per-channel transmission (seconds).")
@@ -1120,7 +1120,7 @@ void RefArch::spawnReceiveThreads()
     {
         uhd::time_spec_t now =
             RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
-        RA_start_time = uhd::time_spec_t(now + RA_rtime);
+        RA_start_time = uhd::time_spec_t(now + RA_delay_start_time);
         int threadnum = 0;
         
         std::signal(SIGINT, this->sigIntHandler);

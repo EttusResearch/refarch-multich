@@ -66,6 +66,27 @@ public:
     void virtual recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer);
     bool static RA_stop_signal_called; 
 
+    //Example Specific Values
+    //These values should be moved when we transition to
+    //example modifiable configuration files.
+
+    // Replay Global Variables
+    std::vector<uhd::rfnoc::replay_block_control::sptr> RA_replay_ctrls;
+    std::vector<size_t> RA_replay_chan_vector;
+    std::vector<uhd::rfnoc::block_id_t> RA_replay_block_list;
+    uint32_t RA_replay_buff_addr;
+    uint32_t RA_replay_buff_size;
+    size_t RA_samples_to_replay;
+
+    //These are used in all examples
+    int RA_singleTX;
+    double RA_delay_start_time;
+    //Iterative Loopback
+    double RA_time_adjust;
+    double RA_rep_delay; // replay block time
+    size_t RA_nruns;
+
+
 protected:
 ///////////////////////////
 //////Structures.hpp///////
@@ -82,12 +103,7 @@ protected:
     std::vector<uhd::rfnoc::duc_block_control::sptr> RA_duc_ctrls;
     size_t RA_ddc_chan;
     size_t RA_duc_chan;
-    // Replay Global Variables
-    std::vector<uhd::rfnoc::replay_block_control::sptr> RA_replay_ctrls;
-    std::vector<size_t> RA_replay_chan_vector;
-    std::vector<uhd::rfnoc::block_id_t> RA_replay_block_list;
-    uint32_t RA_replay_buff_addr;
-    uint32_t RA_replay_buff_size;
+
     // Streamer Variables
     uhd::rx_streamer::sptr RA_rx_stream;
     uhd::tx_streamer::sptr RA_tx_stream;
@@ -107,7 +123,6 @@ protected:
     double RA_tx_rate, RA_tx_freq, RA_tx_gain, RA_tx_bw;
     double RA_rx_rate, RA_rx_freq, RA_rx_gain, RA_rx_bw;
     std::string RA_ref;
-
     std::string RA_tx_ant, RA_rx_ant;
     std::string RA_streamargs;
     std::vector<std::string> RA_address;
@@ -116,24 +131,18 @@ protected:
     //////////////////
     //SignalSettings//
     //////////////////
-    // Runtime
-    size_t RA_samples_to_replay;
 
     // Load from disk
     std::string RA_rx_file;
     std::vector<std::string> RA_rx_file_location;
-    std::vector<std::string> RA_rx_file_streamers;
+    std::vector<std::string> RA_rx_file_channels;
     std::string RA_otw;
     std::string RA_type;
-    size_t RA_spb, RA_nruns;
+    size_t RA_spb;
     double RA_rx_timeout;
-    double RA_time_adjust;
     size_t RA_nsamps;
-    double RA_rtime;
-    double RA_rep_delay; // replay block time
     std::string RA_format;
     std::string RA_file;
-    int RA_singleTX;
     double RA_time_requested;
 
     //////////////////
@@ -157,7 +166,7 @@ private:
     void setDistributor(int device);
 
     std::map<int,std::string> getStreamerFileLocation(
-        std::vector<std::string> RA_rx_file_streamers,
+        std::vector<std::string> RA_rx_file_channels,
         std::vector<std::string> RA_rx_file_location);
 };
 
