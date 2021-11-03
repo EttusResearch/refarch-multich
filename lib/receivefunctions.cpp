@@ -78,6 +78,4 @@ std::string ReceiveFunctions::generateRxFilename(const std::string& base_fn,
     catch (const std::out_of_range& oor) {
         throw uhd::runtime_error("One or more file locations were not specified for initialized channel.");
     }
-    
-    
 }
