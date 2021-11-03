@@ -76,6 +76,8 @@ struct SignalSettings
 
     // Load from disk
     std::string rx_file;
+    std::vector<std::string> rx_file_location;
+    std::vector<std::string> rx_file_channels;
     std::string otw;
     std::string type;
     size_t spb, nruns;
@@ -98,6 +100,8 @@ struct SignalSettings
         //or if we can delete and push explaination to top of each structure
         desc.add_options()
         ("rx-file", po::value<std::string>(&rx_file)->default_value("test.dat"), "name of the file to write binary samples to")
+        ("rx-file-location", po::value<std::vector<std::string>>(&rx_file_location))
+        ("rx-file-channels",po::value<std::vector<std::string>>(&rx_file_channels))
         ("otw", po::value<std::string>(&otw)->default_value("sc16"), "specify the over-the-wire sample mode")
         ("type", po::value<std::string>(&type)->default_value("short"), "sample type in file: double, float, or short")
         ("spb", po::value<size_t>(&spb)->default_value(0), "samples per buffer, 0 for default")
@@ -111,9 +115,6 @@ struct SignalSettings
         ("time_adjust",po::value<double>(&time_adjust)->default_value(2.0), "If tramsmitting in iterative mode, seperation between per-channel transmission (seconds).")
         ("singleTX",po::value<int>(&singleTX)->default_value(0), "TX Channel)")
         ("time_requested", po::value<double>(&time_requested)->default_value(0.0), "Single Loopback Continous Time Limit (s).")
-
-
-
         ;
         // clang-format on
     }
@@ -160,7 +161,6 @@ struct DeviceSettings
         ("tx-bw", po::value<double>(&tx_bw)->default_value(0), "analog transmit filter bandwidth in Hz")
         ("rx-bw", po::value<double>(&rx_bw)->default_value(0), "analog receive filter bandwidth in Hz")
         ("lo", po::value<std::vector<std::string>>(&lo), "device LO settings")
-
         ;
         // clang-format on
     }
