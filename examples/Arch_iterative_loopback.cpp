@@ -30,7 +30,7 @@ class iterative_loopback : public RefArch
 
 public:
     std::string folder_name;
-    int run_number;
+    size_t run_number;
 
     std::string zeropad_to_length(int length, std::string s)
     {
