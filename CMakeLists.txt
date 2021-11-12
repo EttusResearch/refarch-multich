@@ -10,8 +10,8 @@
 ########################################################################
 cmake_minimum_required(VERSION 3.10.2)
 
-project(COGRF VERSION 1.0
-        DESCRIPTION "Cognitive RF Host Libaries and Examples"
+project(RefArch VERSION 1.0
+        DESCRIPTION "Open Architecture for Radar and EW Research Libaries and Examples"
         LANGUAGES CXX)
 enable_testing()
 
@@ -25,7 +25,7 @@ set(CMAKE_BUILD_TYPE "Release")
 # Find Packages and add to the project as a dependency
 ########################################################################
 
-find_package(UHD 4.0.0 REQUIRED)
+find_package(UHD 4.1.0 REQUIRED)
 
 # Pull in all boost dependencies in one place.
 find_package(Boost 1.50 REQUIRED COMPONENTS
@@ -54,22 +54,6 @@ add_subdirectory(lib)
 ########################################################################
 # Make the executable
 ########################################################################
-
-add_executable(rfnoc_txrx_loopback examples/rfnoc_txrx_loopback.cpp)
-message(STATUS "Linking rfnoc_txrx_loopback.")
-target_link_libraries(rfnoc_txrx_loopback PRIVATE UHD_BOOST Arch_lib)
-
-add_executable(iterative_loopback_singlethread examples/iterative_loopback_singlethread.cpp)
-message(STATUS "Linking iterative_loopback_singlethread.")
-target_link_libraries(iterative_loopback_singlethread PRIVATE UHD_BOOST Arch_lib)
-
-add_executable(multifreq_loopback examples/multifreq_loopback.cpp)
-message(STATUS "Linking multifreq_loopback.")
-target_link_libraries(multifreq_loopback PRIVATE UHD_BOOST Arch_lib)
-
-add_executable(rfnoc_txrx_loopback_mem examples/rfnoc_txrx_loopback_mem.cpp)
-message(STATUS "Linking rfnoc_txrx_loopback_mem.")
-target_link_libraries(rfnoc_txrx_loopback_mem PRIVATE UHD_BOOST Arch_lib)
 
 add_executable(Arch_rfnoc_txrx_loopback_mem examples/Arch_rfnoc_txrx_loopback_mem.cpp)
 message(STATUS "Linking Arch_rfnoc_txrx_loopback_mem.")

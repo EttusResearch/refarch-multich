@@ -7,21 +7,8 @@
 
 ### Make the library ###
 add_library(Arch_lib STATIC 
-    graphassembly.cpp 
-    graphassembly.hpp
-    structures.hpp
-    sync.hpp
-    sync.cpp
-    blocksettings.hpp
-    blocksettings.cpp
-    replaycontrol.hpp
-    replaycontrol.cpp
-    receivefunctions.hpp
-    receivefunctions.cpp
-    recvdata.hpp
-    recvdata.cpp
-    ArchUSRP.hpp
-    ArchUSRP.cpp
+    RefArch.hpp
+    RefArch.cpp
     )
 target_link_libraries(Arch_lib PRIVATE UHD_BOOST)
 

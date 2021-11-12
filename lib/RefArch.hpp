@@ -1,5 +1,5 @@
-#ifndef ARCHUSRP_H
-#define ARCHUSRP_H
+#ifndef REFARCH_H
+#define REFARCH_H
 
 #include <uhd/rfnoc_graph.hpp>
 #include <uhd/rfnoc/radio_control.hpp>
@@ -16,55 +16,56 @@ public:
 
 
     //SyncDevices
-    void virtual setSources();
-    int virtual syncAllDevices();
-    void virtual killLOs();
-    void virtual setLOsfromConfig();
-    void virtual checkRXSensorLock();
-    void virtual checkTXSensorLock();
+    virtual void setSources();
+    virtual int syncAllDevices();
+    virtual void killLOs();
+    virtual void setLOsfromConfig();
+    virtual void checkRXSensorLock();
+    virtual void checkTXSensorLock();
 
     //Replaycontrol
-    int virtual importData();
-    void virtual stopReplay();
-    void static sigIntHandler(int); //This has to be a void static. Can't override
+    virtual int importData();
+    virtual void stopReplay();
+    static void sigIntHandler(int); //This has to be a void static. Can't override
 
     //recievefunctions
-    std::string virtual generateRxFilename(const std::string& base_fn,
-        const size_t& rx_chan_num,
-        const int& tx_chan_num,
-        const int& run_num,
-        const double& tx_freq,
-        const std::string folder_name,
-        const std::vector<std::string> rx_streamer_string,
-        const std::vector<std::string> rx_file_location);
+    virtual std::string generateRxFilename(const std::string& base_fn,
+        const size_t rx_chan_num,
+        const int tx_chan_num,
+        const int run_num,
+        const double tx_freq,
+        const std::string& folder_name,
+        const std::vector<std::string>& rx_streamer_string,
+        const std::vector<std::string>& rx_file_location);
 
     //GraphAssembly
-    void virtual buildGraph();
-    void virtual buildRadios();
-    void virtual buildDDCDUC();
-    void virtual buildReplay();
-    void virtual buildStreams();
-    void virtual connectGraph();
-    void virtual commitGraph();
-    void virtual connectGraphMultithread();
-    void virtual buildStreamsMultithread();
+    virtual void buildGraph();
+    virtual void buildRadios();
+    virtual void buildDDCDUC();
+    virtual void buildReplay();
+    virtual void buildStreams();
+    virtual void connectGraph();
+    virtual void commitGraph();
+    virtual void connectGraphMultithread();
+    virtual void buildStreamsMultithread();
 
     //blocksettings
-    int virtual setRadioRates();
-    void virtual tuneRX();
-    void virtual tuneTX();
-    void virtual setRXGain();
-    void virtual setTXGain();
-    void virtual setRXBw();
-    void virtual setTXBw();
-    void virtual setRXAnt();
-    void virtual setTXAnt();
+    virtual int setRadioRates();
+    virtual void tuneRX();
+    virtual void tuneTX();
+    virtual void setRXGain();
+    virtual void setTXGain();
+    virtual void setRXBw();
+    virtual void setTXBw();
+    virtual void setRXAnt();
+    virtual void setTXAnt();
 
     //Spawns threads and transmitter
-    void virtual spawnReceiveThreads();
+    virtual void spawnReceiveThreads();
 
-    void virtual recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer);
-    bool static RA_stop_signal_called; 
+    virtual void recv(const int rx_channel_nums, const int threadnum, 
+        uhd::rx_streamer::sptr rx_streamer);
+    static bool RA_stop_signal_called; 
 
     //Example Specific Values
     //These values should be moved when we transition to
@@ -156,9 +157,9 @@ protected:
     boost::program_options::variables_map RA_vm;
 
     //Structures
-    void virtual addProgramOptions(); //todo: find way of adding additional variables
-    void virtual addAddresstoArgs();
-    void virtual storeProgramOptions(int argc, char* argv[]);
+    void addProgramOptions(); //todo: find way of adding additional variables
+    void addAddresstoArgs();
+    void storeProgramOptions(int argc, char* argv[]);
 
 private:
     void setSource(int device);
@@ -166,8 +167,8 @@ private:
     void setDistributor(int device);
 
     std::map<int,std::string> getStreamerFileLocation(
-        std::vector<std::string> RA_rx_file_channels,
-        std::vector<std::string> RA_rx_file_location);
+        const std::vector<std::string>& RA_rx_file_channels,
+        const std::vector<std::string>& RA_rx_file_location);
 };
 
 #endif

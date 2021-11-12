@@ -13,98 +13,96 @@ continuously. The multithreaded version
 currently has each USRP in its own thread. This version uses one RX streamer per device.
 *******************************************************************************************************************/
 
-#include "ArchUSRP.hpp"
+#include "RefArch.hpp"
 #include <uhd/rfnoc/mb_controller.hpp>
 #include <uhd/utils/safe_main.hpp>
-#include <thread>
-#include <stdio.h>
 #include <uhd/utils/thread.hpp>
+#include <stdio.h>
 #include <boost/circular_buffer.hpp>
-#include <memory>
 #include <fstream>
+#include <memory>
+#include <thread>
 
-
-bool RefArch::RA_stop_signal_called=false;
-
-class recvToFile : public RefArch{
+class recvToFile : public RefArch
+{
     using RefArch::RefArch;
-    public:
+
+public:
     std::string folder_name;
 
-    void localTime(){
+    std::string zeropad_to_length(int length, std::string s)
+    {
+        return std::string(length - s.length(), '0') + s;
+    }
+    void localTime()
+    {
+        // clang-format off
         boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
-        std::string month   = std::to_string(timeLocal.date().month());
-        month = std::string(2 - month.length(), '0') + month;
-        std::string day     = std::to_string(timeLocal.date().day());
-        day = std::string(2 - day.length(), '0') + day;
-        std::string year    = std::to_string(timeLocal.date().year());
-        std::string hour    = std::to_string(timeLocal.time_of_day().hours());
-        hour = std::string(2 - hour.length(), '0') + hour;
-        std::string minute  = std::to_string(timeLocal.time_of_day().minutes());
-        minute = std::string(2 - minute.length(), '0') + minute;
-        std::string seconds = std::to_string(timeLocal.time_of_day().seconds());
-        seconds = std::string(2 - seconds.length(), '0') + seconds;
-        folder_name= month + day + year + "_" + hour + minute + seconds + "_" + RA_rx_file;
+        std::string month = zeropad_to_length(2, std::to_string(timeLocal.date().month()));
+        std::string day  = zeropad_to_length(2, std::to_string(timeLocal.date().day()));
+        std::string year = zeropad_to_length(4, std::to_string(timeLocal.date().year()));
+        std::string hour = zeropad_to_length(2, std::to_string(timeLocal.time_of_day().hours()));
+        std::string minute = zeropad_to_length(2, std::to_string(timeLocal.time_of_day().minutes()));
+        std::string seconds = zeropad_to_length(2, std::to_string(timeLocal.time_of_day().seconds()));
+        folder_name = month + day + year + "_" + hour + minute + seconds + "_" + RA_rx_file;
+        // clang-format on
     }
 
-    void recv(int rx_channel_nums, int threadnum, 
-        uhd::rx_streamer::sptr rx_streamer) 
-        override {
-
+    void recv(
+        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
+    {
         uhd::set_thread_priority_safe(0.9F);
         int num_total_samps = 0;
         std::unique_ptr<char[]> buf(new char[RA_spb]);
         // Prepare buffers for received samples and metadata
         uhd::rx_metadata_t md;
         std::vector<boost::circular_buffer<std::complex<short>>> buffs(
-            rx_channel_nums, boost::circular_buffer<std::complex<short>>(RA_spb+1));
+            rx_channel_nums, boost::circular_buffer<std::complex<short>>(RA_spb + 1));
         // create a vector of pointers to point to each of the channel buffers
         std::vector<std::complex<short>*> buff_ptrs;
         for (size_t i = 0; i < buffs.size(); i++) {
             buff_ptrs.push_back(&buffs[i].front());
         }
-        // Correctly lable output files based on run method, single TX->single RX or single TX
-    // -> All RX
+        // Correctly lable output files based on run method, single TX->single RX or
+        // single TX
+        // -> All RX
         int rx_identifier = threadnum;
         std::vector<std::shared_ptr<std::ofstream>> outfiles;
         for (size_t i = 0; i < buffs.size(); i++) {
             // rx_identifier * 2 + i in order to get correct channel number in filename
-            const std::string this_filename =
-                generateRxFilename(RA_file,
-                    rx_identifier * 2 + i,
-                    RA_singleTX,
-                    0,
-                    RA_tx_freq,
-                    folder_name,
-                    RA_rx_file_channels,
-                    RA_rx_file_location);
-            std::ofstream* outstream = new std::ofstream;
+            const std::string this_filename = generateRxFilename(RA_file,
+                rx_identifier * 2 + i,
+                RA_singleTX,
+                0,
+                RA_tx_freq,
+                folder_name,
+                RA_rx_file_channels,
+                RA_rx_file_location);
+            auto outstream                  = std::shared_ptr<std::ofstream>();
             outstream->rdbuf()->pubsetbuf(buf.get(), RA_spb); // Important
-            outstream->open(this_filename.c_str(),std::ofstream::binary);
+            outstream->open(this_filename.c_str(), std::ofstream::binary);
             outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
         }
         UHD_ASSERT_THROW(outfiles.size() == buffs.size());
         UHD_ASSERT_THROW(buffs.size() == rx_channel_nums);
         bool overflow_message = true;
         // setup streaming
-        uhd::stream_cmd_t stream_cmd((RA_nsamps == 0)
-                                            ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
-                                            : uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+        uhd::stream_cmd_t stream_cmd(
+            (RA_nsamps == 0) ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
+                             : uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
         stream_cmd.num_samps  = RA_nsamps;
         stream_cmd.stream_now = false;
         stream_cmd.time_spec  = RA_start_time;
         md.has_time_spec      = true;
         md.time_spec          = RA_start_time;
-        const auto stop_time = RA_start_time + uhd::time_spec_t(RA_time_requested);
+        const auto stop_time  = RA_start_time + uhd::time_spec_t(RA_time_requested);
         rx_streamer->issue_stream_cmd(stream_cmd);
-        int loop_num =0;
+        int loop_num = 0;
         while (not RA_stop_signal_called
-                and (RA_nsamps > num_total_samps or RA_nsamps == 0)
-                and (RA_time_requested == 0.0
-                    or RA_graph->get_mb_controller(0)
-                                ->get_timekeeper(0)
-                                ->get_time_now()
-                            <= stop_time)) {
+               and (RA_nsamps > num_total_samps or RA_nsamps == 0)
+               and (RA_time_requested == 0.0
+                    or RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now()
+                           <= stop_time)) {
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -113,21 +111,23 @@ class recvToFile : public RefArch{
             }
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
                 if (overflow_message) {
-                    overflow_message = false;
-                    std::string tempstr ="\n thread:"+std::to_string(threadnum)+'\n'+"loop_num:"+std::to_string(loop_num)+'\n';
-                    std::cout<<tempstr;
+                    overflow_message    = false;
+                    std::string tempstr = "\n thread:" + std::to_string(threadnum) + '\n'
+                                          + "loop_num:" + std::to_string(loop_num) + '\n';
+                    std::cout << tempstr;
                 }
-                if(md.out_of_sequence != true){
+                if (md.out_of_sequence != true) {
                     std::cerr
                         << boost::format(
-                                "Got an overflow indication. Please consider the following:\n"
-                                "  Your write medium must sustain a rate of %fMB/s.\n"
-                                "  Dropped samples will not be written to the file.\n"
-                                "  Please modify this example for your purposes.\n"
-                                "  This message will not appear again.\n")
-                                % (RA_rx_rate * sizeof(std::complex<short>) / 1e6);
-                        break;
-                    }
+                               "Got an overflow indication. Please consider the "
+                               "following:\n"
+                               "  Your write medium must sustain a rate of %fMB/s.\n"
+                               "  Dropped samples will not be written to the file.\n"
+                               "  Please modify this example for your purposes.\n"
+                               "  This message will not appear again.\n")
+                               % (RA_rx_rate * sizeof(std::complex<short>) / 1e6);
+                    break;
+                }
                 continue;
             }
             if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
@@ -136,11 +136,11 @@ class recvToFile : public RefArch{
             }
             num_total_samps += num_rx_samps * rx_streamer->get_num_channels();
             for (size_t i = 0; i < outfiles.size(); i++) {
-                outfiles[i]->write(
-                    (const char*)buff_ptrs[i], num_rx_samps * sizeof(std::complex<short>));
+                outfiles[i]->write((const char*)buff_ptrs[i],
+                    num_rx_samps * sizeof(std::complex<short>));
             }
         }
-         // Shut down receiver
+        // Shut down receiver
         stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
         rx_streamer->issue_stream_cmd(stream_cmd);
 
@@ -148,8 +148,8 @@ class recvToFile : public RefArch{
             outfiles[i]->close();
         }
         std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
-                << " samples..." << std::endl;
-        }
+                  << " samples..." << std::endl;
+    }
 };
 /***********************************************************************
  * Main function

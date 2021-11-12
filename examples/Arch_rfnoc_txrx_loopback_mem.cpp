@@ -13,19 +13,17 @@ continuously. The multithreaded version
 currently has each USRP in its own thread. This version uses one RX streamer per device.
 *******************************************************************************************************************/
 
-#include "ArchUSRP.hpp"
+#include "RefArch.hpp"
 #include <uhd/rfnoc/mb_controller.hpp>
 #include <uhd/utils/safe_main.hpp>
 #include <csignal>
 #include <thread>
 
-bool RefArch::RA_stop_signal_called=false;
-
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
     RefArch usrpSystem(argc, argv);
-    
+
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
     // Sync Device Clocks
