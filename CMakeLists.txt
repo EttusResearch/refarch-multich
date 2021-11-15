@@ -15,6 +15,9 @@ project(RefArch VERSION 1.0
         LANGUAGES CXX)
 enable_testing()
 
+# make sure any repo local custome CMake Module scripts are found first
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
+
 ########################################################################
 # Configure Compiler
 ########################################################################
@@ -27,23 +30,38 @@ set(CMAKE_BUILD_TYPE "Release")
 
 find_package(UHD 4.1.0 REQUIRED)
 
+# Check if we have std::filesystem
+find_package(Filesystem COMPONENTS Final Experimental)
+
+if(FILESYSTEM_FOUND)
+    add_definitions(-DHAS_STD_FILESYSTEM=1)
+    if(${find_experimental})
+        add_definitions(-DHAS_STD_FILESYSTEM_EXPERIMENTAL=1)
+    endif()
+endif()
+
+set(BOOST_FILESYSTEM "")
+if(NOT FILESYSTEM_FOUND)
+        set(BOOST_FILESYSTEM "filesystem")
+endif()
+
 # Pull in all boost dependencies in one place.
 find_package(Boost 1.50 REQUIRED COMPONENTS
     chrono
     date_time
-    filesystem
+    ${BOOST_FILESYSTEM}
     program_options
     system
     serialization
     thread
     unit_test_framework
 )
+
 # Interface library will automatically add UHD and Boost
 # include directories with "target_link_libraries"
 add_library(UHD_BOOST INTERFACE)
 target_include_directories(UHD_BOOST INTERFACE ${UHD_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 target_link_libraries(UHD_BOOST INTERFACE ${UHD_LIBRARIES} ${Boost_LIBRARIES})
-
 
 ########################################################################
 # Add the Libraries
