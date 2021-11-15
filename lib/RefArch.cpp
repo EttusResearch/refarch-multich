@@ -8,23 +8,23 @@
 #include <thread>
 
 #if HAS_STD_FILESYSTEM
-#if HAS_STD_FILESYSTEM_EXPERIMENTAL
-#include <experimental/filesystem>
+#    if HAS_STD_FILESYSTEM_EXPERIMENTAL
+#        include <experimental/filesystem>
+#    else
+#        include <filesystem>
+#    endif
 #else
-#include <filesystem>
-#endif
-#else
-#include <boost/filesystem/operations.hpp>  // for create_directories, exists
-#include <boost/filesystem/path.hpp>        // for path, operator<<
-#include <boost/filesystem/path_traits.hpp> // for filesystem
+#    include <boost/filesystem/operations.hpp> // for create_directories, exists
+#    include <boost/filesystem/path.hpp> // for path, operator<<
+#    include <boost/filesystem/path_traits.hpp> // for filesystem
 #endif
 
 #if HAS_STD_FILESYSTEM
-#if HAS_STD_FILESYSTEM_EXPERIMENTAL
+#    if HAS_STD_FILESYSTEM_EXPERIMENTAL
 namespace RA_fs = std::experimental::filesystem;
-#else
+#    else
 namespace RA_fs = std::filesystem;
-#endif
+#    endif
 #else
 namespace RA_fs = boost::filesystem;
 #endif
@@ -597,10 +597,10 @@ std::string RefArch::generateRxFilename(const std::string& base_fn,
             str(boost::format("%s%s") % streamer_files.at(rx_chan_num) % cw_folder)));
         RA_fs::path base_fn_fp(
             streamer_files.at(rx_chan_num) + cw_folder + "/" + base_fn);
-        base_fn_fp.replace_extension(RA_fs::path(
-            str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_" % tx_chan_num % "_rx_"
-                % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq
-                % base_fn_fp.extension().string())));
+        base_fn_fp.replace_extension(
+            RA_fs::path(str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_"
+                            % tx_chan_num % "_rx_" % rx_chan_num % "_run_" % run_num
+                            % "_cw_" % tx_freq % base_fn_fp.extension().string())));
         return base_fn_fp.string();
     } catch (const std::out_of_range& oor) {
         throw uhd::runtime_error(
