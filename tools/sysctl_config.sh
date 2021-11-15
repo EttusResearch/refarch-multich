@@ -37,12 +37,12 @@ update_netcore(){
 check_root
 
 # Maximum and Default TX Buffer. increasing this too much will have adverse effects
-update_netcore net.core.wmem_max            67108864
-update_netcore net.core.wmem_default        67108864
+update_netcore net.core.wmem_max        67108864
+update_netcore net.core.wmem_default    67108864
 
 # Maximum and Default RX Buffer. increasing this too much will have adverse effects
-update_netcore net.core.rmem_max            67108864
-update_netcore net.core.rmem_default        67108864
+update_netcore net.core.rmem_max        67108864
+update_netcore net.core.rmem_default    67108864
 
 # netdev_max_backlog - is the maximum number of packets, queued on the INPUT side, 
 #                      when the interface receives packets faster than kernel can process them.
