@@ -7,8 +7,9 @@
 main(){
 ETH_CARDS=($(ip link | grep -E -o '[0-9]+: [0-9­A-Z­a-z]+:' | sed 's/^[0-9]*: //;s/://'))
 echo ""
-echo "These are your links. Please update this script with the correct link names and rx/tx ring buffer sizes"
-echo "To get the maximum rx/tx ring buffer sizes run \"sudo ethtool -g {Your Device}\""
+echo "These are all of your links. Only modify the links that are connected to your USRPs"
+echo "Please update this script with the correct link names and rx/tx ring buffer sizes"
+echo "To get the maximum rx/tx ring buffer sizes run \"sudo ethtool -g {Your NIC}\""
 echo "The Pre-set maximums are the maximum ring buffer sizes"
 echo ""
 print_arry "${ETH_CARDS[@]}"
