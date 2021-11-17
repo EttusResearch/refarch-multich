@@ -98,6 +98,9 @@ void RefArch::addProgramOptions()
         ("file", 
             po::value<std::string>(&RA_file)->default_value("usrp_samples.dat"), 
             "name of the file to transmit")
+        ("tx-file", 
+            po::value<std::string>(&RA_tx_file)->default_value("usrp_samples.dat"), 
+            "name of the file to transmit")
         ("nsamps", 
             po::value<size_t>(&RA_nsamps)->default_value(16000), 
             "number of samples to play (0 for infinite)")
@@ -409,6 +412,12 @@ void RefArch::checkTXSensorLock()
             std::cout << "TX LO LOCKED" << std::endl;
         }
     }
+}
+void RefArch::timeBase(){
+    // This provides a common timebase to synchronize RX and TX threads. 
+    uhd::time_spec_t now =
+        RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
+    RA_start_time = uhd::time_spec_t(now + RA_delay_start_time);
 }
 // replaycontrol
 int RefArch::importData()
@@ -845,6 +854,7 @@ void RefArch::connectGraphMultithread()
     for (size_t j = 0; j < RA_ddc_ctrls.size(); j++) {
         // Connect DDC to streamers
         // Reusing replay chan vector, need a vector of zeros and ones
+        // TODO: Remove dependancy on replay chan vector
         RA_graph->connect(RA_ddc_ctrls[j]->get_block_id(),
             0,
             RA_rx_stream_vector[j],
@@ -1185,6 +1195,45 @@ void RefArch::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx
     rx_streamer->issue_stream_cmd(stream_cmd);
     std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
               << " samples..." << std::endl;
+}
+void RefArch::transmitFromFile(std::vector<std::complex<float>> buff,
+    uhd::tx_streamer::sptr tx_streamer,
+    uhd::tx_metadata_t metadata,
+    size_t step,
+    size_t index,
+    int num_channels){
+        uhd::set_thread_priority_safe();
+        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
+        //std::cout << "BUFF" << std::endl;
+        std::ifstream infile(RA_tx_file.c_str(), std::ifstream::binary);
+        // send data until  the signal handler gets called
+        while (not RA_stop_signal_called) {
+            // fill the buffer with the waveform
+            //for (size_t n = 0; n < buff.size(); n++) {
+                //buff[n] = wave_table(index += step);
+            //}
+            //std::cout << "Buffer ready for TX: " << buff.size() << std::endl;
+            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
+            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
+
+            metadata.end_of_burst = infile.eof();
+            // send the entire contents of the buffer
+            tx_streamer->send(buffs, buff.size(), metadata);
+
+            metadata.start_of_burst = false;
+            metadata.has_time_spec  = false;
+        }
+
+        // send a mini EOB packet
+        metadata.end_of_burst = true;
+        tx_streamer->send("", 0, metadata);
+
+    }
+void RefArch::transmitFromReplay(){
+    //TODO: Seperate out replay TX
+}
+void RefArch::spawnTransmitThreads(){
+    //TODO: Spawn Transmit Threads
 }
 void RefArch::spawnReceiveThreads()
 {

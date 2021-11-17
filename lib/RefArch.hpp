@@ -22,6 +22,7 @@ public:
     virtual void setLOsfromConfig();
     virtual void checkRXSensorLock();
     virtual void checkTXSensorLock();
+    virtual void timeBase();
 
     //Replaycontrol
     virtual int importData();
@@ -62,9 +63,16 @@ public:
 
     //Spawns threads and transmitter
     virtual void spawnReceiveThreads();
-
+    virtual void spawnTransmitThreads();
     virtual void recv(const int rx_channel_nums, const int threadnum, 
         uhd::rx_streamer::sptr rx_streamer);
+    void virtual transmitFromFile(std::vector<std::complex<float>> buff,
+    uhd::tx_streamer::sptr tx_streamer,
+    uhd::tx_metadata_t metadata,
+    size_t step,
+    size_t index,
+    int num_channels);
+    virtual void transmitFromReplay();
     static bool RA_stop_signal_called; 
 
     //Example Specific Values
@@ -145,6 +153,7 @@ protected:
     std::string RA_format;
     std::string RA_file;
     double RA_time_requested;
+    std::string RA_tx_file;
 
     //////////////////
     //ProgramMetaData//
