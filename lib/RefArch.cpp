@@ -857,9 +857,9 @@ void RefArch::connectGraphMultithread()
         RA_graph->connect(RA_ddc_ctrls[j]->get_block_id(),
             0,
             RA_rx_stream_vector[j],
-            RA_replay_chan_vector[j]);
+            RA_rx_stream_chan_vector[j]);
         std::cout << "Connected " << RA_ddc_ctrls[j]->get_block_id() << " to "
-                  << RA_rx_stream_vector[j] << " Port " << RA_replay_chan_vector[j]
+                  << RA_rx_stream_vector[j] << " Port " << RA_rx_stream_chan_vector[j]
                   << std::endl;
     }
     int pos2 = 0;
