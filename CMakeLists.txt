@@ -71,9 +71,9 @@ add_executable(Arch_multifreq_loopback examples/Arch_multifreq_loopback.cpp)
 message(STATUS "Linking Arch_multifreq_loopback.")
 target_link_libraries(Arch_multifreq_loopback PRIVATE UHD_BOOST Arch_lib)
 
-add_executable(RX_Only examples/RX_Only.cpp)
-message(STATUS "Linking RX_Only.")
-target_link_libraries(RX_Only PRIVATE UHD_BOOST Arch_lib)
+add_executable(Arch_rx_to_mem examples/Arch_rx_to_mem.cpp)
+message(STATUS "Linking Arch_rx_to_mem.")
+target_link_libraries(Arch_rx_to_mem PRIVATE UHD_BOOST Arch_lib)
 
 ########################################################################
 # Post Build Include Configuration files

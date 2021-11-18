@@ -6,7 +6,7 @@ refarch-multich supports Ubuntu 20.04 with the USRP N320 and USRP N321 Ettus har
 
 ## Documentation
 
-For getting started assistance, visit the User Manual located at the [Open Architecture For Radar and EW Research](http://kb.ettus.com/Open_Architecture_For_Radar_and_EW_Research). For technical documentation related to USRP™ hardware or UHD system design, visit the [UHD and USRP Manual](http://files.ettus.com/manual/).
+For getting started assistance, visit the User Manual located at the [Open Architecture For Radar and EW Research](https://kb.ettus.com/Open_Architecture_For_Radar_and_EW_Research). For technical documentation related to USRP™ hardware or UHD system design, visit the [UHD and USRP Manual](https://files.ettus.com/manual/).
 
 ## OS Support
 
@@ -41,7 +41,7 @@ Documents including the BOM, wiring list, and templates to setup the system.
 
 ## Instructions
 
-Read the Open Architecture for Radar and EW Research User Manual located on the [Ettus KB website](http://kb.ettus.com/Open_Architecture_For_Radar_and_EW_Research). 
+Read the Open Architecture for Radar and EW Research User Manual located on the [Ettus KB website](https://kb.ettus.com/Open_Architecture_For_Radar_and_EW_Research). 
 
 **Setup Script**
 1. Clone or download this repository to the directory of your choice.
