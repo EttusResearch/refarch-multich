@@ -4,14 +4,11 @@
 
 main(){
     check_root
-
     rm usrp_config.txt
     echo "Determining USRP IP Addresses"
     sudo uhd_find_devices > usrp_config.txt
     echo 'Information Stored in usrp_config.txt'
-    
     FILENAME="usrp_config.txt"
-   
     #loop over ip addresses
     cat 'usrp_config.txt'
     myarr=($(awk '$1 ~ /addr:/ && $1 !~ /mgmt_addr/ {print $2}' usrp_config.txt))
@@ -27,12 +24,10 @@ main(){
         update_filesystem "$i" &
       done
       wait
-
       echo 'Rebooting USRPs..'
       for i in "${myarr[@]}"
       do
         reboot "$i" &
-        
       done
       wait
 
@@ -55,11 +50,8 @@ main(){
       done
       wait
     fi 
-
-
     exit 0
 }
-
 check_root(){
     if [ `whoami` == root ]; then
     echo "(1) already root"
@@ -69,36 +61,21 @@ check_root(){
     exit 1
   fi
 }
-
-
 update_filesystem(){
-
   local i=$1
-
-  
   scp /usr/local/share/uhd/images/usrp_n3xx_fs.mender root@$i:~/.
   ssh root@$i 'mender install /home/root/usrp_n3xx_fs.mender'
-  
-  
 }
-
 reboot(){
-
   local i=$1
-  
-  
   ssh root@$i 'reboot' 
-  
-  
 }
-
 mender_commit(){
 
   local i=$1
   
   ssh root@$i 'mender -commit'
 }
-
 #requests User input function
 user_input(){
   echo ""
@@ -112,6 +89,4 @@ user_input(){
       esac
   done
 }
-
-
 main "$@"; exit
