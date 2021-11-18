@@ -21,12 +21,12 @@
 
 #if HAS_STD_FILESYSTEM
 #    if HAS_STD_FILESYSTEM_EXPERIMENTAL
-namespace RA_fs = std::experimental::filesystem;
+namespace RA_filesystem = std::experimental::filesystem;
 #    else
-namespace RA_fs = std::filesystem;
+namespace RA_filesystem = std::filesystem;
 #    endif
 #else
-namespace RA_fs = boost::filesystem;
+namespace RA_filesystem = boost::filesystem;
 #endif
 
 bool RefArch::RA_stop_signal_called = false;
@@ -593,12 +593,12 @@ std::string RefArch::generateRxFilename(const std::string& base_fn,
     try {
         std::string cw_folder =
             "CW_" + std::to_string(tx_freq * 1e-9) + "_GHz_" + folder_name;
-        RA_fs::create_directory(RA_fs::path(
+        RA_filesystem::create_directory(RA_filesystem::path(
             str(boost::format("%s%s") % streamer_files.at(rx_chan_num) % cw_folder)));
-        RA_fs::path base_fn_fp(
+        RA_filesystem::path base_fn_fp(
             streamer_files.at(rx_chan_num) + cw_folder + "/" + base_fn);
         base_fn_fp.replace_extension(
-            RA_fs::path(str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_"
+            RA_filesystem::path(str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_"
                             % tx_chan_num % "_rx_" % rx_chan_num % "_run_" % run_num
                             % "_cw_" % tx_freq % base_fn_fp.extension().string())));
         return base_fn_fp.string();
