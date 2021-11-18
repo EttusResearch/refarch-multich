@@ -118,6 +118,7 @@ protected:
     uhd::tx_streamer::sptr RA_tx_stream;
     std::vector<uhd::tx_streamer::sptr> RA_tx_stream_vector;
     std::vector<uhd::rx_streamer::sptr> RA_rx_stream_vector;
+    std::vector<size_t> RA_rx_stream_chan_vector;
     // txrx settings
     uhd::time_spec_t RA_start_time;
 

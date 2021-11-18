@@ -851,6 +851,15 @@ void RefArch::connectGraphMultithread()
         std::cout << "Connected " << RA_radio_block_list[i] << " to "
                   << RA_ddc_ctrls[i]->get_block_id() << std::endl;
     }
+    // Each streamer has two channels, 0 and 1.
+    // Vector of streamer channels.
+    for (size_t i_chan = 0; i_chan < RA_rx_stream_vector.size() * 2; i_chan++) {
+        if (i_chan % 2 == 0) {
+            RA_rx_stream_chan_vector.push_back(0);
+        } else {
+            RA_rx_stream_chan_vector.push_back(1);
+        }
+    }
     for (size_t j = 0; j < RA_ddc_ctrls.size(); j++) {
         // Connect DDC to streamers
         // Reusing replay chan vector, need a vector of zeros and ones
@@ -858,9 +867,9 @@ void RefArch::connectGraphMultithread()
         RA_graph->connect(RA_ddc_ctrls[j]->get_block_id(),
             0,
             RA_rx_stream_vector[j],
-            RA_replay_chan_vector[j]);
+            RA_rx_stream_chan_vector[j]);
         std::cout << "Connected " << RA_ddc_ctrls[j]->get_block_id() << " to "
-                  << RA_rx_stream_vector[j] << " Port " << RA_replay_chan_vector[j]
+                  << RA_rx_stream_vector[j] << " Port " << RA_rx_stream_chan_vector[j]
                   << std::endl;
     }
     int pos2 = 0;
