@@ -33,7 +33,7 @@ find_package(UHD 4.1.0 REQUIRED)
 # Check if we have std::filesystem
 find_package(Filesystem COMPONENTS Final Experimental)
 
-if(FILESYSTEM_FOUND)
+if(Filesystem_FOUND)
     add_definitions(-DHAS_STD_FILESYSTEM=1)
     if(${find_experimental})
         add_definitions(-DHAS_STD_FILESYSTEM_EXPERIMENTAL=1)

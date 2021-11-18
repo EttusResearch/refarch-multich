@@ -12,7 +12,7 @@ add_library(Arch_lib STATIC
     )
 target_link_libraries(Arch_lib PRIVATE UHD_BOOST)
 
-if(FILESYSTEM_FOUND)
+if(Filesystem_FOUND)
     target_link_libraries(Arch_lib PRIVATE std::filesystem)
 endif()
 
