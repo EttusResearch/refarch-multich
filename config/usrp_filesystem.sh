@@ -28,10 +28,11 @@ main(){
       done
       wait
 
+      echo 'Rebooting USRPs..'
       for i in "${myarr[@]}"
       do
         reboot "$i" &
-        echo 'reboot'
+        
       done
       wait
 
@@ -40,6 +41,8 @@ main(){
 
       for i in "${myarr[@]}"
       do
+        echo 'Running uhd_usrp_probe...'
+        uhd_usrp_probe --args addr=$i
         echo 'Does the USRP at '$i ' appear to be functioning?'
         echo 'It is recommended that uhd_usrp_probe be used to verify functionality.'
         tempText="If the USRP appears to be functioning, would you like to commit the file system update?"
