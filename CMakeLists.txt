@@ -71,6 +71,10 @@ add_executable(Arch_multifreq_loopback examples/Arch_multifreq_loopback.cpp)
 message(STATUS "Linking Arch_multifreq_loopback.")
 target_link_libraries(Arch_multifreq_loopback PRIVATE UHD_BOOST Arch_lib)
 
+add_executable(Arch_txrx_fullduplex examples/Arch_txrx_fullduplex.cpp)
+message(STATUS "Linking Arch_txrx_fullduplex.")
+target_link_libraries(Arch_txrx_fullduplex PRIVATE UHD_BOOST Arch_lib)
+
 ########################################################################
 # Post Build Include Configuration files
 ########################################################################

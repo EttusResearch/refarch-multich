@@ -7,6 +7,9 @@
 #include <uhd/rfnoc/duc_block_control.hpp>
 #include <uhd/rfnoc/replay_block_control.hpp>
 #include <boost/program_options.hpp>
+#include <thread>
+#include <stdlib.h>
+#include <signal.h>
 
 //TODO: Need to rethink how to control the stop_signal
 
@@ -22,7 +25,7 @@ public:
     virtual void setLOsfromConfig();
     virtual void checkRXSensorLock();
     virtual void checkTXSensorLock();
-    virtual void timeBase();
+    virtual void updateDelayedStartTime();
 
     //Replaycontrol
     virtual int importData();
@@ -69,11 +72,13 @@ public:
     void virtual transmitFromFile(std::vector<std::complex<float>> buff,
     uhd::tx_streamer::sptr tx_streamer,
     uhd::tx_metadata_t metadata,
-    size_t step,
-    size_t index,
     int num_channels);
     virtual void transmitFromReplay();
+    virtual void joinAllThreads();
     static bool RA_stop_signal_called; 
+    std::vector<std::thread> RA_rx_vector_thread;
+    std::vector<std::thread> RA_tx_vector_thread;
+
 
     //Example Specific Values
     //These values should be moved when we transition to

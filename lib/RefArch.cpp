@@ -6,7 +6,7 @@
 #include <boost/filesystem.hpp>
 #include <csignal>
 #include <fstream>
-#include <thread>
+
 
 bool RefArch::RA_stop_signal_called = false;
 
@@ -413,7 +413,7 @@ void RefArch::checkTXSensorLock()
         }
     }
 }
-void RefArch::timeBase(){
+void RefArch::updateDelayedStartTime(){
     // This provides a common timebase to synchronize RX and TX threads. 
     uhd::time_spec_t now =
         RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
@@ -539,6 +539,7 @@ void RefArch::stopReplay()
 void RefArch::sigIntHandler(int)
 {
     RA_stop_signal_called = true;
+    
 }
 // receivefunctions
 std::map<int, std::string> RefArch::getStreamerFileLocation(
@@ -1208,8 +1209,6 @@ void RefArch::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx
 void RefArch::transmitFromFile(std::vector<std::complex<float>> buff,
     uhd::tx_streamer::sptr tx_streamer,
     uhd::tx_metadata_t metadata,
-    size_t step,
-    size_t index,
     int num_channels){
         uhd::set_thread_priority_safe();
         std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
@@ -1240,36 +1239,6 @@ void RefArch::transmitFromFile(std::vector<std::complex<float>> buff,
     }
 void RefArch::transmitFromReplay(){
     //TODO: Seperate out replay TX
-}
-void RefArch::spawnTransmitThreads(){
-    //TODO: Spawn Transmit Threads
-}
-void RefArch::spawnReceiveThreads()
-{
-    uhd::time_spec_t now =
-        RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
-    RA_start_time = uhd::time_spec_t(now + RA_delay_start_time);
-    int threadnum = 0;
-
-    std::signal(SIGINT, this->sigIntHandler);
-    std::vector<std::thread> vectorThread;
-    // Receive RA_rx_stream_vector.size()
-    if (RA_format == "sc16") {
-        for (size_t i = 0; i < RA_rx_stream_vector.size(); i = i + 2) {
-            std::cout << "Spawning RX Thread.." << threadnum << std::endl;
-            std::thread t(
-                [this](int threadnum, uhd::rx_streamer::sptr rx_streamer) {
-                    recv(2, threadnum, rx_streamer);
-                },
-                threadnum,
-                RA_rx_stream_vector[i]);
-
-            vectorThread.push_back(std::move(t));
-            threadnum++;
-        }
-    } else {
-        throw std::runtime_error("Unknown type " + RA_format);
-    }
     std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
     uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
     if (RA_nsamps <= 0) {
@@ -1294,10 +1263,74 @@ void RefArch::spawnReceiveThreads()
     stream_cmd.time_spec  = RA_start_time;
     RA_replay_ctrls[RA_singleTX]->issue_stream_cmd(
         stream_cmd, RA_replay_chan_vector[RA_singleTX]);
-    for (auto& i : vectorThread) {
-        i.join();
+}
+void RefArch::spawnTransmitThreads(){
+    
+    if (RA_spb == 0)
+        RA_spb = RA_tx_stream_vector[0]->get_max_num_samps() * 10;
+    std::vector<std::vector<std::complex<float>>> txbuff_vector;
+    for (int i = 0; i < RA_tx_stream_vector.size(); i++){
+        std::vector<std::complex<float>> txbuff(RA_spb); 
+        txbuff_vector.push_back(txbuff);
     }
-    std::signal(SIGINT, SIG_DFL);
+    // setup the metadata flags
+    uhd::tx_metadata_t md;
+    md.start_of_burst = true;
+    md.end_of_burst   = false;
+    md.has_time_spec  = true;
+    md.time_spec = RA_start_time;
+    for (int i = 0; i < RA_tx_stream_vector.size(); i++){
+        // start transmit worker thread, not for use with replay block. 
+        std::cout << "Spawning TX thread.." << std::endl;
+        std::thread tx ([this](std::vector<std::complex<float>> buff,
+        uhd::tx_streamer::sptr tx_streamer,
+        uhd::tx_metadata_t metadata,
+        int num_channels){transmitFromFile(buff,tx_streamer,metadata,num_channels);},txbuff_vector[i], RA_tx_stream_vector[i], md, 1);
+        RA_tx_vector_thread.push_back(std::move(tx));
+    }
+    
+}
+void RefArch::spawnReceiveThreads()
+{
+    
+    int threadnum = 0;
+
+    
+    // Receive RA_rx_stream_vector.size()
+    if (RA_format == "sc16") {
+        for (size_t i = 0; i < RA_rx_stream_vector.size(); i = i + 2) {
+            std::cout << "Spawning RX Thread.." << threadnum << std::endl;
+            std::thread t(
+                [this](int threadnum, uhd::rx_streamer::sptr rx_streamer) {
+                    recv(2, threadnum, rx_streamer);
+                },
+                threadnum,
+                RA_rx_stream_vector[i]);
+
+            RA_rx_vector_thread.push_back(std::move(t));
+            threadnum++;
+        }
+    } else {
+        throw std::runtime_error("Unknown type " + RA_format);
+    }
+    
+    
 
     return;
+}
+void RefArch::joinAllThreads()
+{
+    
+    std::cout << "Waiting to join threads.." << std::endl;
+    // Join RX Threads
+    for (auto& rx : RA_rx_vector_thread) {
+        rx.join();
+        std::cout << "Joined RX Thread: " << std::endl;
+    }
+    // Join TX Threads
+    for (auto& tx : RA_tx_vector_thread) {
+        tx.join();
+        std::cout << "Joined TX Thread: " << std::endl;
+    }
+    std::cout << "Threads Joined" << std::endl;
 }
