@@ -539,7 +539,6 @@ void RefArch::stopReplay()
 void RefArch::sigIntHandler(int)
 {
     RA_stop_signal_called = true;
-    
 }
 // receivefunctions
 std::map<int, std::string> RefArch::getStreamerFileLocation(
@@ -1235,7 +1234,6 @@ void RefArch::transmitFromFile(std::vector<std::complex<float>> buff,
         // send a mini EOB packet
         metadata.end_of_burst = true;
         tx_streamer->send("", 0, metadata);
-
     }
 void RefArch::transmitFromReplay(){
     //TODO: Seperate out replay TX
@@ -1313,24 +1311,25 @@ void RefArch::spawnReceiveThreads()
     } else {
         throw std::runtime_error("Unknown type " + RA_format);
     }
-    
-    
-
     return;
 }
 void RefArch::joinAllThreads()
 {
-    
+    // Joins RX and TX threads if they exist.
     std::cout << "Waiting to join threads.." << std::endl;
-    // Join RX Threads
-    for (auto& rx : RA_rx_vector_thread) {
-        rx.join();
-        std::cout << "Joined RX Thread: " << std::endl;
+    if (RA_rx_vector_thread.size() > 0){
+        // Join RX Threads
+        for (auto& rx : RA_rx_vector_thread) {
+            rx.join();
+        }
     }
-    // Join TX Threads
-    for (auto& tx : RA_tx_vector_thread) {
-        tx.join();
-        std::cout << "Joined TX Thread: " << std::endl;
+    // Stop Transmitting once RX is complete
+    RA_stop_signal_called = true;
+    if (RA_tx_vector_thread.size() > 0){
+        // Join TX Threads
+        for (auto& tx : RA_tx_vector_thread) {
+            tx.join();
+        }
     }
     std::cout << "Threads Joined" << std::endl;
 }
