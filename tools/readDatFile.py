@@ -22,7 +22,7 @@ def parse_args():
     Parse the command line arguments
     Example command line syntax:
     python3 readDatFile.py -f <directory where files are> -s <rx sampling rate>
-    python3 readDatFile.py -f "/mnt/md0/CW_2.000000_GHz_9282021_113939_test.dat" -s 33330000
+    python3 readDatFile.py -f "/mnt/md1/CW_2.000000_GHz_11292021_111153_test.dat" -s 33330000
     """
 
     parser = argparse.ArgumentParser()

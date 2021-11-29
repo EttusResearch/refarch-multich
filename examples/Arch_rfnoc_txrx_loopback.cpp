@@ -22,7 +22,7 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <fstream>
 #include <memory>
 #include <thread>
-
+#include <csignal>
 class recvToFile : public RefArch
 {
     using RefArch::RefArch;
@@ -78,7 +78,7 @@ public:
                 folder_name,
                 RA_rx_file_channels,
                 RA_rx_file_location);
-            auto outstream                  = std::shared_ptr<std::ofstream>();
+            auto outstream = std::shared_ptr<std::ofstream>(new std::ofstream());
             outstream->rdbuf()->pubsetbuf(buf.get(), RA_spb); // Important
             outstream->open(this_filename.c_str(), std::ofstream::binary);
             outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
@@ -194,9 +194,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Check TX Sensor Lock
     usrpSystem.checkTXSensorLock();
     // Build Streams
-    usrpSystem.buildStreamsMultithread();
+    usrpSystem.buildStreamsMultithreadReplayTX();
     // Connect Graph
-    usrpSystem.connectGraphMultithread();
+    usrpSystem.connectGraphMultithreadReplayTX();
     // Commit Graph
     usrpSystem.commitGraph();
     // Allow for some setup time
@@ -208,8 +208,15 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Begin TX and RX
     // INFO: Comment what each initilization does what type of data is stored in each.
     usrpSystem.localTime();
-
+    // Sync times across threads
+    usrpSystem.updateDelayedStartTime();
+    std::signal(SIGINT, usrpSystem.sigIntHandler);
+    // Transmit via replay block, must be before spawning receive threads. 
+    usrpSystem.transmitFromReplay();
     usrpSystem.spawnReceiveThreads();
+    //Join Threads
+    usrpSystem.joinAllThreads();
+    std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
     // Kill Replay
     usrpSystem.stopReplay();

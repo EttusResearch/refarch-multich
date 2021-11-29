@@ -721,7 +721,7 @@ void RefArch::buildReplay()
         count_replay_chan++;
     }
 }
-void RefArch::buildStreams()
+void RefArch::buildStreamsReplayTX()
 {
     // Build streams for single threaded implementation.
     // Constants related to the Replay block
@@ -761,7 +761,7 @@ void RefArch::buildStreams()
         RA_tx_stream_vector.push_back(RA_tx_stream);
     }
 }
-void RefArch::connectGraph()
+void RefArch::connectGraphReplayTX()
 {
     // This is the connect function for single threaded implementation.
     UHD_LOG_INFO("CogRF", "Connecting graph...");
@@ -839,9 +839,9 @@ void RefArch::commitGraph()
     RA_graph->commit();
     UHD_LOG_INFO("CogRF", "Commit complete.");
 }
-void RefArch::connectGraphMultithread()
+void RefArch::connectGraphMultithreadReplayTX()
 {
-    // This is the function that connects the graph for the multithreaded implementation
+    // This is the function that connects the graph for the multithreaded implementation streaming from Replay Block. 
     // The difference is that each channel gets its own RX streamer.
     UHD_LOG_INFO("CogRF", "Connecting graph...");
     // Connect Graph
@@ -913,9 +913,90 @@ void RefArch::connectGraphMultithread()
                   << RA_replay_ctrls[i_s2r]->get_block_id() << std::endl;
     }
 }
-void RefArch::buildStreamsMultithread()
+void RefArch::connectGraphMultithreadHostTX()
 {
-    // Build Streams for multithreaded implementation
+        // This is the function that connects the graph for the multithreaded implementation streaming from host.
+   
+
+        UHD_LOG_INFO("CogRF", "Connecting graph...");
+
+        // Connect Graph
+        for (int i = 0; i < RA_radio_ctrls.size(); i++) {
+            // connect radios to ddc
+            RA_graph->connect(RA_radio_block_list[i],
+                0,
+                RA_ddc_ctrls[i]->get_block_id(),
+                0);
+            std::cout << "Connected " << RA_radio_block_list[i] << " to "
+                    << RA_ddc_ctrls[i]->get_block_id() << std::endl;
+        }
+
+
+        // Vector of streamer channels.
+        for (size_t i_chan = 0; i_chan < RA_rx_stream_vector.size() * 2; i_chan++) {
+            if (i_chan % 2 == 0) {
+                RA_rx_stream_chan_vector.push_back(0);
+            } else {
+                RA_rx_stream_chan_vector.push_back(1);
+            }
+        }
+        for (int j = 0; j < RA_ddc_ctrls.size(); j++) {
+            // Connect DDC to streamers
+            // Reusing replay chan vector, need a vector of zeros and ones
+            RA_graph->connect(RA_ddc_ctrls[j]->get_block_id(),
+                0,
+                RA_rx_stream_vector[j],
+                RA_rx_stream_chan_vector[j]);
+            std::cout << "Connected " << RA_ddc_ctrls[j]->get_block_id() << " to "
+                    << RA_rx_stream_vector[j] << " Port "
+                    << RA_rx_stream_chan_vector[j] << std::endl;
+        }
+
+        int pos2 = 0;
+        if (RA_duc_ctrls.size() > 0) {
+            for (auto& rctrl : RA_radio_ctrls) {
+                RA_graph->connect(RA_duc_ctrls[pos2]->get_block_id(),
+                    RA_duc_chan,
+                    rctrl->get_block_id(),
+                    0);
+                std::cout << "Connected " << RA_duc_ctrls[pos2]->get_block_id()
+                        << " port " << RA_duc_chan << " to radio "
+                        << rctrl->get_block_id() << " port " << 0 << std::endl;
+
+                RA_graph->connect(RA_tx_stream_vector[pos2],
+                0,
+                RA_duc_ctrls[pos2]->get_block_id(),
+                0);
+                std::cout << "Streamer: " << RA_tx_stream_vector[pos2]
+                    << " connected to " << RA_replay_ctrls[pos2]->get_block_id()
+                    << std::endl;
+
+
+                pos2++;
+            }
+
+        } else {
+            int pos2 = 0;
+            
+                for (auto& rctrl : RA_radio_ctrls) {
+                    RA_graph->connect(RA_tx_stream_vector[pos2],
+                0,
+                RA_duc_ctrls[pos2]->get_block_id(),
+                0);
+                std::cout << "Streamer: " << RA_tx_stream_vector[pos2]
+                    << " connected to " << RA_replay_ctrls[pos2]->get_block_id()
+                    << std::endl;
+
+                    pos2++;
+                }
+            
+        }
+
+    }
+void RefArch::buildStreamsMultithreadReplayTX()
+{
+    // TODO: Think about renaming
+    // Build Streams for multithreaded implementation streaming from Repplay Block. 
     // Each Channel gets its own RX streamer.
     // Constants related to the Replay block
     const size_t replay_word_size = 8; // Size of words used by replay block
@@ -957,6 +1038,68 @@ void RefArch::buildStreamsMultithread()
         RA_tx_stream_vector.push_back(RA_tx_stream);
     }
 }
+void RefArch::buildStreamsMultithreadHostTX() 
+{
+
+    // Build Streams for multithreaded implementation
+    // TX streams from Host, not replay. 
+    // Each Device gets its own RX streamer.
+    // Each Channel gets its own TX streamer.
+
+    // Constants related to the Replay block
+    const size_t replay_word_size = 8; // Size of words used by replay block
+    const size_t sample_size      = 4; // Complex signed 16-bit is 32 bits per sample
+    const size_t samples_per_word = 2; // Number of sc16 samples per word
+
+    uhd::device_addr_t streamer_args(RA_streamargs);
+
+
+    // create a receive streamer
+    // std::cout << "Samples per packet: " << spp << std::endl;
+    uhd::stream_args_t stream_args(
+        RA_format, RA_otw); // We should read the wire format from the blocks
+    stream_args.args = streamer_args;
+    std::cout << "Using streamer args: " << stream_args.args.to_string() << std::endl;
+
+
+    // One stream per channel
+    for (int rx_count = 0; rx_count < RA_radio_ctrls.size() / 2; rx_count++) {
+        RA_rx_stream = RA_graph->create_rx_streamer(2, stream_args);
+        RA_rx_stream_vector.push_back(RA_rx_stream);
+        RA_rx_stream_vector.push_back(RA_rx_stream);
+    }
+
+    /************************************************************************
+     * Set up streamer to Replay blocks
+     ***********************************************************************/
+
+
+    for (int i_s2r = 0; i_s2r < RA_radio_ctrls.size(); i_s2r = i_s2r + 1) {
+        streamer_args["block_id"] =
+            RA_duc_ctrls[i_s2r]->get_block_id().to_string();
+        streamer_args["block_port"] = std::to_string(0);
+        stream_args.args            = streamer_args;
+        stream_args.channels        = {0};
+
+        RA_tx_stream = RA_graph->create_tx_streamer(
+            stream_args.channels.size(), stream_args);
+        size_t tx_spp = RA_tx_stream->get_max_num_samps();
+        // Make sure that stream SPP is a multiple of the Replay Block Word Size
+        if (tx_spp % samples_per_word != 0) {
+            // Round SPP down to a multiple of the word size
+            tx_spp                  = (tx_spp / samples_per_word) * samples_per_word;
+            streamer_args["spp"]    = std::to_string(tx_spp);
+            stream_args.args        = streamer_args;
+            RA_tx_stream = RA_graph->create_tx_streamer(
+                stream_args.channels.size(), stream_args);
+        }
+        // Vector of tx streamers
+        RA_tx_stream_vector.push_back(RA_tx_stream);
+        
+    }
+
+}
+
 // blocksettings
 int RefArch::setRadioRates()
 {
@@ -1215,11 +1358,7 @@ void RefArch::transmitFromFile(std::vector<std::complex<float>> buff,
         std::ifstream infile(RA_tx_file.c_str(), std::ifstream::binary);
         // send data until  the signal handler gets called
         while (not RA_stop_signal_called) {
-            // fill the buffer with the waveform
-            //for (size_t n = 0; n < buff.size(); n++) {
-                //buff[n] = wave_table(index += step);
-            //}
-            //std::cout << "Buffer ready for TX: " << buff.size() << std::endl;
+            
             infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
             size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
 

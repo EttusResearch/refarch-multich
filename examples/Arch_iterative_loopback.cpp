@@ -23,6 +23,7 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <fstream>
 #include <memory>
 #include <thread>
+#include <csignal>
 
 class iterative_loopback : public RefArch
 {
@@ -198,9 +199,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Check TX Sensor Lock
     usrpSystem.checkTXSensorLock();
     // Build Streams
-    usrpSystem.buildStreamsMultithread();
+    usrpSystem.buildStreamsMultithreadReplayTX();
     // Connect Graph
-    usrpSystem.connectGraphMultithread();
+    usrpSystem.connectGraphMultithreadReplayTX();
     // Commit Graph
     usrpSystem.commitGraph();
     // Allow for some setup time
@@ -212,13 +213,16 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Begin TX and RX
     // INFO: Comment what each initilization does what type of data is stored in each.
     usrpSystem.localTime();
-
+    // Calculate starttime for threads
+    usrpSystem.updateDelayedStartTime();
+    std::signal(SIGINT, usrpSystem.sigIntHandler);
     int saved_user_delay_time = usrpSystem.RA_delay_start_time;
     for (usrpSystem.run_number = 0; usrpSystem.run_number < usrpSystem.RA_nruns;
          usrpSystem.run_number++) {
         for (usrpSystem.RA_singleTX = 0;
              usrpSystem.RA_singleTX < usrpSystem.RA_replay_ctrls.size();
              usrpSystem.RA_singleTX++) {
+            usrpSystem.transmitFromReplay();
             usrpSystem.spawnReceiveThreads();
             // Next iteration use saved_user_delay_time
             usrpSystem.RA_delay_start_time = saved_user_delay_time;
@@ -226,7 +230,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         // Next iteration use RA_rep_delay
         usrpSystem.RA_delay_start_time = usrpSystem.RA_rep_delay;
     }
-
+    //Join Threads
+    usrpSystem.joinAllThreads();
+    std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
     // Kill Replay
     usrpSystem.stopReplay();
