@@ -258,7 +258,6 @@ void RefArch::setLOsfromConfig()
         } else if (RA_lo[device] == "distributor") {
             RefArch::setDistributor(device);
         }
-        device++;
     }
 }
 void RefArch::setSource(int device)
