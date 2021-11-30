@@ -119,9 +119,6 @@ void RefArch::addProgramOptions()
         ("file", 
             po::value<std::string>(&RA_file)->default_value("usrp_samples.dat"), 
             "name of the file to transmit")
-        ("tx-file", 
-            po::value<std::string>(&RA_tx_file)->default_value("usrp_samples.dat"), 
-            "name of the file to transmit")
         ("nsamps", 
             po::value<size_t>(&RA_nsamps)->default_value(16000), 
             "number of samples to play (0 for infinite)")
@@ -1263,7 +1260,7 @@ void RefArch::transmitFromFile(std::vector<std::complex<float>> buff,
         uhd::set_thread_priority_safe();
         std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
         //std::cout << "BUFF" << std::endl;
-        std::ifstream infile(RA_tx_file.c_str(), std::ifstream::binary);
+        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
         // send data until  the signal handler gets called
         while (not RA_stop_signal_called) {
             
