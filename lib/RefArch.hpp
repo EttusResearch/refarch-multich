@@ -47,12 +47,10 @@ public:
     virtual void buildRadios();
     virtual void buildDDCDUC();
     virtual void buildReplay();
-    virtual void buildStreamsReplayTX();
-    virtual void connectGraphReplayTX();
     virtual void commitGraph();
-    virtual void connectGraphMultithreadReplayTX();
+    virtual void connectGraphMultithread();
     virtual void connectGraphMultithreadHostTX();
-    virtual void buildStreamsMultithreadReplayTX();
+    virtual void buildStreamsMultithread();
     virtual void buildStreamsMultithreadHostTX();
     //blocksettings
     virtual int setRadioRates();

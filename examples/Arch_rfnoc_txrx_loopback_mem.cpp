@@ -60,9 +60,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Check TX Sensor Lock
     usrpSystem.checkTXSensorLock();
     // Build Streams
-    usrpSystem.buildStreamsMultithreadReplayTX();
+    usrpSystem.buildStreamsMultithread();
     // Connect Graph
-    usrpSystem.connectGraphMultithreadReplayTX();
+    usrpSystem.connectGraphMultithread();
     // Commit Graph
     usrpSystem.commitGraph();
     // Allow for some setup time

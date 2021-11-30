@@ -199,9 +199,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Check TX Sensor Lock
     usrpSystem.checkTXSensorLock();
     // Build Streams
-    usrpSystem.buildStreamsMultithreadReplayTX();
+    usrpSystem.buildStreamsMultithread();
     // Connect Graph
-    usrpSystem.connectGraphMultithreadReplayTX();
+    usrpSystem.connectGraphMultithread();
     // Commit Graph
     usrpSystem.commitGraph();
     // Allow for some setup time
@@ -213,8 +213,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Begin TX and RX
     // INFO: Comment what each initilization does what type of data is stored in each.
     usrpSystem.localTime();
-    // Calculate starttime for threads
-    usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     int saved_user_delay_time = usrpSystem.RA_delay_start_time;
     for (usrpSystem.run_number = 0; usrpSystem.run_number < usrpSystem.RA_nruns;
@@ -222,6 +220,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         for (usrpSystem.RA_singleTX = 0;
              usrpSystem.RA_singleTX < usrpSystem.RA_replay_ctrls.size();
              usrpSystem.RA_singleTX++) {
+            usrpSystem.RA_stop_signal_called = false;
+            // Calculate starttime for threads
+            usrpSystem.updateDelayedStartTime();
             usrpSystem.spawnReceiveThreads();
             usrpSystem.transmitFromReplay();
             usrpSystem.joinAllThreads();

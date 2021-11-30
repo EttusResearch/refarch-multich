@@ -23,9 +23,7 @@ class rx_only : public RefArch{
     using RefArch::RefArch;
     void spawnReceiveThreads() override
     {
-        uhd::time_spec_t now =
-            RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now();
-        RA_start_time = uhd::time_spec_t(now + RA_delay_start_time);
+        
         int threadnum = 0;
         
         std::signal(SIGINT, this->sigIntHandler);
@@ -57,7 +55,7 @@ class rx_only : public RefArch{
     void connectGraphMultithread() override
     {
         // This is the function that connects the graph for the multithreaded implementation
-        // The difference is that each channel gets its own RX streamer.
+        // The difference is that each device gets its own RX streamer.
         UHD_LOG_INFO("CogRF", "Connecting graph...");
          std::cout << RA_rx_stream_vector.size();
           std::cout << RA_radio_ctrls.size();
@@ -140,6 +138,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     usrpSystem.syncAllDevices();
     // Begin TX and RX
     // INFO: Comment what each initilization does what type of data is stored in each.
+    // Sync times across threads
+    usrpSystem.updateDelayedStartTime();
     usrpSystem.spawnReceiveThreads();
     std::cout << "Run complete." << std::endl;
     // Kill Replay
