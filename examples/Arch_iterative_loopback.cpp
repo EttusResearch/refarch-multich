@@ -82,7 +82,7 @@ public:
                 folder_name,
                 RA_rx_file_channels,
                 RA_rx_file_location);
-            auto outstream                  = std::shared_ptr<std::ofstream>();
+            auto outstream = std::shared_ptr<std::ofstream>(new std::ofstream());
             outstream->rdbuf()->pubsetbuf(buf.get(), RA_spb); // Important
             outstream->open(this_filename.c_str(), std::ofstream::binary);
             outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
