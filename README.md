@@ -1,3 +1,7 @@
+# Development Branch!
+
+You are currently in the development branch of the Open Architecture for Radar and EW Research. Please checkout either a tagged release or a stable branch. This Development branch has the latest features that the team is working on. There will likely be bugs and some features may not be completely implemented. Developing applications based off this branch is not recommended. Use this branch to watch and give feedback on what we are currently working on!
+
 # Open Architecture for Radar and EW Research
 
 Welcome to the Open Architecture for Radar and EW Research software distribution. refarch-multich is the free and open-source reference architecture code for building a multi-channel USRP-based Radar and EW Research system, designed by NI.
@@ -6,7 +10,7 @@ refarch-multich supports Ubuntu 20.04 with the USRP N320 and USRP N321 Ettus har
 
 ## Documentation
 
-For getting started assistance, visit the User Manual located at the [Knowledge Base](http://kb.ettus.com/). For technical documentation related to USRP™ hardware or UHD system design, visit the [UHD and USRP Manual](http://files.ettus.com/manual/).
+For getting started assistance, visit the User Manual located at the [Open Architecture For Radar and EW Research](https://kb.ettus.com/Open_Architecture_For_Radar_and_EW_Research). For technical documentation related to USRP™ hardware or UHD system design, visit the [UHD and USRP Manual](https://files.ettus.com/manual/).
 
 ## OS Support
 
@@ -14,9 +18,9 @@ refarch-multich is developed and tested on Ubuntu 20.04 version. Operating syste
 
 ## Applications
 
-rearch-multich can be used to build stand-alone Open Architectur for Radar and EW Research system with USRP hardware, or with third-party applications. Some common use-cases for the framework are as follows:
+rearch-multich can be used to build stand-alone Open Architecture for Radar and EW Research system with USRP hardware, or with third-party applications. Some common use-cases for the framework are as follows:
 
-- Cognative Radar
+- Cognitive Radar
 - Antenna Array
 - Beamforming Algorithms 
 - Waveform Testing
@@ -41,7 +45,7 @@ Documents including the BOM, wiring list, and templates to setup the system.
 
 ## Instructions
 
-Read the Open Architecture for Radar and EW Research User Manual located on the Ettus KB website. 
+Read the Open Architecture for Radar and EW Research User Manual located on the [Ettus KB website](https://kb.ettus.com/Open_Architecture_For_Radar_and_EW_Research). 
 
 **Setup Script**
 1. Clone or download this repository to the directory of your choice.

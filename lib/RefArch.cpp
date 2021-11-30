@@ -3,10 +3,31 @@
 #include <uhd/utils/thread.hpp>
 #include <stdio.h>
 #include <boost/circular_buffer.hpp>
-#include <boost/filesystem.hpp>
 #include <csignal>
 #include <fstream>
 
+
+#if HAS_STD_FILESYSTEM
+#    if HAS_STD_FILESYSTEM_EXPERIMENTAL
+#        include <experimental/filesystem>
+#    else
+#        include <filesystem>
+#    endif
+#else
+#    include <boost/filesystem/operations.hpp> // for create_directories, exists
+#    include <boost/filesystem/path.hpp> // for path, operator<<
+#    include <boost/filesystem/path_traits.hpp> // for filesystem
+#endif
+
+#if HAS_STD_FILESYSTEM
+#    if HAS_STD_FILESYSTEM_EXPERIMENTAL
+namespace RA_filesystem = std::experimental::filesystem;
+#    else
+namespace RA_filesystem = std::filesystem;
+#    endif
+#else
+namespace RA_filesystem = boost::filesystem;
+#endif
 
 bool RefArch::RA_stop_signal_called = false;
 
@@ -240,7 +261,6 @@ void RefArch::setLOsfromConfig()
         } else if (RA_lo[device] == "distributor") {
             RefArch::setDistributor(device);
         }
-        device++;
     }
 }
 void RefArch::setSource(int device)
@@ -581,14 +601,14 @@ std::string RefArch::generateRxFilename(const std::string& base_fn,
     try {
         std::string cw_folder =
             "CW_" + std::to_string(tx_freq * 1e-9) + "_GHz_" + folder_name;
-        boost::filesystem::create_directory(
-            str(boost::format("%s%s") % streamer_files.at(rx_chan_num) % cw_folder));
-        boost::filesystem::path base_fn_fp(
+        RA_filesystem::create_directory(RA_filesystem::path(
+            str(boost::format("%s%s") % streamer_files.at(rx_chan_num) % cw_folder)));
+        RA_filesystem::path base_fn_fp(
             streamer_files.at(rx_chan_num) + cw_folder + "/" + base_fn);
-        base_fn_fp.replace_extension(boost::filesystem::path(
-            str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_" % tx_chan_num % "_rx_"
-                % rx_chan_num % "_run_" % run_num % "_cw_" % tx_freq
-                % base_fn_fp.extension().string())));
+        base_fn_fp.replace_extension(
+            RA_filesystem::path(str(boost::format("%s%02d%s%02d%s%02d%s%02d%s") % "tx_"
+                            % tx_chan_num % "_rx_" % rx_chan_num % "_run_" % run_num
+                            % "_cw_" % tx_freq % base_fn_fp.extension().string())));
         return base_fn_fp.string();
     } catch (const std::out_of_range& oor) {
         throw uhd::runtime_error(
