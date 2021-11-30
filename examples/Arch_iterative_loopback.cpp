@@ -222,8 +222,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         for (usrpSystem.RA_singleTX = 0;
              usrpSystem.RA_singleTX < usrpSystem.RA_replay_ctrls.size();
              usrpSystem.RA_singleTX++) {
-            usrpSystem.transmitFromReplay();
             usrpSystem.spawnReceiveThreads();
+            usrpSystem.transmitFromReplay();
+            usrpSystem.joinAllThreads();
             // Next iteration use saved_user_delay_time
             usrpSystem.RA_delay_start_time = saved_user_delay_time;
         }
@@ -231,7 +232,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         usrpSystem.RA_delay_start_time = usrpSystem.RA_rep_delay;
     }
     //Join Threads
-    usrpSystem.joinAllThreads();
+    
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
     // Kill Replay
