@@ -19,10 +19,10 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <uhd/utils/thread.hpp>
 #include <stdio.h>
 #include <boost/circular_buffer.hpp>
+#include <csignal>
 #include <fstream>
 #include <memory>
 #include <thread>
-#include <csignal>
 
 class multifreq : public RefArch
 {
@@ -232,7 +232,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         usrpSystem.spawnReceiveThreads();
         usrpSystem.stopReplay();
     }
-    //Join Threads
+    // Join Threads
     usrpSystem.joinAllThreads();
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;

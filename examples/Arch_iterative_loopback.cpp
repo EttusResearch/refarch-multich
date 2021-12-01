@@ -23,7 +23,6 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <fstream>
 #include <memory>
 #include <thread>
-#include <csignal>
 
 class iterative_loopback : public RefArch
 {
@@ -232,8 +231,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         // Next iteration use RA_rep_delay
         usrpSystem.RA_delay_start_time = usrpSystem.RA_rep_delay;
     }
-    //Join Threads
-    
+    // Join Threads
+
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
     // Kill Replay

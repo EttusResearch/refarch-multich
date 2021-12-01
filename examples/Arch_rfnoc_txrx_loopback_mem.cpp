@@ -21,7 +21,6 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
-    
     // find configuration file -cfgFile adds to "desc" variable
     RefArch usrpSystem(argc, argv);
 
@@ -76,11 +75,11 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync times across threads
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
-    // Transmit via replay block, must be before spawning receive threads. 
+    // Transmit via replay block, must be before spawning receive threads.
     usrpSystem.transmitFromReplay();
     // Spawn receive Threads
     usrpSystem.spawnReceiveThreads();
-    //Join Threads
+    // Join Threads
     usrpSystem.joinAllThreads();
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;

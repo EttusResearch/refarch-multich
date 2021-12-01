@@ -1,24 +1,25 @@
 #ifndef REFARCH_H
 #define REFARCH_H
 
-#include <uhd/rfnoc_graph.hpp>
-#include <uhd/rfnoc/radio_control.hpp>
 #include <uhd/rfnoc/ddc_block_control.hpp>
 #include <uhd/rfnoc/duc_block_control.hpp>
+#include <uhd/rfnoc/radio_control.hpp>
 #include <uhd/rfnoc/replay_block_control.hpp>
+#include <uhd/rfnoc_graph.hpp>
+#include <signal.h>
+#include <stdlib.h>
 #include <boost/program_options.hpp>
 #include <thread>
-#include <stdlib.h>
-#include <signal.h>
 
-//TODO: Need to rethink how to control the stop_signal
+// TODO: Need to rethink how to control the stop_signal
 
-class RefArch {
+class RefArch
+{
 public:
     RefArch(int argc, char* argv[]);
 
 
-    //SyncDevices
+    // SyncDevices
     virtual void setSources();
     virtual int syncAllDevices();
     virtual void killLOs();
@@ -27,12 +28,12 @@ public:
     virtual void checkTXSensorLock();
     virtual void updateDelayedStartTime();
 
-    //Replaycontrol
+    // Replaycontrol
     virtual int importData();
     virtual void stopReplay();
-    static void sigIntHandler(int); //This has to be a void static. Can't override
+    static void sigIntHandler(int); // This has to be a void static. Can't override
 
-    //recievefunctions
+    // recievefunctions
     virtual std::string generateRxFilename(const std::string& base_fn,
         const size_t rx_chan_num,
         const int tx_chan_num,
@@ -42,7 +43,7 @@ public:
         const std::vector<std::string>& rx_streamer_string,
         const std::vector<std::string>& rx_file_location);
 
-    //GraphAssembly
+    // GraphAssembly
     virtual void buildGraph();
     virtual void buildRadios();
     virtual void buildDDCDUC();
@@ -52,7 +53,7 @@ public:
     virtual void connectGraphMultithreadHostTX();
     virtual void buildStreamsMultithread();
     virtual void buildStreamsMultithreadHostTX();
-    //blocksettings
+    // blocksettings
     virtual int setRadioRates();
     virtual void tuneRX();
     virtual void tuneTX();
@@ -63,25 +64,26 @@ public:
     virtual void setRXAnt();
     virtual void setTXAnt();
 
-    //Spawns threads and transmitter
+    // Spawns threads and transmitter
     virtual void spawnReceiveThreads();
     virtual void spawnTransmitThreads();
-    virtual void recv(const int rx_channel_nums, const int threadnum, 
+    virtual void recv(const int rx_channel_nums,
+        const int threadnum,
         uhd::rx_streamer::sptr rx_streamer);
     void virtual transmitFromFile(std::vector<std::complex<float>> buff,
-    uhd::tx_streamer::sptr tx_streamer,
-    uhd::tx_metadata_t metadata,
-    int num_channels);
+        uhd::tx_streamer::sptr tx_streamer,
+        uhd::tx_metadata_t metadata,
+        int num_channels);
     virtual void transmitFromReplay();
     virtual void joinAllThreads();
-    static bool RA_stop_signal_called; 
+    static bool RA_stop_signal_called;
     std::vector<std::thread> RA_rx_vector_thread;
     std::vector<std::thread> RA_tx_vector_thread;
 
 
-    //Example Specific Values
-    //These values should be moved when we transition to
-    //example modifiable configuration files.
+    // Example Specific Values
+    // These values should be moved when we transition to
+    // example modifiable configuration files.
 
     // Replay Global Variables
     std::vector<uhd::rfnoc::replay_block_control::sptr> RA_replay_ctrls;
@@ -91,21 +93,21 @@ public:
     uint32_t RA_replay_buff_size;
     size_t RA_samples_to_replay;
 
-    //These are used in all examples
+    // These are used in all examples
     int RA_singleTX;
     double RA_delay_start_time;
-    //Iterative Loopback
+    // Iterative Loopback
     double RA_time_adjust;
     double RA_rep_delay; // replay block time
     size_t RA_nruns;
 
 
 protected:
-///////////////////////////
-//////Structures.hpp///////
-///////////////////////////
+    ///////////////////////////
+    //////Structures.hpp///////
+    ///////////////////////////
     /////////////////
-    //GraphSettings//
+    // GraphSettings//
     /////////////////
     uhd::rfnoc::rfnoc_graph::sptr RA_graph;
     // radio Global Variables
@@ -127,7 +129,7 @@ protected:
     uhd::time_spec_t RA_start_time;
 
     //////////////////
-    //DeviceSettings//
+    // DeviceSettings//
     //////////////////
     // Runtime
     std::string RA_argsWithAddress;
@@ -143,7 +145,7 @@ protected:
     std::vector<std::string> RA_lo;
 
     //////////////////
-    //SignalSettings//
+    // SignalSettings//
     //////////////////
 
     // Load from disk
@@ -161,7 +163,7 @@ protected:
     std::string RA_tx_file;
 
     //////////////////
-    //ProgramMetaData//
+    // ProgramMetaData//
     //////////////////
     // Input argument
     std::string RA_cfgFile;
@@ -170,8 +172,8 @@ protected:
     boost::program_options::options_description RA_desc;
     boost::program_options::variables_map RA_vm;
 
-    //Structures
-    void addProgramOptions(); //todo: find way of adding additional variables
+    // Structures
+    void addProgramOptions(); // todo: find way of adding additional variables
     void addAddresstoArgs();
     void storeProgramOptions(int argc, char* argv[]);
 
@@ -180,7 +182,7 @@ private:
     void setTerminal(int device);
     void setDistributor(int device);
 
-    std::map<int,std::string> getStreamerFileLocation(
+    std::map<int, std::string> getStreamerFileLocation(
         const std::vector<std::string>& RA_rx_file_channels,
         const std::vector<std::string>& RA_rx_file_location);
 };

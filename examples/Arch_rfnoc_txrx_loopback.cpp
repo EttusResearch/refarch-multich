@@ -19,10 +19,10 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <uhd/utils/thread.hpp>
 #include <stdio.h>
 #include <boost/circular_buffer.hpp>
+#include <csignal>
 #include <fstream>
 #include <memory>
 #include <thread>
-#include <csignal>
 class recvToFile : public RefArch
 {
     using RefArch::RefArch;
@@ -211,10 +211,10 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync times across threads
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
-    // Transmit via replay block, must be before spawning receive threads. 
+    // Transmit via replay block, must be before spawning receive threads.
     usrpSystem.transmitFromReplay();
     usrpSystem.spawnReceiveThreads();
-    //Join Threads
+    // Join Threads
     usrpSystem.joinAllThreads();
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
