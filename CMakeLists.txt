@@ -93,6 +93,10 @@ add_executable(Arch_rx_to_mem examples/Arch_rx_to_mem.cpp)
 message(STATUS "Linking Arch_rx_to_mem.")
 target_link_libraries(Arch_rx_to_mem PRIVATE UHD_BOOST Arch_lib)
 
+add_executable(Arch_txrx_fullduplex examples/Arch_txrx_fullduplex.cpp)
+message(STATUS "Linking Arch_txrx_fullduplex.")
+target_link_libraries(Arch_txrx_fullduplex PRIVATE UHD_BOOST Arch_lib)
+
 ########################################################################
 # Post Build Include Configuration files
 ########################################################################

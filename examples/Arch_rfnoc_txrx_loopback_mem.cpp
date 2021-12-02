@@ -72,7 +72,16 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     usrpSystem.syncAllDevices();
     // Begin TX and RX
     // INFO: Comment what each initilization does what type of data is stored in each.
+    // Sync times across threads
+    usrpSystem.updateDelayedStartTime();
+    std::signal(SIGINT, usrpSystem.sigIntHandler);
+    // Transmit via replay block, must be before spawning receive threads.
+    usrpSystem.transmitFromReplay();
+    // Spawn receive Threads
     usrpSystem.spawnReceiveThreads();
+    // Join Threads
+    usrpSystem.joinAllThreads();
+    std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
     // Kill Replay
     usrpSystem.stopReplay();

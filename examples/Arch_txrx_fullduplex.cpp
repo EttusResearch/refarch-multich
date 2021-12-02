@@ -22,7 +22,8 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <csignal>
 #include <fstream>
 #include <memory>
-#include <thread>
+
+
 class recvToFile : public RefArch
 {
     using RefArch::RefArch;
@@ -30,22 +31,23 @@ class recvToFile : public RefArch
 public:
     std::string folder_name;
 
-    std::string zeropad_to_length(int length, std::string s)
-    {
-        return std::string(length - s.length(), '0') + s;
-    }
     void localTime()
     {
-        // clang-format off
-        boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
-        std::string month = zeropad_to_length(2, std::to_string(timeLocal.date().month()));
-        std::string day  = zeropad_to_length(2, std::to_string(timeLocal.date().day()));
-        std::string year = zeropad_to_length(4, std::to_string(timeLocal.date().year()));
-        std::string hour = zeropad_to_length(2, std::to_string(timeLocal.time_of_day().hours()));
-        std::string minute = zeropad_to_length(2, std::to_string(timeLocal.time_of_day().minutes()));
-        std::string seconds = zeropad_to_length(2, std::to_string(timeLocal.time_of_day().seconds()));
-        folder_name = month + day + year + "_" + hour + minute + seconds + "_" + RA_rx_file;
-        // clang-format on
+        boost::posix_time::ptime timeLocal =
+            boost::posix_time::second_clock::local_time();
+        std::string month   = std::to_string(timeLocal.date().month());
+        month               = std::string(2 - month.length(), '0') + month;
+        std::string day     = std::to_string(timeLocal.date().day());
+        day                 = std::string(2 - day.length(), '0') + day;
+        std::string year    = std::to_string(timeLocal.date().year());
+        std::string hour    = std::to_string(timeLocal.time_of_day().hours());
+        hour                = std::string(2 - hour.length(), '0') + hour;
+        std::string minute  = std::to_string(timeLocal.time_of_day().minutes());
+        minute              = std::string(2 - minute.length(), '0') + minute;
+        std::string seconds = std::to_string(timeLocal.time_of_day().seconds());
+        seconds             = std::string(2 - seconds.length(), '0') + seconds;
+        folder_name =
+            month + day + year + "_" + hour + minute + seconds + "_" + RA_rx_file;
     }
 
     void recv(
@@ -78,7 +80,7 @@ public:
                 folder_name,
                 RA_rx_file_channels,
                 RA_rx_file_location);
-            auto outstream = std::shared_ptr<std::ofstream>(new std::ofstream());
+            std::ofstream* outstream        = new std::ofstream;
             outstream->rdbuf()->pubsetbuf(buf.get(), RA_spb); // Important
             outstream->open(this_filename.c_str(), std::ofstream::binary);
             outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
@@ -167,7 +169,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     usrpSystem.buildRadios();
     // Setup DDC/DUC Blocks
     usrpSystem.buildDDCDUC();
-    // Setup Replay Blocks
+
     usrpSystem.buildReplay();
     // Setup LO distribution
     usrpSystem.setLOsfromConfig();
@@ -194,32 +196,30 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Check TX Sensor Lock
     usrpSystem.checkTXSensorLock();
     // Build Streams
-    usrpSystem.buildStreamsMultithread();
+    usrpSystem.buildStreamsMultithreadHostTX();
     // Connect Graph
-    usrpSystem.connectGraphMultithread();
+    usrpSystem.connectGraphMultithreadHostTX();
     // Commit Graph
     usrpSystem.commitGraph();
     // Allow for some setup time
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    // Load Replay Block Buffers with data to transmit
-    usrpSystem.importData();
     // Sync time across devices
     usrpSystem.syncAllDevices();
     // Begin TX and RX
     // INFO: Comment what each initilization does what type of data is stored in each.
     usrpSystem.localTime();
-    // Sync times across threads
+    // Calculate startime for threads
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     // Transmit via replay block, must be before spawning receive threads.
-    usrpSystem.transmitFromReplay();
+    usrpSystem.spawnTransmitThreads();
+    // Spawn receive Threads
     usrpSystem.spawnReceiveThreads();
     // Join Threads
     usrpSystem.joinAllThreads();
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
-    // Kill Replay
-    usrpSystem.stopReplay();
+
     // Kill LO
     usrpSystem.killLOs();
 
