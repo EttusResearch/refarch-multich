@@ -70,7 +70,7 @@ public:
     virtual void recv(const int rx_channel_nums,
         const int threadnum,
         uhd::rx_streamer::sptr rx_streamer);
-    void virtual transmitFromFile(std::vector<std::complex<float>> buff,
+    void virtual transmitFromFile(
         uhd::tx_streamer::sptr tx_streamer,
         uhd::tx_metadata_t metadata,
         int num_channels);
