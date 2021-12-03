@@ -803,7 +803,7 @@ void RefArch::connectGraphMultithread()
                       << std::endl;
         }
     } else {
-        // For the case where the replay block is connected directly to the radio blocks. 
+        // For the case where the replay block is connected directly to the radio blocks.
         int pos2 = 0;
         for (auto& replctrl : RA_replay_ctrls) {
             for (auto& rctrl : RA_radio_ctrls) {
@@ -854,23 +854,20 @@ void RefArch::connectGraphMultithreadHostTX()
                   << std::endl;
     }
     int pos2 = 0;
-    
+
     for (auto& rctrl : RA_radio_ctrls) {
-        RA_graph->connect(RA_duc_ctrls[pos2]->get_block_id(),
-            RA_duc_chan,
-            rctrl->get_block_id(),
-            0);
+        RA_graph->connect(
+            RA_duc_ctrls[pos2]->get_block_id(), RA_duc_chan, rctrl->get_block_id(), 0);
         std::cout << "Connected " << RA_duc_ctrls[pos2]->get_block_id() << " port "
-                    << RA_duc_chan << " to radio " << rctrl->get_block_id() << " port "
-                    << 0 << std::endl;
+                  << RA_duc_chan << " to radio " << rctrl->get_block_id() << " port " << 0
+                  << std::endl;
 
         RA_graph->connect(
             RA_tx_stream_vector[pos2], 0, RA_duc_ctrls[pos2]->get_block_id(), 0);
         std::cout << "Streamer: " << RA_tx_stream_vector[pos2] << " connected to "
-                    << RA_replay_ctrls[pos2]->get_block_id() << std::endl;
+                  << RA_replay_ctrls[pos2]->get_block_id() << std::endl;
         pos2++;
     }
-    
 }
 void RefArch::buildStreamsMultithread()
 {
@@ -931,7 +928,7 @@ void RefArch::buildStreamsMultithreadHostTX()
     uhd::device_addr_t streamer_args(RA_streamargs);
     // create a receive streamer
     // std::cout << "Samples per packet: " << spp << std::endl;
-    uhd::stream_args_t stream_args(RA_format, RA_otw); 
+    uhd::stream_args_t stream_args(RA_format, RA_otw);
     stream_args.args = streamer_args;
     std::cout << "Using streamer args: " << stream_args.args.to_string() << std::endl;
     // One stream per channel
@@ -1215,9 +1212,7 @@ void RefArch::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx
               << " samples..." << std::endl;
 }
 void RefArch::transmitFromFile(
-    uhd::tx_streamer::sptr tx_streamer,
-    uhd::tx_metadata_t metadata,
-    int num_channels)
+    uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
 {
     uhd::set_thread_priority_safe(0.9F);
     std::vector<std::complex<float>> buff(RA_spb);
@@ -1254,38 +1249,36 @@ void RefArch::transmitFromReplay()
         // larger than the buffer size.
         stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE;
     }
-    if (RA_TX_All_Chan == true){
+    if (RA_TX_All_Chan == true) {
         for (int i = 0; i < RA_replay_ctrls.size(); i = i + 2) {
-        // Replay Block Channel (output) 0
+            // Replay Block Channel (output) 0
             std::cout << RA_replay_ctrls[i]->get_block_id()
-                  << " Port: " << RA_replay_chan_vector[i] << std::endl
-                  << RA_replay_ctrls[i]->get_block_id()
-                  << " Issuing replay command for " << RA_nsamps << " samps..."
-                  << std::endl;
-        RA_replay_ctrls[i]->config_play(
-            RA_replay_buff_addr, RA_replay_buff_size, RA_replay_chan_vector[i]);
-        stream_cmd.num_samps  = RA_nsamps;
-        stream_cmd.stream_now = false;
-        stream_cmd.time_spec  = RA_start_time;
-        RA_replay_ctrls[i]->issue_stream_cmd(
-            stream_cmd, RA_replay_chan_vector[i]);
-        // Replay Block Channel (output) 1
-        std::cout << RA_replay_ctrls[i]->get_block_id()
-                  << " Port: " << RA_replay_chan_vector[i+1] << std::endl
-                  << RA_replay_ctrls[i]->get_block_id()
-                  << " Issuing replay command for " << RA_nsamps << " samps..."
-                  << std::endl;
-        RA_replay_ctrls[i]->config_play(
-            RA_replay_buff_addr, RA_replay_buff_size, RA_replay_chan_vector[i+1]);
-        stream_cmd.num_samps  = RA_nsamps;
-        stream_cmd.stream_now = false;
-        stream_cmd.time_spec  = RA_start_time;
-        RA_replay_ctrls[i]->issue_stream_cmd(
-            stream_cmd, RA_replay_chan_vector[i+1]);
+                      << " Port: " << RA_replay_chan_vector[i] << std::endl
+                      << RA_replay_ctrls[i]->get_block_id()
+                      << " Issuing replay command for " << RA_nsamps << " samps..."
+                      << std::endl;
+            RA_replay_ctrls[i]->config_play(
+                RA_replay_buff_addr, RA_replay_buff_size, RA_replay_chan_vector[i]);
+            stream_cmd.num_samps  = RA_nsamps;
+            stream_cmd.stream_now = false;
+            stream_cmd.time_spec  = RA_start_time;
+            RA_replay_ctrls[i]->issue_stream_cmd(stream_cmd, RA_replay_chan_vector[i]);
+            // Replay Block Channel (output) 1
+            std::cout << RA_replay_ctrls[i]->get_block_id()
+                      << " Port: " << RA_replay_chan_vector[i + 1] << std::endl
+                      << RA_replay_ctrls[i]->get_block_id()
+                      << " Issuing replay command for " << RA_nsamps << " samps..."
+                      << std::endl;
+            RA_replay_ctrls[i]->config_play(
+                RA_replay_buff_addr, RA_replay_buff_size, RA_replay_chan_vector[i + 1]);
+            stream_cmd.num_samps  = RA_nsamps;
+            stream_cmd.stream_now = false;
+            stream_cmd.time_spec  = RA_start_time;
+            RA_replay_ctrls[i]->issue_stream_cmd(
+                stream_cmd, RA_replay_chan_vector[i + 1]);
         }
 
-    }
-    else{
+    } else {
         // Single TX Channel Output
         std::cout << RA_replay_ctrls[RA_singleTX]->get_block_id()
                   << " Port: " << RA_replay_chan_vector[RA_singleTX] << std::endl
@@ -1312,13 +1305,12 @@ void RefArch::spawnTransmitThreads()
     md.has_time_spec  = true;
     md.time_spec      = RA_start_time;
     std::cout << RA_TX_All_Chan << std::endl;
-    if (RA_TX_All_Chan == true){
+    if (RA_TX_All_Chan == true) {
         for (int i = 0; i < RA_tx_stream_vector.size(); i++) {
             // start transmit worker thread, not for use with replay block.
             std::cout << "Spawning TX thread.." << std::endl;
             std::thread tx(
-                [this](
-                    uhd::tx_streamer::sptr tx_streamer,
+                [this](uhd::tx_streamer::sptr tx_streamer,
                     uhd::tx_metadata_t metadata,
                     int num_channels) {
                     transmitFromFile(tx_streamer, metadata, num_channels);
@@ -1328,21 +1320,19 @@ void RefArch::spawnTransmitThreads()
                 1);
             RA_tx_vector_thread.push_back(std::move(tx));
         }
-    } 
-    else{
-         // start transmit worker thread, not for use with replay block.
-            std::cout << "Spawning Single TX thread, Channel: " << RA_singleTX << std::endl;
-            std::thread tx(
-                [this](
-                    uhd::tx_streamer::sptr tx_streamer,
-                    uhd::tx_metadata_t metadata,
-                    int num_channels) {
-                    transmitFromFile(tx_streamer, metadata, num_channels);
-                },
-                RA_tx_stream_vector[RA_singleTX],
-                md,
-                1);
-            RA_tx_vector_thread.push_back(std::move(tx));
+    } else {
+        // start transmit worker thread, not for use with replay block.
+        std::cout << "Spawning Single TX thread, Channel: " << RA_singleTX << std::endl;
+        std::thread tx(
+            [this](uhd::tx_streamer::sptr tx_streamer,
+                uhd::tx_metadata_t metadata,
+                int num_channels) {
+                transmitFromFile(tx_streamer, metadata, num_channels);
+            },
+            RA_tx_stream_vector[RA_singleTX],
+            md,
+            1);
+        RA_tx_vector_thread.push_back(std::move(tx));
     }
 }
 void RefArch::spawnReceiveThreads()
