@@ -10,8 +10,8 @@ Full TX-RX Loopback to/from host
 ALL TX -> ALL RX.
 If the user sets the number of samples to zero, this function will stream
 continuously. The multithreaded version
-currently has each USRP in its own thread. This version uses one RX streamer per device and one TX streamer
-per channel.
+currently has each USRP in its own thread. This version uses one RX streamer per device
+and one TX streamer per channel.
 *******************************************************************************************************************/
 
 #include "RefArch.hpp"
