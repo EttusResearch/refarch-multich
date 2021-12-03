@@ -1255,7 +1255,7 @@ void RefArch::transmitFromReplay()
         stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE;
     }
     if (RA_TX_All_Chan == true){
-        for (int i = 0; i < RA_replay_ctrls.size(); i++) {
+        for (int i = 0; i < RA_replay_ctrls.size(); i = i + 2) {
         // Replay Block Channel (output) 0
             std::cout << RA_replay_ctrls[i]->get_block_id()
                   << " Port: " << RA_replay_chan_vector[i] << std::endl
