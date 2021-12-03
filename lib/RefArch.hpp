@@ -96,6 +96,7 @@ public:
     // These are used in all examples
     int RA_singleTX;
     double RA_delay_start_time;
+    bool RA_TX_All_Chan;
     // Iterative Loopback
     double RA_time_adjust;
     double RA_rep_delay; // replay block time

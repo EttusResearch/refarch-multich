@@ -138,6 +138,9 @@ void RefArch::addProgramOptions()
         ("singleTX",
             po::value<int>(&RA_singleTX)->default_value(0), 
             "TX Channel)")
+        ("TXallChan",
+            po::value<bool>(&RA_TX_All_Chan)->default_value(false), 
+            "Transmit on all TX Channels")
         ("time_requested", 
             po::value<double>(&RA_time_requested)->default_value(0.0), 
             "Single Loopback Continous Time Limit (s).")
@@ -1275,20 +1278,38 @@ void RefArch::spawnTransmitThreads()
     md.end_of_burst   = false;
     md.has_time_spec  = true;
     md.time_spec      = RA_start_time;
-    for (int i = 0; i < RA_tx_stream_vector.size(); i++) {
-        // start transmit worker thread, not for use with replay block.
-        std::cout << "Spawning TX thread.." << std::endl;
-        std::thread tx(
-            [this](
-                uhd::tx_streamer::sptr tx_streamer,
-                uhd::tx_metadata_t metadata,
-                int num_channels) {
-                transmitFromFile(tx_streamer, metadata, num_channels);
-            },
-            RA_tx_stream_vector[i],
-            md,
-            1);
-        RA_tx_vector_thread.push_back(std::move(tx));
+    std::cout << RA_TX_All_Chan << std::endl;
+    if (RA_TX_All_Chan == true){
+        for (int i = 0; i < RA_tx_stream_vector.size(); i++) {
+            // start transmit worker thread, not for use with replay block.
+            std::cout << "Spawning TX thread.." << std::endl;
+            std::thread tx(
+                [this](
+                    uhd::tx_streamer::sptr tx_streamer,
+                    uhd::tx_metadata_t metadata,
+                    int num_channels) {
+                    transmitFromFile(tx_streamer, metadata, num_channels);
+                },
+                RA_tx_stream_vector[i],
+                md,
+                1);
+            RA_tx_vector_thread.push_back(std::move(tx));
+        }
+    } 
+    else{
+         // start transmit worker thread, not for use with replay block.
+            std::cout << "Spawning Single TX thread, Channel: " << RA_singleTX << std::endl;
+            std::thread tx(
+                [this](
+                    uhd::tx_streamer::sptr tx_streamer,
+                    uhd::tx_metadata_t metadata,
+                    int num_channels) {
+                    transmitFromFile(tx_streamer, metadata, num_channels);
+                },
+                RA_tx_stream_vector[RA_singleTX],
+                md,
+                1);
+            RA_tx_vector_thread.push_back(std::move(tx));
     }
 }
 void RefArch::spawnReceiveThreads()
