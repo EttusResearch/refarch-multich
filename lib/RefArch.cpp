@@ -1304,11 +1304,10 @@ void RefArch::spawnTransmitThreads()
     md.end_of_burst   = false;
     md.has_time_spec  = true;
     md.time_spec      = RA_start_time;
-    std::cout << RA_TX_All_Chan << std::endl;
     if (RA_TX_All_Chan == true) {
-        for (int i = 0; i < RA_tx_stream_vector.size(); i++) {
+        for (size_t i = 0; i < RA_tx_stream_vector.size(); i++) {
             // start transmit worker thread, not for use with replay block.
-            std::cout << "Spawning TX thread.." << std::endl;
+            std::cout << "Spawning TX thread: " << i << std::endl;
             std::thread tx(
                 [this](uhd::tx_streamer::sptr tx_streamer,
                     uhd::tx_metadata_t metadata,
