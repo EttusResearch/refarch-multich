@@ -39,16 +39,14 @@ public:
         return std::string(length - s.length(), '0') + s;
     }
 
-    //Easy way of adding custom values to configuration file.
-    void addAditionalOptions() override{
+    // Easy way of adding custom values to configuration file.
+    void addAditionalOptions() override
+    {
         namespace po = boost::program_options;
-        RA_desc.add_options()
-        ("repeat_delay", 
-            po::value<double>(&rep_delay)->default_value(0), 
-            "delay between repeats (seconds)")
-        ("nruns", 
-            po::value<size_t>(&nruns)->default_value(1), 
-            "number of repeats");
+        RA_desc.add_options()("repeat_delay",
+            po::value<double>(&rep_delay)->default_value(0),
+            "delay between repeats (seconds)")(
+            "nruns", po::value<size_t>(&nruns)->default_value(1), "number of repeats");
     }
 
     void localTime()

@@ -32,10 +32,10 @@ namespace RA_filesystem = boost::filesystem;
 bool RefArch::RA_stop_signal_called = false;
 
 
-
-void RefArch::parseConfig(){
+void RefArch::parseConfig()
+{
     addProgramOptions();
-    addAditionalOptions(); //Overloaded by User
+    addAditionalOptions(); // Overloaded by User
     storeProgramOptions();
     addAddresstoArgs();
 }
@@ -156,15 +156,16 @@ void RefArch::storeProgramOptions()
     // store program options from config file
     if (RA_vm.count("cfgFile")) {
         // Have to use a special way of recieving cfgFile because we haven't run notify
-        std::cout << "Load cfg_file: " << RA_vm["cfgFile"].as<std::string>()<< std::endl;
+        std::cout << "Load cfg_file: " << RA_vm["cfgFile"].as<std::string>() << std::endl;
         // standard streams don't accept a standard string, so pass the string using
         // c_str()
-        auto parsed_options = po::parse_config_file(RA_vm["cfgFile"].as<std::string>().c_str(), RA_desc, true);
+        auto parsed_options = po::parse_config_file(
+            RA_vm["cfgFile"].as<std::string>().c_str(), RA_desc, true);
         po::store(parsed_options, RA_vm);
         for (const auto& o : parsed_options.options) {
             if (RA_vm.find(o.string_key) == RA_vm.end()) {
                 // an unknown option
-                UHD_LOG_WARNING("ConfigFile Option","Ignoring Key: " << o.string_key);
+                UHD_LOG_WARNING("ConfigFile Option", "Ignoring Key: " << o.string_key);
             }
         }
     }
