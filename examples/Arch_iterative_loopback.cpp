@@ -31,10 +31,24 @@ class iterative_loopback : public RefArch
 public:
     std::string folder_name;
     size_t run_number;
+    double rep_delay; // replay block time
+    size_t nruns; // Number of runs to perform
 
     std::string zeropad_to_length(int length, std::string s)
     {
         return std::string(length - s.length(), '0') + s;
+    }
+
+    //Easy way of adding custom values to configuration file.
+    void addAditionalOptions() override{
+        namespace po = boost::program_options;
+        RA_desc.add_options()
+        ("repeat_delay", 
+            po::value<double>(&rep_delay)->default_value(0), 
+            "delay between repeats (seconds)")
+        ("nruns", 
+            po::value<size_t>(&nruns)->default_value(1), 
+            "number of repeats");
     }
 
     void localTime()
@@ -162,7 +176,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
     iterative_loopback usrpSystem(argc, argv);
-
+    usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
     // Sync Device Clocks
@@ -214,7 +228,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     usrpSystem.localTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     int saved_user_delay_time = usrpSystem.RA_delay_start_time;
-    for (usrpSystem.run_number = 0; usrpSystem.run_number < usrpSystem.RA_nruns;
+    for (usrpSystem.run_number = 0; usrpSystem.run_number < usrpSystem.nruns;
          usrpSystem.run_number++) {
         for (usrpSystem.RA_singleTX = 0;
              usrpSystem.RA_singleTX < usrpSystem.RA_replay_ctrls.size();
@@ -229,7 +243,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
             usrpSystem.RA_delay_start_time = saved_user_delay_time;
         }
         // Next iteration use RA_rep_delay
-        usrpSystem.RA_delay_start_time = usrpSystem.RA_rep_delay;
+        usrpSystem.RA_delay_start_time = usrpSystem.rep_delay;
     }
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;

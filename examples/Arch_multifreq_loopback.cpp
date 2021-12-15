@@ -172,7 +172,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
     multifreq usrpSystem(argc, argv);
-
+    usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
     // Sync Device Clocks

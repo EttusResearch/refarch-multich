@@ -31,12 +31,15 @@ namespace RA_filesystem = boost::filesystem;
 
 bool RefArch::RA_stop_signal_called = false;
 
-RefArch::RefArch(int argc, char* argv[])
-{
-    this->addProgramOptions();
-    this->storeProgramOptions(argc, argv);
-    this->addAddresstoArgs();
+
+
+void RefArch::parseConfig(){
+    addProgramOptions();
+    addAditionalOptions(); //Overloaded by User
+    storeProgramOptions();
+    addAddresstoArgs();
 }
+
 
 // structures
 void RefArch::addProgramOptions()
@@ -48,8 +51,8 @@ void RefArch::addProgramOptions()
 
         RA_desc.add_options()
         ("cfgFile",
-            po::value<std::string>(&RA_cfgFile), 
-            "relative path to configuration file")
+                po::value<std::string>(&RA_cfgFile)->required(), 
+                "relative path to configuration file")
         ("args",
             po::value<std::string>(&RA_args)->default_value(""), 
             "uhd transmit device address args")
@@ -125,16 +128,6 @@ void RefArch::addProgramOptions()
         ("replay_time",
             po::value<double>(&RA_delay_start_time)->default_value(2.0), 
             "Replay Block Time Delay (seconds)")
-        ("nruns", 
-            po::value<size_t>(&RA_nruns)->default_value(1), 
-            "number of repeats")
-        ("repeat_delay", 
-            po::value<double>(&RA_rep_delay)->default_value(0), 
-            "delay between repeats (seconds)")
-        ("time_adjust",
-            po::value<double>(&RA_time_adjust)->default_value(2.0), 
-            "If tramsmitting in iterative mode, "
-            "seperation between per-channel transmission (seconds).")
         ("singleTX",
             po::value<int>(&RA_singleTX)->default_value(0), 
             "TX Channel)")
@@ -155,20 +148,27 @@ void RefArch::addAddresstoArgs()
     }
     RA_args = RA_argsWithAddress;
 }
-void RefArch::storeProgramOptions(int argc, char* argv[])
+void RefArch::storeProgramOptions()
 {
     namespace po = boost::program_options;
     // store program options from cmd line
-    po::store(po::parse_command_line(argc, argv, RA_desc), RA_vm);
-    po::notify(RA_vm);
+    po::store(po::command_line_parser(RA_argc, RA_argv).options(RA_desc).run(), RA_vm);
     // store program options from config file
     if (RA_vm.count("cfgFile")) {
-        std::cout << "Load cfg_file: " << RA_cfgFile << std::endl;
+        // Have to use a special way of recieving cfgFile because we haven't run notify
+        std::cout << "Load cfg_file: " << RA_vm["cfgFile"].as<std::string>()<< std::endl;
         // standard streams don't accept a standard string, so pass the string using
         // c_str()
-        po::store(po::parse_config_file(RA_cfgFile.c_str(), RA_desc), RA_vm);
-        po::notify(RA_vm);
+        auto parsed_options = po::parse_config_file(RA_vm["cfgFile"].as<std::string>().c_str(), RA_desc, true);
+        po::store(parsed_options, RA_vm);
+        for (const auto& o : parsed_options.options) {
+            if (RA_vm.find(o.string_key) == RA_vm.end()) {
+                // an unknown option
+                UHD_LOG_WARNING("ConfigFile Option","Ignoring Key: " << o.string_key);
+            }
+        }
     }
+    po::notify(RA_vm);
 }
 // sync
 void RefArch::setSources()
