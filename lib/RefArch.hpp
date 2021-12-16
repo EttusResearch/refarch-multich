@@ -16,8 +16,19 @@
 class RefArch
 {
 public:
-    RefArch(int argc, char* argv[]);
+    RefArch(int argc, char* argv[]) : RA_argc(argc), RA_argv(argv){};
+    virtual void addAditionalOptions(){
+        /*
+        Add additional options by calling
+        namespace po = boost::program_options;
+        RA_desc.add_options()
+        ("cfgFile",
+            po::value<std::string>(&RA_cfgFile),
+            "relative path to configuration file")
 
+        See RefArch::addProgramOptions() for default values
+        */
+    };
 
     // SyncDevices
     virtual void setSources();
@@ -63,6 +74,7 @@ public:
     virtual void setTXBw();
     virtual void setRXAnt();
     virtual void setTXAnt();
+    virtual void parseConfig();
 
     // Spawns threads and transmitter
     virtual void spawnReceiveThreads();
@@ -78,7 +90,6 @@ public:
     static bool RA_stop_signal_called;
     std::vector<std::thread> RA_rx_vector_thread;
     std::vector<std::thread> RA_tx_vector_thread;
-
 
     // Example Specific Values
     // These values should be moved when we transition to
@@ -96,11 +107,6 @@ public:
     int RA_singleTX;
     double RA_delay_start_time;
     bool RA_TX_All_Chan;
-    // Iterative Loopback
-    double RA_time_adjust;
-    double RA_rep_delay; // replay block time
-    size_t RA_nruns;
-
 
 protected:
     ///////////////////////////
@@ -171,11 +177,12 @@ protected:
     // runtime
     boost::program_options::options_description RA_desc;
     boost::program_options::variables_map RA_vm;
-
+    int RA_argc;
+    char** RA_argv;
     // Structures
     void addProgramOptions(); // todo: find way of adding additional variables
     void addAddresstoArgs();
-    void storeProgramOptions(int argc, char* argv[]);
+    void storeProgramOptions();
 
 private:
     void setSource(int device);
