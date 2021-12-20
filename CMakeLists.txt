@@ -97,6 +97,10 @@ add_executable(Arch_txrx_fullduplex examples/Arch_txrx_fullduplex.cpp)
 message(STATUS "Linking Arch_txrx_fullduplex.")
 target_link_libraries(Arch_txrx_fullduplex PRIVATE UHD_BOOST Arch_lib)
 
+add_executable(Arch_pipe_example examples/Arch_pipe_example.cpp)
+message(STATUS "Linking Arch_pipe_example.")
+target_link_libraries(Arch_pipe_example PRIVATE UHD_BOOST Arch_lib)
+
 ########################################################################
 # Post Build Include Configuration files
 ########################################################################
