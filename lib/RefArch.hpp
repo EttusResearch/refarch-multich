@@ -85,6 +85,18 @@ public:
     void virtual transmitFromFile(uhd::tx_streamer::sptr tx_streamer,
         uhd::tx_metadata_t metadata,
         int num_channels);
+    void virtual transmitFromFile0(uhd::tx_streamer::sptr tx_streamer,
+        uhd::tx_metadata_t metadata,
+        int num_channels);
+    void virtual transmitFromFile1(uhd::tx_streamer::sptr tx_streamer,
+        uhd::tx_metadata_t metadata,
+        int num_channels);
+    void virtual transmitFromFile2(uhd::tx_streamer::sptr tx_streamer,
+        uhd::tx_metadata_t metadata,
+        int num_channels);
+    void virtual transmitFromFile3(uhd::tx_streamer::sptr tx_streamer,
+        uhd::tx_metadata_t metadata,
+        int num_channels);
     virtual void transmitFromReplay();
     virtual void joinAllThreads();
     static bool RA_stop_signal_called;
