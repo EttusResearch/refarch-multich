@@ -21,25 +21,44 @@ single TX -> # of RX.
 #include <stdio.h>
 #include <boost/circular_buffer.hpp>
 #include <csignal>
+#include <fcntl.h>
 #include <fstream>
 #include <memory>
 #include <thread>
+
+#include <chrono>
+
+#define NumberOfTriesToMake 5000
 
 class Pipe_Example : public RefArch{
 public:
     using RefArch::RefArch;
     std::string pipe_folder_location;
+    int pipe_file_buffer_size;
     std::vector<std::shared_ptr<PipeFile>> outfiles;
     int32_t maximum_number_of_samples =0;
 
+    /**
+     * @brief Used to add options to the configuration file.
+     * 
+     */
     void addAditionalOptions() override{
         namespace po = boost::program_options;
         RA_desc.add_options()
         ("PipeFolderLocation",
             po::value<std::string>(&pipe_folder_location)->required(), 
-            "Absolute location of PipeFile");
+            "Absolute location of PipeFile")
+        ("PipeFileBufferSize",
+            po::value<int>(&pipe_file_buffer_size)->required(), 
+            "Number of samples to read or write to file");
     }
 
+    /**
+     * @brief Copied out the transmitFromReplay in the source code but made modifications
+     *          to allow for STREAM_MODE_NUM_SAMPS_AND_MORE
+     *          Also changed RA_nsamps to maximum_number_of_samples
+     * 
+     */
     void transmitFromReplay() override{
         if (maximum_number_of_samples <=0) return;
         std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
@@ -89,20 +108,30 @@ public:
         }
     }
 
+    /**
+     * @brief is a background process that reads the data from each channel. Changed 
+     *          so that it uses STREAM_MODE_NUM_SAMPS_AND_MORE and will end if 
+     *          maximum_number_of_samples <=0.
+     *          Includes the write to pipe implimentation.
+     *          This will read the number of samples required into memory THEN write
+     *          to the pipe.
+     * 
+     * @param rx_channel_nums number of rx channels
+     * @param threadnum The thread number
+     * @param rx_streamer sptr to the rx_streamer
+     */
     void recv(
        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
     {
-        
         std::vector<std::shared_ptr<PipeFile>> thread_files;
-        thread_files.push_back(outfiles[threadnum*2]);
-        thread_files.push_back(outfiles[threadnum*2+1]);
+        for (int i =0; i<rx_channel_nums; i++){
+            thread_files.push_back(outfiles[threadnum*rx_channel_nums+i]);
+        }
         uhd::set_thread_priority_safe(0.9F);
-        int num_total_samps = 0;
-        std::unique_ptr<char[]> buf(new char[RA_spb]);
+        int total_num_samples_returned = 0;
         // Prepare buffers for received samples and metadata
-        uhd::rx_metadata_t md;
         std::vector<boost::circular_buffer<std::complex<short>>> buffs(
-            rx_channel_nums, boost::circular_buffer<std::complex<short>>(RA_spb + 1));
+            rx_channel_nums, boost::circular_buffer<std::complex<short>>(maximum_number_of_samples + 1));
         // create a vector of pointers to point to each of the channel buffers
         std::vector<std::complex<short>*> buff_ptrs;
         for (size_t i = 0; i < buffs.size(); i++) {
@@ -110,10 +139,12 @@ public:
         }
         bool overflow_message = true;
         // setup streaming
+        uhd::rx_metadata_t md;
         uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_MORE);
         stream_cmd.num_samps  = std::max(
-                                    thread_files[0]->returnedNumberOfSamples(),
-                                    thread_files[1]->returnedNumberOfSamples());
+                                    thread_files[0]->returnedValues()[0],
+                                    thread_files[1]->returnedValues()[0]);
+        
         stream_cmd.stream_now = false;
         stream_cmd.time_spec  = RA_start_time;
         md.has_time_spec      = true;
@@ -125,10 +156,11 @@ public:
         }
         rx_streamer->issue_stream_cmd(stream_cmd);
         int loop_num = 0;
+        int total_sent = 0;
         while (not RA_stop_signal_called
-               and (stream_cmd.num_samps > num_total_samps or stream_cmd.num_samps == 0)) 
+               and (stream_cmd.num_samps > total_num_samples_returned or stream_cmd.num_samps == 0)) 
                {
-            size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
+            size_t samps_retuned = rx_streamer->recv(buff_ptrs, stream_cmd.num_samps, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
                 std::cout << boost::format("Timeout while streaming") << std::endl;
@@ -159,62 +191,177 @@ public:
                 throw std::runtime_error(
                     str(boost::format("Receiver error %s") % md.strerror()));
             }
-            num_total_samps += num_rx_samps;
+            // Write to Pipe Implimentation
+            total_num_samples_returned += samps_retuned;
             int buffer_number=0;
+            typedef std::chrono::high_resolution_clock Clock;
             for (auto file : thread_files) {
-                size_t num_of_samples_to_write = 
-                    num_total_samps > file->returnedNumberOfSamples() ? num_rx_samps : 
-                    num_rx_samps - (num_total_samps - file->returnedNumberOfSamples());
-                file->writeFile((char*)buff_ptrs[buffer_number],
-                    num_of_samples_to_write * sizeof(std::complex<short>));
+                // sets the samples_remaining to either the number recieved from rev (samps_returned)
+                // or sets them to an ammount that gets us to the requested number of samples
+                size_t samples_remaining = 
+                    file->returnedValues()[0] >= total_num_samples_returned ? samps_retuned : 
+                    samps_retuned - (total_num_samples_returned - file->returnedValues()[0]);
+                int file_write_index = 0;
+                int number_of_tries = NumberOfTriesToMake; 
+                uint iterations = 0;                     // used for benchmarking
+                double combined_rate_in_miliseconds = 0; // used for benchmarking
+                auto timer = Clock::now();               // used for benchmarking
+                while(samples_remaining > 0 && !RA_stop_signal_called){
+                    int num_of_bytes_to_write = std::min(samples_remaining * sizeof(std::complex<short>), size_t(pipe_file_buffer_size));
+                    std::complex<short>* it = buff_ptrs[buffer_number]+file_write_index;
+                    int returned_num_bytes = file->writeFile(it,num_of_bytes_to_write);
+                    if(returned_num_bytes!=-1){
+                        file_write_index += returned_num_bytes/sizeof(std::complex<short>);
+                        samples_remaining -= returned_num_bytes/sizeof(std::complex<short>);
+                        //Code used to benchmark the write rate. Just benchmarking first thread
+                        if (threadnum ==0 && buffer_number==0){
+                            auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now()-timer).count();
+                            iterations++;
+                            deltaTime = deltaTime == 0 ? 1 : deltaTime;
+                            combined_rate_in_miliseconds += (returned_num_bytes/sizeof(std::complex<short>))*1000/deltaTime;
+                            total_sent += returned_num_bytes/sizeof(std::complex<short>);
+                            timer = Clock::now();
+                        }
+                        number_of_tries=NumberOfTriesToMake;
+                    }
+                    else if (number_of_tries <=0) {
+                                std::cout << std::endl
+                                    <<"#######Broke Early########\n"
+                                    <<"                   Thread:"<<threadnum<< std::endl
+                                    <<"               FileNumber:"<<buffer_number<< std::endl
+                                    <<"        Samples Remaining:"<<samples_remaining<< std::endl
+                                    <<"Number of Samples Written:"<<file_write_index<<std::endl
+                                    <<"##########################"<<std::endl;
+                        break;
+                    }
+                    //Try to write again. Waiting a small delay.
+                    else {
+                        --number_of_tries;
+                        std::this_thread::sleep_for(std::chrono::microseconds(10));
+                    }
+                }
+                //Code used to benchmark the write rate. Just benchmarking first thread
+                if (threadnum ==0 && buffer_number==0){
+                    _Float64 speed=0;
+                    iterations = iterations == 0 ? 1 : iterations;
+                    if (iterations>0) speed=(combined_rate_in_miliseconds/iterations);
+                    std::cout   <<"returned_num_bytes: "<<file_write_index<<std::endl
+                                <<"         Rate KS/s:"<<speed<<std::endl
+                                <<"        iterations:"<<iterations<<std::endl
+                                <<"             total:"<<total_sent<<std::endl;}
                 ++buffer_number;
             }
         }
-        
+        //End of recv
         for (auto file : thread_files) {
             file->closeFile();
         }
     }
 
+    /**
+     * @brief Create a Pipes object at file location
+     * 
+     */
     void createPipes(){
         for (size_t i = 0; i < RA_rx_stream_vector.size(); i++) {
-            const std::string this_filename = pipe_folder_location+"/"+std::to_string(i);
+            const std::string this_filename = pipe_folder_location+"/"+std::to_string(i)+".fifo";
             auto Pipe = std::shared_ptr<PipeFile>(new PipeFile(this_filename));
             outfiles.push_back(Pipe);
         }
     }
 
-    void ReadPipes(int pollRateMs){
-        for(auto pipe : outfiles){
-            pipe->readSampleNonBlocking();
-             }
-        bool allReturned;
-        maximum_number_of_samples=0;
+    /**
+     * @brief Creates a test file at the pipe_folder_location to make sure we are able to
+     *          set the buffer size.
+     * 
+     */
+    void testFileSize(){
+        const std::string this_filename = pipe_folder_location+"/"+"test.fifo";
+        PipeFile read_pipe(this_filename);
+        PipeFile write_pipe(this_filename);
+        write_pipe.openFile(O_WRONLY);
+        read_pipe.openFile(O_RDONLY);
+        bool all_returned;
         do{
-            allReturned = true;
-            for(auto pipe : outfiles){
-                allReturned &= pipe->returnedNumberOfSamples()>=0;
-                maximum_number_of_samples = std::max(maximum_number_of_samples,
-                    pipe->returnedNumberOfSamples());
-            }
-            std::cout<<allReturned;
-            std::this_thread::sleep_for(std::chrono::milliseconds(pollRateMs));
-        }while(!RA_stop_signal_called && !allReturned);
+            all_returned = true;
+            all_returned &= write_pipe.isFileOpen();
+            all_returned &= read_pipe.isFileOpen();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }while(!RA_stop_signal_called && !all_returned); 
+        int file_size_buffer = write_pipe.setfileSize(pipe_file_buffer_size);
+        if(file_size_buffer != pipe_file_buffer_size){
+            UHD_LOGGER_ERROR("Configuration File")
+                 << (boost::format(
+                     " Could not set buffer size to %d. Instead set to %d \n"
+                     " Try setting permissions of this executable with this command\n "
+                     " sudo setcap 'CAP_SYS_RESOURCE=+ep' Arch_pipe_example\n "
+                     " Or by reducing the pipe file buffer size inside the configuration file. ")
+                     % pipe_file_buffer_size %file_size_buffer);
+            throw std::runtime_error("Configuration File: Buffer size could not be set");
+        }
+    }
+
+    /**
+     * @brief Spawns background processes to read from the pipe. If all files return
+     *          OR the the RA_stop_signal_called is true it will return. Stores
+     *          data inside the maximum_number_of_samples. Initially sets 
+     *          maximum_number_of_samples to 0;
+     * 
+     * @param pollRateMs rate to poll for all returned samples.
+     */
+    void readPipes(int pollRateMs){
         for(auto pipe : outfiles){
-                std::cout<<pipe->returnedNumberOfSamples()<<std::endl;
+            pipe->readSamplesNonBlocking(1);
+            printf("Calling readSamplesNonBlocking\n");
+             }
+        bool all_returned;
+        maximum_number_of_samples=0;
+        int index_not_returned=0; //This is done so we don't traverse over the returned ones
+        do{
+            all_returned = true;
+            for(; index_not_returned < outfiles.size(); index_not_returned++){
+                all_returned &= outfiles[index_not_returned]->didBackgroundReturn();
+                if(all_returned){
+                    maximum_number_of_samples = std::max(maximum_number_of_samples,
+                        outfiles[index_not_returned]->returnedValues()[0]); 
+                }
+                else {break;}
             }
+            std::this_thread::sleep_for(std::chrono::milliseconds(pollRateMs));
+        }while(!RA_stop_signal_called && !all_returned); 
         for(auto pipe : outfiles){ pipe->closeFile();}
     }
-    
 
+    void openPipesForWriting(int pollRateMs){
+        for (auto outfile : outfiles){
+            outfile->openFile(O_WRONLY);
+        }
+        bool all_returned;
+        int index_not_returned=0; //This is done so we don't traverse over the returned ones
+        do{
+            all_returned = true;
+            for(; index_not_returned < outfiles.size(); index_not_returned++){
+                all_returned &= outfiles[index_not_returned]->isFileOpen();
+                if(!all_returned){break;}
+            }
+            std::cout<<"index1:"<<index_not_returned<<std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(pollRateMs));
+        }while(!RA_stop_signal_called && !all_returned); 
+        if(all_returned){
+            for (auto outfile : outfiles){
+                outfile->setfileSize(pipe_file_buffer_size); //todo: Need error handeler
+            }
+        }
+    }
 };
-
 
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
     Pipe_Example usrpSystem(argc, argv);
     usrpSystem.parseConfig();
+
+    usrpSystem.testFileSize();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
     // Sync Device Clocks
@@ -261,32 +408,30 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     usrpSystem.importData();
     // Sync time across devices
     usrpSystem.syncAllDevices();
-    // Begin TX and RX
-    // INFO: Comment what each initilization does what type of data is stored in each.
-    // Sync times across threads
-    usrpSystem.updateDelayedStartTime();
+    // Create pipes
     usrpSystem.createPipes();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     do{
-        usrpSystem.ReadPipes(100);
-        usrpSystem.transmitFromReplay();
-        usrpSystem.spawnReceiveThreads();
-        usrpSystem.joinAllThreads();
+        usrpSystem.readPipes(100);
+        if(usrpSystem.maximum_number_of_samples!=0){
+            usrpSystem.openPipesForWriting(100);
+            usrpSystem.updateDelayedStartTime();
+            usrpSystem.transmitFromReplay();
+            usrpSystem.spawnReceiveThreads();
+            usrpSystem.joinAllThreads();
+            std::cout << " DONE  GENERATING: "<<std::endl<<std::endl<<std::endl;
+        }
+        else usrpSystem.RA_stop_signal_called=true;
+        usrpSystem.stopReplay();
         std::cout<<"END:"<<usrpSystem.maximum_number_of_samples<<std::endl<<std::flush;
-    }while(usrpSystem.maximum_number_of_samples > 0 && usrpSystem.RA_stop_signal_called);
-    
-    // Transmit via replay block, must be before spawning receive threads.
-    
-    // Spawn receive Threads
-    
-    // Join Threads
+    }while(!usrpSystem.RA_stop_signal_called);
     
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
     // Kill Replay
-    usrpSystem.stopReplay();
     // Kill LO
     usrpSystem.killLOs();
+
 
     std::cout << std::endl << "Closing USRP Sessions" << std::endl << std::endl;
     return EXIT_SUCCESS;

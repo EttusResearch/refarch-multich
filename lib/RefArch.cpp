@@ -454,7 +454,10 @@ int RefArch::importData()
     // Open the file
     std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     if (!infile.is_open()) {
-        std::cerr << "Could not open specified file" << std::endl;
+        std::cerr << "Could not open Replay file. Try using absolute path:" 
+                  << std::endl
+                  << RA_file
+                  << std::endl;
         exit(0);
         return EXIT_FAILURE;
     }
@@ -1231,7 +1234,7 @@ void RefArch::transmitFromFile(
         metadata.start_of_burst = false;
         metadata.has_time_spec  = false;
     }
-
+ 
     // send a mini EOB packet
     metadata.end_of_burst = true;
     tx_streamer->send("", 0, metadata);
@@ -1369,6 +1372,7 @@ void RefArch::joinAllThreads()
     }
     RA_rx_vector_thread.clear();
     // Stop Transmitting once RX is complete
+    bool temp_stop_signal = RA_stop_signal_called;
     RA_stop_signal_called = true;
     // Join TX Threads
     for (auto& tx : RA_tx_vector_thread) {
@@ -1376,4 +1380,5 @@ void RefArch::joinAllThreads()
     }
     RA_tx_vector_thread.clear();
     std::cout << "Threads Joined" << std::endl;
+    RA_stop_signal_called = temp_stop_signal; //return stop_signal_called
 }

@@ -7,8 +7,6 @@
 #include <thread>
 
 #define NOT_OPEN -1
-#define IS_OPEN >= 0
-
 
 class FileLinux
 {
@@ -17,16 +15,16 @@ private:
     bool background_open_active = false;
 
 protected:
-    int fileid = NOT_OPEN;
+    int file_id = NOT_OPEN;
     std::string file_location;
     std::vector<std::thread> threads;
     bool stop_all_file_threads = false;
-    const void *buf;
-    size_t buff_size;
     void BACKGROUND_open(int oFlag);
 public:
+    FileLinux(const std::string& file);
+    bool isFileOpen(){return file_id >= 0;}
     void openFile(int oFlag);
-    virtual ssize_t readFileBlocking(void *buf, size_t nbytes);
+    ssize_t virtual readFileBlocking(void *buf, size_t nbytes);
     int writeFile(void *buf, size_t nbytes);
     void closeFile();
 };
@@ -35,13 +33,18 @@ public:
 class PipeFile : public FileLinux
 {
 private:
-    int32_t num_of_samples_to_aquire=-1;
     bool pipe_background_process = false;
-    void readSampleBlocking();
+    void readSamplesBlocking(uint16_t num_of_samples);
+    std::vector<int32_t> recv_buff;
+    ssize_t ammount_of_data_returned=0;
+    int32_t *buf;
 public:
-    int32_t returnedNumberOfSamples(){return num_of_samples_to_aquire;};
-    PipeFile(std::string file);
-    int readSampleNonBlocking();
+    std::vector<int32_t> returnedValues(){return recv_buff;}
+    bool didBackgroundReturn(){return ammount_of_data_returned>0;}
+    void openPipeFile(int oFlag);
+    int setfileSize(int file_size);
+    PipeFile(const std::string& file);
+    int readSamplesNonBlocking(uint16_t num_of_samples);
     ~PipeFile();
 };
 
