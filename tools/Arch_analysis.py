@@ -15,14 +15,17 @@ import itertools as itt
 import sys
 import time
 import logging
+from matplotlib.pyplot import plot
 import numpy as np
 import numpy.random as npr
+from paramiko import Channel
 #print(sys.path)
 import uhd
 import configargparse
 import glob
 import os
-import shutil 
+import shutil
+import re  
 
 CLOCK_TIMEOUT = 1000  # 1000mS timeout for external clock locking
 INIT_DELAY = 0.05  # 50mS initial delay before transmit
@@ -47,7 +50,7 @@ def parse_args():
     """
     parser = configargparse.ArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description=description, default_config_files=['~/*.conf'])
-    parser.add_argument("-file-path", default=False, type=str, help="Directory that the samples are located in.")
+    parser.add_argument("-file-path", default=None, type=str, help="Directory that the samples are located in.")
     parser.add_argument("--drift-threshold", type=float, default=2.,
                         help="Maximum frequency drift (deg) while testing a given frequency")
     parser.add_argument("--stddev-threshold", type=float, default=2.,
@@ -99,7 +102,7 @@ def generate_time_spec(usrp, time_delta=0.05):
     return usrp.get_time_now() + uhd.types.TimeSpec(time_delta)
 
 
-def plot_samps(samps, alignment):
+def plot_samps(samps, alignment, args):
     """
     Show a nice plot of samples and their phase alignment
     """
@@ -117,6 +120,7 @@ def plot_samps(samps, alignment):
     plt.legend(["Device A", "Device B"], fontsize=24)
     plt.ylabel("Amplitude (real)", fontsize=35)
     plt.xlabel("Time (us)", fontsize=35)
+    plt.savefig("temp/"+"samps"+".png",)
     plt.show()
     # Plot the alignment
     logger.info("plotting alignment")
@@ -125,6 +129,7 @@ def plot_samps(samps, alignment):
     plt.ylabel("Phase Delta (radian)", fontsize=30)
     plt.xlabel("Time (us)", fontsize=30)
     plt.ylim([-np.pi, np.pi])
+    plt.savefig("temp/"+"alignment"+".png",)
     plt.show()
 
 
@@ -201,7 +206,7 @@ def check_results(alignment_stats, drift_thresh, stddev_thresh):
     return success
 
 def measure_phase(samps0, samps1):
-    alignment = np.angle(np.conj(samps0[0]) * samps1[0])
+    alignment = np.angle(np.conj(samps0) * samps1)
     return alignment
 
 def deinterleave_iq(array = [], *args):
@@ -209,40 +214,55 @@ def deinterleave_iq(array = [], *args):
     return [array[index::2] for index in range(2)]
 
 def samps_vector(directory, args):
+    data_dict = {}
     fileFolder = directory
     data_array = []
-    if args.file_path is None:
+    if directory is None:
         folders = glob.glob(args.newest_file+"*")
         fileFolder = max(folders, key=os.path.getctime)
     print(fileFolder)
     for file in os.listdir("/"+fileFolder):
         if file.endswith(".dat"):
-            file_size = os.path.getsize(fileFolder+"/"+file)
-            nsamps = file_size/4
             data_array.append(np.fromfile(fileFolder+"/"+file, dtype=np.int16))
-    return data_array
+            rx_channel = extract_channel_rx(file)
+            data_dict[rx_channel] = data_array
+    return data_dict
+
+def extract_channel_rx(filename):
+    """Look in filename for rx channel"""
+    match_rx= re.search("rx_[0-9][0-9]", filename)
+    rx_channel_number = match_rx.group()
+    return rx_channel_number
+
+def extract_channel_tx(filename):
+    """Look in filename for tx channel"""
+    match_tx= re.search("tx_[0-9][0-9]", filename)
+    tx_channel_number = match_tx.group() 
+    return tx_channel_number
+
+
 
 def main():
 
    
     args = parse_args()
-    fileFolder = args.file_path
     if (os.path.exists(os.getcwd()+"/temp")):
         shutil.rmtree( os.getcwd()+"/temp" )
     os.mkdir(os.getcwd()+"/temp" )
-    data_array = samps_vector(fileFolder, args)
-    
-    
-    file_size = os.path.getsize(fileFolder+"/"+file)
-    nsamps = file_size/4
-    data_array = np.fromfile(fileFolder+"/"+file, dtype=np.int16)
-    i,q = deinterleave_iq(data_array)
-    i = i[600:nsamps]
-    q = q[600:nsamps]
+    data_dict = samps_vector(args.file_path, args)
+
+    alignment = measure_phase(data_array[0],data_array[0])
+    plot_samps(data_array,alignment,args)
+    #file_size = os.path.getsize(fileFolder+"/"+file)
+    #nsamps = file_size/4
+    #data_array = np.fromfile(fileFolder+"/"+file, dtype=np.int16)
+    i,q = deinterleave_iq(data_array["rx_03"])
+    i = i[600:16000]
+    q = q[600:16000]
     time_scale = np.linspace(600,len(i)/args.sample_rate,len(i))
+    #print(alignment[1000:1500])
 
-
-    return check_results(all_alignment_stats, args.drift_threshold, args.stddev_threshold)
+    #return check_results(all_alignment_stats, args.drift_threshold, args.stddev_threshold)
 
     
     
