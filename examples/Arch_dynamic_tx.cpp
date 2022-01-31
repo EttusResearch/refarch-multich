@@ -156,6 +156,103 @@ public:
                   << " samples..." << std::endl;
     }
 
+    void transmitFromFile0(
+        uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
+    {
+        uhd::set_thread_priority_safe(0.9F);
+        std::vector<std::complex<float>> buff(RA_spb);
+        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
+        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
+        // send data until  the signal handler gets called
+        while (not RA_stop_signal_called) {
+            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
+            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
+
+            metadata.end_of_burst = infile.eof();
+            // send the entire contents of the buffer
+            tx_streamer->send(buffs, buff.size(), metadata);
+
+            metadata.start_of_burst = false;
+            metadata.has_time_spec  = false;
+        }
+
+        // send a mini EOB packet
+        metadata.end_of_burst = true;
+        tx_streamer->send("", 0, metadata);
+    }
+    void transmitFromFile1(
+        uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
+    {
+        uhd::set_thread_priority_safe(0.9F);
+        std::vector<std::complex<float>> buff(RA_spb);
+        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
+        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
+        // send data until  the signal handler gets called
+        while (not RA_stop_signal_called) {
+            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
+            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
+
+            metadata.end_of_burst = infile.eof();
+            // send the entire contents of the buffer
+            tx_streamer->send(buffs, buff.size(), metadata);
+
+            metadata.start_of_burst = false;
+            metadata.has_time_spec  = false;
+        }
+
+        // send a mini EOB packet
+        metadata.end_of_burst = true;
+        tx_streamer->send("", 0, metadata);
+    }
+    void transmitFromFile2(
+        uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
+    {
+        uhd::set_thread_priority_safe(0.9F);
+        std::vector<std::complex<float>> buff(RA_spb);
+        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
+        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
+        // send data until  the signal handler gets called
+        while (not RA_stop_signal_called) {
+            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
+            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
+
+            metadata.end_of_burst = infile.eof();
+            // send the entire contents of the buffer
+            tx_streamer->send(buffs, buff.size(), metadata);
+
+            metadata.start_of_burst = false;
+            metadata.has_time_spec  = false;
+        }
+
+        // send a mini EOB packet
+        metadata.end_of_burst = true;
+        tx_streamer->send("", 0, metadata);
+    }
+    void transmitFromFile3(
+        uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
+    {
+        uhd::set_thread_priority_safe(0.9F);
+        std::vector<std::complex<float>> buff(RA_spb);
+        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
+        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
+        // send data until  the signal handler gets called
+        while (not RA_stop_signal_called) {
+            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
+            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
+
+            metadata.end_of_burst = infile.eof();
+            // send the entire contents of the buffer
+            tx_streamer->send(buffs, buff.size(), metadata);
+
+            metadata.start_of_burst = false;
+            metadata.has_time_spec  = false;
+        }
+
+        // send a mini EOB packet
+        metadata.end_of_burst = true;
+        tx_streamer->send("", 0, metadata);
+    }
+
     void spawnTransmitThreads()
     {
         if (RA_spb == 0)
@@ -235,6 +332,7 @@ public:
             RA_tx_vector_thread.push_back(std::move(tx));
         }
     }
+    
 };
 /***********************************************************************
  * Main function
