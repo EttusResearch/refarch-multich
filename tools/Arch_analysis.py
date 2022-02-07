@@ -25,8 +25,11 @@ import configargparse
 import glob
 import os
 import shutil
-import re  
-
+import re
+from scipy.fft import fft, fftfreq, rfft   
+import matplotlib.mlab as mlb
+import iqtools
+ 
 CLOCK_TIMEOUT = 1000  # 1000mS timeout for external clock locking
 INIT_DELAY = 0.05  # 50mS initial delay before transmit
 CMD_DELAY = 0.05  # set a 50mS delay in commands
@@ -57,7 +60,8 @@ def parse_args():
                         help="Maximum frequency deviation (deg) over a single receive call")
     parser.add_argument("-s", "--sample_rate", default=1, type=int)
     parser.add_argument("-n", "--newest_file", type=str)
-    # Extra, advanced arguments
+    parser.add_argument("-c","--base-rx",type=str, default="rx_00", help="Base RX channel to measure against, format: rx_##")
+    # Extra, advanced argument
     parser.add_argument("--plot", default=False, action="store_true",
                         help="Plot results")
     args = parser.parse_args()
@@ -102,7 +106,7 @@ def generate_time_spec(usrp, time_delta=0.05):
     return usrp.get_time_now() + uhd.types.TimeSpec(time_delta)
 
 
-def plot_samps(samps, alignment, args):
+def plot_samps(samps_dict, alignment_dict, args):
     """
     Show a nice plot of samples and their phase alignment
     """
@@ -111,26 +115,35 @@ def plot_samps(samps, alignment, args):
     except ImportError:
         logger.error("--plot requires pylab.")
         return
-
-    plt.tick_params(axis="both", labelsize=20)
-    # Plot the samples
-    plt.plot(samps[0][1000:2000].real, 'b')
-    plt.plot(samps[1][1000:2000].real, 'r')
-    plt.title("Phase Aligned RX", fontsize=44)
-    plt.legend(["Device A", "Device B"], fontsize=24)
-    plt.ylabel("Amplitude (real)", fontsize=35)
-    plt.xlabel("Time (us)", fontsize=35)
-    plt.savefig("temp/"+"samps"+".png",)
-    plt.show()
-    # Plot the alignment
-    logger.info("plotting alignment")
-    plt.plot(alignment)
-    plt.title("Phase Difference between Devices", fontsize=40)
-    plt.ylabel("Phase Delta (radian)", fontsize=30)
-    plt.xlabel("Time (us)", fontsize=30)
-    plt.ylim([-np.pi, np.pi])
-    plt.savefig("temp/"+"alignment"+".png",)
-    plt.show()
+    subPlot = plt.subplot()
+    for key in alignment_dict:
+        
+        i_samps,q_samps = deinterleave_iq(samps_dict[key])
+        i_base_rx, q_base_rx = deinterleave_iq(samps_dict[args.base_rx])
+        time_scale_samps = np.linspace(0,len(q_samps)/args.sample_rate,len(q_samps))
+        plt.tick_params(axis="both", labelsize=10)
+        # Plot the samples
+        subPlot.plot(time_scale_samps, q_base_rx/(2**15-1), 'b')
+        subPlot.plot(time_scale_samps, q_samps/(2**15-1), 'r')
+        plt.title("Phase Aligned RX:"  + args.base_rx + " to " + key, fontsize=15)
+        plt.legend(["Channel: " + args.base_rx, "Channel: " + key], fontsize=10)
+        plt.ylabel("Amplitude (real)", fontsize=15)
+        plt.xlabel("Time (us)", fontsize=15)
+        plt.savefig("temp/"+ "samples_" + args.base_rx + "_to_" + key +".png",)
+        subPlot.clear()
+        #plt.show()
+        # Plot the alignment
+        logger.info("plotting alignment")
+        time_scale_alignment = np.linspace(0,len(alignment_dict[key])/args.sample_rate,len(alignment_dict[key]))
+        subPlot.plot(time_scale_alignment, np.abs(alignment_dict[key]))
+        plt.title("Phase Difference between Channels: " + args.base_rx + " to " + key, fontsize=15)
+        plt.ylabel("Phase Delta (degrees)", fontsize=15)
+        plt.xlabel("Time (us)", fontsize=15)
+        #plt.ylim([-np.pi, np.pi])
+        plt.savefig("temp/"+"alignment_" + args.base_rx + "_to_" + key +".png",)
+        subPlot.clear()
+        
+        #plt.show()
 
 
 def calc_max_drift(phase_vals):
@@ -206,8 +219,29 @@ def check_results(alignment_stats, drift_thresh, stddev_thresh):
     return success
 
 def measure_phase(samps0, samps1):
-    alignment = np.angle(np.conj(samps0) * samps1)
+    alignment = np.angle(np.conj(samps0) * samps1, True)
     return alignment
+
+def get_fft_freqs(data):
+    n = data.size 
+
+def measure_phase_single_tone(samps0, samps1):
+    #
+    try:
+        import pylab as plt
+    except ImportError:
+        logger.error("--plot requires pylab.")
+        return
+    yf_0 = fft(samps0)
+    xf_0 = fftfreq(len(samps0), 1/33330000)
+    #yf_1 = rfft(np.real(samps1))
+    #xf_1 = fftfreq(8001, 1/33330000)
+    plt.plot(xf_0,abs(yf_0))
+    plt.xlim(-750000,750000)
+    max_y = max(yf_0)
+    max_x = xf_0[yf_0.argmax()]
+    print (max_x, max_y)
+    plt.savefig("temp/"+ "fft_" + "test" + "_to_" + "key" +".png",)
 
 def deinterleave_iq(array = [], *args):
     """Deinterleave a 1D array into two 1D arrays [0,1,2,3]>>>[[0,2],[1,3]]"""
@@ -217,16 +251,24 @@ def samps_vector(directory, args):
     data_dict = {}
     fileFolder = directory
     data_array = []
+    
+    complex_dict = {}
     if directory is None:
         folders = glob.glob(args.newest_file+"*")
         fileFolder = max(folders, key=os.path.getctime)
     print(fileFolder)
     for file in os.listdir("/"+fileFolder):
         if file.endswith(".dat"):
-            data_array.append(np.fromfile(fileFolder+"/"+file, dtype=np.int16))
+            complex_array = []
+            data_array = np.fromfile(fileFolder+"/"+file, dtype=np.int16)
+            i, q = deinterleave_iq(data_array)
+            for x in range(0,len(i)):
+                complex_array.append(np.complex(q[x], i[x]))
+
             rx_channel = extract_channel_rx(file)
             data_dict[rx_channel] = data_array
-    return data_dict
+            complex_dict[rx_channel] = complex_array
+    return data_dict, complex_dict
 
 def extract_channel_rx(filename):
     """Look in filename for rx channel"""
@@ -241,25 +283,29 @@ def extract_channel_tx(filename):
     return tx_channel_number
 
 
-
 def main():
 
-   
     args = parse_args()
+    alignment_dict = {}
     if (os.path.exists(os.getcwd()+"/temp")):
         shutil.rmtree( os.getcwd()+"/temp" )
     os.mkdir(os.getcwd()+"/temp" )
-    data_dict = samps_vector(args.file_path, args)
-
-    alignment = measure_phase(data_array[0],data_array[0])
-    plot_samps(data_array,alignment,args)
+    data_dict, complex_dict = samps_vector(args.file_path, args)
+    for key in data_dict:
+        if key != args.base_rx:
+            logger.info("Calculating Alignment: " + args.base_rx + " to " + key)
+            alignment = measure_phase(complex_dict[args.base_rx][100:],complex_dict[key][100:])
+            alignment_dict[key] = alignment
+    
+    #plot_samps(data_dict,alignment_dict,args)
+    measure_phase_single_tone(complex_dict[args.base_rx], complex_dict['rx_01'])
     #file_size = os.path.getsize(fileFolder+"/"+file)
     #nsamps = file_size/4
     #data_array = np.fromfile(fileFolder+"/"+file, dtype=np.int16)
-    i,q = deinterleave_iq(data_array["rx_03"])
-    i = i[600:16000]
-    q = q[600:16000]
-    time_scale = np.linspace(600,len(i)/args.sample_rate,len(i))
+    #i,q = deinterleave_iq(data_array["rx_03"])
+    #i = i[600:16000]
+    #q = q[600:16000]
+    #time_scale = np.linspace(600,len(i)/args.sample_rate,len(i))
     #print(alignment[1000:1500])
 
     #return check_results(all_alignment_stats, args.drift_threshold, args.stddev_threshold)
