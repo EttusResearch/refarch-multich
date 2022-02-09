@@ -171,7 +171,6 @@ void RefArch::storeProgramOptions()
     }
     po::notify(RA_vm);
 }
-// sync
 void RefArch::setSources()
 {
     // Set clock reference
@@ -410,6 +409,7 @@ void RefArch::checkRXSensorLock()
             uhd::sensor_value_t rx_sensor_value = rctrl->get_rx_sensor(name, 0);
             std::cout << "Checking RX LO Lock: " << rx_sensor_value.to_pp_string()
                       << std::endl;
+            //TODO: change to !rx_sensor_value.to_bool()
             while (rx_sensor_value.to_pp_string() != "all_los: locked") {
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
@@ -427,7 +427,8 @@ void RefArch::checkTXSensorLock()
             uhd::sensor_value_t tx_sensor_value = rctrl->get_tx_sensor(name, 0);
             std::cout << "Checking TX LO Lock: " << tx_sensor_value.to_pp_string()
                       << std::endl;
-            while (tx_sensor_value.to_pp_string() != "all_los: locked") {
+            //TODO: change to !tx_sensor_value.to_bool()
+            while (tx_sensor_value.to_pp_string() != "all_los: locked") { 
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             std::cout << "TX LO LOCKED" << std::endl;
@@ -509,9 +510,10 @@ int RefArch::importData()
             replay_start_time = std::chrono::system_clock::now();
             do {
                 fullness = RA_replay_ctrls[i]->get_record_fullness(0);
-                if (fullness != 0)
+                if (fullness != 0){
                     std::cout << "BREAK" << std::endl;
-                break;
+                    break;
+                }
                 time_diff = std::chrono::system_clock::now() - replay_start_time;
                 time_diff =
                     std::chrono::duration_cast<std::chrono::milliseconds>(time_diff);

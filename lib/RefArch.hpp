@@ -17,34 +17,86 @@ class RefArch
 {
 public:
     RefArch(int argc, char* argv[]) : RA_argc(argc), RA_argv(argv){};
-    virtual void addAditionalOptions(){
-        /*
-        Add additional options by calling
-        namespace po = boost::program_options;
-        RA_desc.add_options()
-        ("cfgFile",
-            po::value<std::string>(&RA_cfgFile),
-            "relative path to configuration file")
-
-        See RefArch::addProgramOptions() for default values
-        */
-    };
+    /**
+     * @brief For adding custom additional Options to the configuration file
+     * See RefArch::addProgramOptions() for default variables
+     * Use the following code to generate additional variables.
+     * 
+     *      namespace po = boost::program_options;
+     *      RA_desc.add_options()
+     *          ("cfgFile",
+     *          po::value<std::string>(&RA_cfgFile),
+     *          "relative path to configuration file")
+     */
+    virtual void addAditionalOptions(){/*NOP*/};
 
     // SyncDevices
+    /**
+     * @brief Controls the initilization of the 10MHz and PPS
+     */
     virtual void setSources();
+    /**
+     * @brief Sets the next PPS edge as time 0 on all devies
+     * @return int Returns 0 for success and 1 for failure.
+     */
     virtual int syncAllDevices();
+    /**
+     * @brief Shuts down the LOs on all N321s.
+     */
     virtual void killLOs();
+    /**
+     * @brief Uses the parsed configuration properties to 
+     * configure the LO sources. 
+     * @details all LO sources to External
+     * Distributor- TX/RX export = False
+     * Source-      TX export = False
+     *              RX export = True (LO source)
+     */
     virtual void setLOsfromConfig();
+    /**
+     * @brief Returns after all sensors are locked
+     */
     virtual void checkRXSensorLock();
+    /**
+     * @brief Returns after all sensors are locked
+     */
     virtual void checkTXSensorLock();
+    /**
+     * @brief Gets the current time on controller 0 and sets
+     * RA_start_time to that time plus RA_delay_start_time.
+     */
     virtual void updateDelayedStartTime();
-
-    // Replaycontrol
+    /**
+     * @brief Uses the #RA_file waveform to fill all the replayblocks
+     * 
+     * @details the #RA_file then configures the replay block
+     * Sends the data to the replay block
+     * @return int Returns early if we are unable to fill all replayblocks
+     */
     virtual int importData();
+    /**
+     * @brief Stops all replay blocks
+     */
     virtual void stopReplay();
+    /**
+     * @brief Used to interrupt all threads.
+     */
     static void sigIntHandler(int); // This has to be a void static. Can't override
 
-    // recievefunctions
+    /**
+     * @brief Used for a few examples to write to file. This function is 
+     * can be removed in later releases. Please use with caution
+     * 
+     * @param base_fn 
+     * @param rx_chan_num 
+     * @param tx_chan_num 
+     * @param run_num 
+     * @param tx_freq 
+     * @param folder_name 
+     * @param rx_streamer_string 
+     * @param rx_file_location 
+     * @return std::string 
+     */
     virtual std::string generateRxFilename(const std::string& base_fn,
         const size_t rx_chan_num,
         const int tx_chan_num,
@@ -53,11 +105,25 @@ public:
         const std::string& folder_name,
         const std::vector<std::string>& rx_streamer_string,
         const std::vector<std::string>& rx_file_location);
-
-    // GraphAssembly
+    /**
+     * @brief Create the USRP sessions
+     * 
+     */
     virtual void buildGraph();
+    /**
+     * @brief Seek radio blocks on each USRP and assemble a vector of radio
+     * controllers.
+     */
     virtual void buildRadios();
+    /**
+     * @brief Seek DDCs & DUCs on each USRP and assemble a vector of DDC & DUC controllers.
+     * 
+     */
     virtual void buildDDCDUC();
+    /**
+     * @brief Seek Replay blocks on each USRP and assemble a vector of Replay Block Controllers
+
+     */
     virtual void buildReplay();
     virtual void commitGraph();
     virtual void connectGraphMultithread();
@@ -164,6 +230,9 @@ protected:
     double RA_rx_timeout;
     size_t RA_nsamps;
     std::string RA_format;
+    /**
+     * @brief specifies the input waveform for the TX
+     */
     std::string RA_file;
     double RA_time_requested;
     std::string RA_tx_file;
@@ -180,7 +249,10 @@ protected:
     int RA_argc;
     char** RA_argv;
     // Structures
-    void addProgramOptions(); // todo: find way of adding additional variables
+    /**
+     * @brief Default Configuration file variables
+     */
+    void addProgramOptions();
     void addAddresstoArgs();
     void storeProgramOptions();
 
