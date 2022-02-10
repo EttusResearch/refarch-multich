@@ -1,39 +1,39 @@
-from email.mime import base
 import os
 import logging as log
-from scipy.signal import hilbert
-from scipy.io import wavfile
-import xml.etree.ElementTree as et
 import numpy as np
 import glob 
-import types
-import uproot3
-import uproot3_methods.classes.TH1
 import configargparse, argparse
-
+import shutil
 from usrpDat import *
+from usrpDat import usrpDat
 from util import *
+import os
 
 def parse_args():
     description = "TBD"
     parser = configargparse.ArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description=description, default_config_files=['~/*.conf'])
     parser.add_argument("-filename", type=str, default=None,help="Name of the input file.")
-    parser.add_argument("-folder", type=str, default=None, help="Folder to search for newest .dat files.")
+    parser.add_argument("-folder", type=str, default=None,  help="Folder to search for newest .dat files.")
     parser.add_argument("-fs", type=str, default=33330000.0, help="Sampling Rate of Data.")
+    parser.add_argument("-start-point", type=int, default=0,help="Starting point of plots")
+    parser.add_argument("-end-point", type=int, default=0,help="Endingg point of plots")
     parser.add_argument("-format", type=str, default="int16", help="Data Format, default: np.int16")
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-base-rx",type=str, default="rx_00", help="Base RX channel to measure against, format: rx_##")
+    parser.add_argument('-l', type=int,  default=1024, help='Frame-length - default is 1024')
+    parser.add_argument('-n', type=int, default=10, help='Number of frames - default 10')
+    parser.add_argument('-s', type=int, default=1, help='Starting frame - default is 1')
     args = parser.parse_args()
     return args
 
-def get_iq_object(filename, datatype, filesize):
+def get_iq_object(filename, datatype, filesize, args):
    
     _, file_extension = os.path.splitext(filename)
     
     if file_extension.lower() == '.dat':
         log.info('This is a USRP .dat file.')
-        iq_data = usrpDat(filename = filename, datatype=datatype , filesize = filesize)
+        iq_data = usrpDat(filename = filename, datatype=datatype , filesize = filesize, args =  args)
     else:
         log.info('Please use a valid .dat filetype.')
         
@@ -49,16 +49,51 @@ def get_file_list(folder):
     dir_list = os.listdir(folder)
     return dir_list
         
-def calculate_ptp_alignment(usrpData, baseRX):
-    alignment = np.angle(np.conj(baseRX) * usrpData, True)
-    return alignment
-
 def calculate_ptp_alignment_all(usrpDataDict: dict, baseRX):
     result = {}
     for key in usrpDataDict:       
         if key != baseRX:
-            print(key)
             log.info("Calculating Alignment: " + baseRX + " to " + key)
-            alignment = np.angle(np.conj(usrpDataDict[baseRX].data_array) * usrpDataDict[key].data_array, True)
+            alignment = np.angle(np.conj(usrpDataDict[baseRX].complex_data) * usrpDataDict[key].complex_data, True)
             result[key] = alignment
     return result
+
+def create_plot_directories(identifier: str):
+    # Create temp directory if it does not exist.
+    if identifier:
+        identifier = identifier
+    else:
+        identifier = ''
+    if (os.path.exists(os.getcwd()+"/" + identifier)):
+        shutil.rmtree( os.getcwd()+"/" + identifier )
+    os.mkdir(os.getcwd()+"/" + identifier )
+    os.mkdir(os.getcwd()+"/" + identifier + "/ptp_alignment/")
+    os.mkdir(os.getcwd()+"/" + identifier + "/samples/")
+    os.mkdir(os.getcwd()+"/" + identifier + "/spectrum/")
+
+def get_eng_notation(value, unit='', decimal_place=2):
+    """
+    Convert numbers to scientific notation
+    Parameters
+    ----------
+    value input number float or integer
+    decimal_place How many decimal places should be left
+    unit The unit will be shown, otherwise powers of ten
+    Returns
+    -------
+    """
+    ref = {24: 'Y', 21: 'Z', 18: 'E', 15: 'P',
+           12: 'T', 9: 'G', 6: 'M', 3: 'k', 0: '',
+           -3: 'm', -6: 'u', -9: 'n', -12: 'p',
+           -15: 'f', -18: 'a', -21: 'z', -24: 'y',
+           }
+    if value == 0:
+        return '{}{}'.format(0, unit)
+    flag = '-' if value < 0 else ''
+    num = max([key for key in ref.keys() if abs(value) >= 10 ** key])
+    if num == 0:
+        mult = ''
+    else:
+        mult = ref[num] if unit else 'e{}'.format(num)
+    return '{}{}{}{}'.format(flag, int(abs(value) / 10 ** num * 10 ** decimal_place) / 10 ** decimal_place, mult,
+                             unit)

@@ -1,8 +1,4 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
     "configurations": [
         {
             "name": "Python: Current File",
@@ -10,20 +6,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["-n", "/mnt/md1/"]
-        },
-        {
-            "type": "by-gdb",
-            "request": "launch",
-            "name": "Launch(remote)",
-            "program": "${workspaceRoot}/build/rfnoc_txrx_loopback",
-            "cwd": "${workspaceRoot}",
-            "remote": {
-                "enabled": true,
-                "address": ":15970",
-                "mode": "remote",
-                "execfile": "${workspaceRoot}/src/rfnoc_txrx_loopback.cpp"
-            }
+            "args": ["-folder", "/mnt/md1/", "-fs=33330000", "-start-point=100", "-end-point=500"]
         }
     ]
 }

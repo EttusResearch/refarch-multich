@@ -297,8 +297,8 @@ def main():
             alignment = measure_phase(complex_dict[args.base_rx][100:],complex_dict[key][100:])
             alignment_dict[key] = alignment
     
-    #plot_samps(data_dict,alignment_dict,args)
-    measure_phase_single_tone(complex_dict[args.base_rx], complex_dict['rx_01'])
+    plot_samps(data_dict,alignment_dict,args)
+    #measure_phase_single_tone(complex_dict[args.base_rx], complex_dict['rx_01'])
     #file_size = os.path.getsize(fileFolder+"/"+file)
     #nsamps = file_size/4
     #data_array = np.fromfile(fileFolder+"/"+file, dtype=np.int16)
