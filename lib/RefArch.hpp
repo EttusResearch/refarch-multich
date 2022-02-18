@@ -84,8 +84,8 @@ public:
     static void sigIntHandler(int); // This has to be a void static. Can't override
 
     /**
-     * @brief Used for a few examples to write to file. This function is 
-     * can be removed in later releases. Please use with caution
+     * @brief Used for a few examples to write to file. This function  
+     * can be removed in later releases. Please use with caution.
      * 
      * @param base_fn 
      * @param rx_chan_num 
@@ -111,48 +111,136 @@ public:
      */
     virtual void buildGraph();
     /**
-     * @brief Seek radio blocks on each USRP and assemble a vector of radio
+     * @brief Seek Radio Blocks on each USRP and assemble a vector of radio
      * controllers.
      */
     virtual void buildRadios();
     /**
      * @brief Seek DDCs & DUCs on each USRP and assemble a vector of DDC & DUC controllers.
-     * 
      */
     virtual void buildDDCDUC();
     /**
-     * @brief Seek Replay blocks on each USRP and assemble a vector of Replay Block Controllers
-
+     * @brief Seek Replay Blocks on each USRP and assemble a vector of Replay Block Controllers
      */
     virtual void buildReplay();
     virtual void commitGraph();
+    /**
+     * @brief Connects Replay Block to TX
+     *  Connects RX Streamer <- (2)DDC <- (2)RX channels
+     *  Connects Replay block -> DUC -> TX channel
+     * 
+     * @details If 0 #RA_duc_ctrls then Replay Block -> TX channel directly
+     */
     virtual void connectGraphMultithread();
+    /**
+     * @brief Connects DDC/DUC to streamers
+     *  Connects RX Streamer <- (2)DDC <- (2)RX channels
+     *  connects TX Streamer -> DUC -> TX Channel
+     */
     virtual void connectGraphMultithreadHostTX();
+    /**
+     * @brief Builds 1 RX streamer per 2 RX channels.
+     *  Builds a TX streamer for a Replay Block.
+     * 
+     * @details Both the TX and RX vectors are padded (duplicate)
+     */
     virtual void buildStreamsMultithread();
+    /**
+     * @brief Builds 1 RX streamer per 2 RX channels.
+     *  Builds 1 TX streamer per 1 TX channel
+     * 
+     * @details RX vector is padded (duplicate)
+     */
     virtual void buildStreamsMultithreadHostTX();
-    // blocksettings
+    /**
+     * @brief Set the Radio Rates to #RA_rx_rate and #RA_TX_rate
+     * 
+     * @return int 0 on success. 1 on Failure
+     */
     virtual int setRadioRates();
+    /**
+     * @brief Set USRP RX Frequency of #RA_rx_freq for All Devices
+     */
     virtual void tuneRX();
+    /**
+     * @brief Set USRP TX Frequency of #RA_tx_freq for All Devices
+     */
     virtual void tuneTX();
+    /**
+     * @brief Set RX Gain of #RA_rx_gain on all Devices 
+     */
     virtual void setRXGain();
+    /**
+     * @brief Set TX Gain of #RA_tx_gain on all Devices 
+     */
     virtual void setTXGain();
+    /**
+     * @brief Set RX BandWidth of #RA_rx_bw for all devices
+     */
     virtual void setRXBw();
+    /**
+     * @brief Set TX BandWidth of #RA_tx_bw for all devices
+     */
     virtual void setTXBw();
+    /**
+     * @brief Set RX Antenna of #RA_rx_ant for all devices
+     */
     virtual void setRXAnt();
+    /**
+     * @brief Set TX Antenna of #RA_tx_ant for all devices
+     */
     virtual void setTXAnt();
+    /**
+     * @brief Parses the configuration file for default parameters
+     * and user defined variables. Converts address arguments to 
+     * usable format. 
+     */
     virtual void parseConfig();
-
-    // Spawns threads and transmitter
+    /**
+     * @brief Spawns #RA_rx_stream_vector size number of threads calling RefArch::recv()
+     * An override of the recv function will result in this spawning instances of that
+     * function.
+     */
     virtual void spawnReceiveThreads();
+    /**
+     * @brief Spawns either a single TX thread or multiple depending on #RA_TX_All_Chan
+     *  In either case an override of RefArch::transmitFromFile() will result in the
+     *  new function being called.
+     */
     virtual void spawnTransmitThreads();
+    /**
+     * @brief Main loop to aquire samples. Typically all examples override this function
+     * 
+     * @param rx_channel_nums number of channels per streamer
+     * @param threadnum thread number
+     * @param rx_streamer 
+     */
     virtual void recv(const int rx_channel_nums,
         const int threadnum,
         uhd::rx_streamer::sptr rx_streamer);
+    /**
+     * @brief Main loop to stream samples from host. Typically streaming examples
+     *  will override this function
+     * 
+     * @param tx_streamer 
+     * @param metadata meta data that was created from RefArch::spawnTransmitThreads()
+     * @param num_channels number of channels per streamer
+     */
     void virtual transmitFromFile(uhd::tx_streamer::sptr tx_streamer,
         uhd::tx_metadata_t metadata,
         int num_channels);
+    /**
+     * @brief Starts transmitting at #RA_start_time and will continue until either
+     *  #RA_nsamps or until RefArch::stopReplay() is called.
+     */
     virtual void transmitFromReplay();
+    /**
+     * @brief Waits until it is able to join all Rx and Tx threads.
+     */
     virtual void joinAllThreads();
+    /**
+     * @brief Used to shutdown all threads.
+     */
     static bool RA_stop_signal_called;
     std::vector<std::thread> RA_rx_vector_thread;
     std::vector<std::thread> RA_tx_vector_thread;
@@ -195,6 +283,10 @@ protected:
     uhd::rx_streamer::sptr RA_rx_stream;
     uhd::tx_streamer::sptr RA_tx_stream;
     std::vector<uhd::tx_streamer::sptr> RA_tx_stream_vector;
+    /**
+     * @brief Holds each channels streamer. By default each USRP channel 0 and 1 
+     *  use the same streamer. RA_rx_stream_vector[0] == RA_rx_stream_vector[1]
+     */
     std::vector<uhd::rx_streamer::sptr> RA_rx_stream_vector;
     std::vector<size_t> RA_rx_stream_chan_vector;
     // txrx settings
@@ -208,7 +300,8 @@ protected:
 
     // Load from disk
     std::string RA_args;
-    double RA_tx_rate, RA_tx_freq, RA_tx_gain, RA_tx_bw;
+
+    double RA_tx_rate,RA_tx_freq, RA_tx_gain, RA_tx_bw;
     double RA_rx_rate, RA_rx_freq, RA_rx_gain, RA_rx_bw;
     std::string RA_ref;
     std::string RA_tx_ant, RA_rx_ant;

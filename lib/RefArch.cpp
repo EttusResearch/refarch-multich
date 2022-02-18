@@ -875,7 +875,7 @@ void RefArch::connectGraphMultithreadHostTX()
 void RefArch::buildStreamsMultithread()
 {
     // TODO: Think about renaming
-    // Build Streams for multithreaded implementation streaming from Repplay Block.
+    // Build Streams for multithreaded implementation streaming from Replay Block.
     // Each Channel gets its own RX streamer.
     // Constants related to the Replay block
     const size_t replay_word_size = 8; // Size of words used by replay block
