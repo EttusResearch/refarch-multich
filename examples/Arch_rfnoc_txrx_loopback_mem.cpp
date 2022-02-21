@@ -71,7 +71,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync time across devices
     std::cout << std::endl << usrpSystem.syncAllDevices() <<std::endl;
     // Begin TX and RX
-    // INFO: Comment what each initilization does what type of data is stored in each.
+    // INFO: Comment what each initialization does what type of data is stored in each.
     // Sync times across threads
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);

@@ -28,11 +28,11 @@ public:
      *          po::value<std::string>(&RA_cfgFile),
      *          "relative path to configuration file")
      */
-    virtual void addAditionalOptions(){/*NOP*/};
+    virtual void addAdditionalOptions(){/*NOP*/};
 
     // SyncDevices
     /**
-     * @brief Controls the initilization of the 10MHz and PPS
+     * @brief Controls the initialization of the 10MHz and PPS
      */
     virtual void setSources();
     /**
@@ -209,7 +209,7 @@ public:
      */
     virtual void spawnTransmitThreads();
     /**
-     * @brief Main loop to aquire samples. Typically all examples override this function
+     * @brief Main loop to acquire samples. Typically all examples override this function
      * 
      * @param rx_channel_nums number of channels per streamer
      * @param threadnum thread number
@@ -346,7 +346,7 @@ protected:
      * @brief Default Configuration file variables
      */
     void addProgramOptions();
-    void addAddresstoArgs();
+    void addAddressToArgs();
     void storeProgramOptions();
 
 private:

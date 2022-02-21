@@ -45,7 +45,7 @@ public:
         } else {
             throw std::runtime_error("Unknown type " + RA_format);
         }
-        std::cout << "Recieving data (Press Ctrl+C to stop)..." << std::endl;
+        std::cout << "Receiving data (Press Ctrl+C to stop)..." << std::endl;
 
         for (auto& i : vectorThread) {
             i.join();
