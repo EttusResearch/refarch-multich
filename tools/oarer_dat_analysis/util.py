@@ -1,3 +1,4 @@
+from email.mime import base
 import os
 import logging as log
 import numpy as np
@@ -17,13 +18,14 @@ def parse_args():
     parser.add_argument("-folder", type=str, default=None,  help="Folder to search for newest .dat files.")
     parser.add_argument("-fs", type=str, default=33330000.0, help="Sampling Rate of Data.")
     parser.add_argument("-start-point", type=int, default=0,help="Starting point of plots")
-    parser.add_argument("-end-point", type=int, default=0,help="Endingg point of plots")
+    parser.add_argument("-end-point", type=int, default=0,help="Ending point of plots")
     parser.add_argument("-format", type=str, default="int16", help="Data Format, default: np.int16")
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-base-rx",type=str, default="rx_00", help="Base RX channel to measure against, format: rx_##")
     parser.add_argument('-l', type=int,  default=1024, help='Frame-length - default is 1024')
     parser.add_argument('-n', type=int, default=10, help='Number of frames - default 10')
     parser.add_argument('-s', type=int, default=1, help='Starting frame - default is 1')
+    parser.add_argument('-pps', type=int, default=500, help='Points Per Segment')
     args = parser.parse_args()
     return args
 
@@ -69,31 +71,18 @@ def create_plot_directories(identifier: str):
     os.mkdir(os.getcwd()+"/" + identifier )
     os.mkdir(os.getcwd()+"/" + identifier + "/ptp_alignment/")
     os.mkdir(os.getcwd()+"/" + identifier + "/samples/")
-    os.mkdir(os.getcwd()+"/" + identifier + "/spectrum/")
+    os.mkdir(os.getcwd()+"/" + identifier + "/phase_composite/")
 
-def get_eng_notation(value, unit='', decimal_place=2):
-    """
-    Convert numbers to scientific notation
-    Parameters
-    ----------
-    value input number float or integer
-    decimal_place How many decimal places should be left
-    unit The unit will be shown, otherwise powers of ten
-    Returns
-    -------
-    """
-    ref = {24: 'Y', 21: 'Z', 18: 'E', 15: 'P',
-           12: 'T', 9: 'G', 6: 'M', 3: 'k', 0: '',
-           -3: 'm', -6: 'u', -9: 'n', -12: 'p',
-           -15: 'f', -18: 'a', -21: 'z', -24: 'y',
-           }
-    if value == 0:
-        return '{}{}'.format(0, unit)
-    flag = '-' if value < 0 else ''
-    num = max([key for key in ref.keys() if abs(value) >= 10 ** key])
-    if num == 0:
-        mult = ''
-    else:
-        mult = ref[num] if unit else 'e{}'.format(num)
-    return '{}{}{}{}'.format(flag, int(abs(value) / 10 ** num * 10 ** decimal_place) / 10 ** decimal_place, mult,
-                             unit)
+def calculate_phase_diff(usrpDataDict: dict, baseRX, fs, points_per_segment):
+    phase_diff = {}
+    phases = {}
+    test = ToneMeasurement()
+    phases[baseRX] = test.extract_phase_over_time(usrpDataDict[baseRX], float(fs), points_per_segment)
+    for key in usrpDataDict:       
+        if key != baseRX:
+            log.info("Calculating Phases: " + baseRX + " to " + key)
+            phases[key] = test.extract_phase_over_time(usrpDataDict[key], float(fs), points_per_segment)
+            diff = abs(phases[key] - phases[baseRX])
+            phase_diff[key] = diff
+    
+    return phase_diff, phases

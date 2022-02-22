@@ -1,5 +1,5 @@
 
-from matplotlib.pyplot import plot
+from matplotlib import pyplot
 from matplotlib.ticker import FormatStrFormatter
 import pylab as plt  
 import numpy as np
@@ -43,29 +43,17 @@ def plot_ptp_alignment(usrpDat: usrpDat, baseRX: usrpDat, alignment, directory: 
     plt.savefig(directory +"/ptp_alignment/" + baseRX.rx_channel_number + "_to_" + usrpDat.rx_channel_number +".png",)
     subPlot.clear()
 
-def plot_spectrum(usrpDat: usrpDat, f, p, directory, cen=0.0, span=None, dbm=False, title='Spectrum'):
-    """Plot average power in dBm per Hz"""
-
-    if not span:
-        mask = (f != 0) | (f == 0)
-    else:
-        mask = (f <= span / 2) & (f >= -span / 2)
-    if dbm:
-        plt.plot(f[mask], usrpDat.get_dbm(p[mask]))
-    else:
-        plt.plot(f[mask], p[mask])
-
-    ax = plt.gca()
-    ax.xaxis.set_major_formatter(FormatStrFormatter('%.0e'))
-
-    plt.xlabel("Delta f [Hz] @ {}".format(get_eng_notation(cen, 'Hz')))
-    plt.title(title)
-    if dbm:
-        plt.ylabel('Power Spectral Density [dBm/Hz]')
-    else:
-        plt.ylabel('Power Spectral Density')
-
-    #plt.xlim(0,2800000000)
-    plt.grid(True)
-    plt.savefig(directory + "/spectrum/" + usrpDat.rx_channel_number + '.png')  # , bbox_inches='tight')
-    plt.close()
+def plot_phase_diffs_composite(usrpDat: usrpDat, baseRX: usrpDat,  directory: str, start_point: int, end_point: int, phase_diff, phases):
+    i_samps,q_samps = usrpDat.deinterleave_iq()
+    i_base_rx, q_base_rx = baseRX.deinterleave_iq()
+    time_scale_samps = np.linspace(0,len(q_samps)/baseRX.fs,len(q_samps))
+    fig, axs = plt.subplots(3, 1)
+    axs[0].set_title("Input Signals")
+    axs[0].plot(i_base_rx)
+    axs[0].plot(i_samps)
+    axs[1].set_title("Phases")
+    axs[1].plot(phases[baseRX.rx_channel_number])
+    axs[1].plot(phases[usrpDat.rx_channel_number])
+    axs[2].set_title("Phase Difference")
+    axs[2].plot(phase_diff[usrpDat.rx_channel_number])
+    plt.savefig(directory +"/phase_composite/" + baseRX.rx_channel_number + "_to_" + usrpDat.rx_channel_number +".png",)

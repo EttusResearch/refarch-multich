@@ -8,7 +8,7 @@ import sys
 
 from usrpDat import *
 from util import *
-
+from tone_measurement_module import ToneMeasurement
 class usrpDat(object):
 
     def __init__(self, filename, datatype, filesize, args) -> None:
@@ -30,7 +30,7 @@ class usrpDat(object):
         self.startframe = args.s
         self.window = 'rectangular'
         self.method = 'fft'
-
+        
     def __str__(self):
         return self.dic2htmlstring(vars(self))
 
@@ -80,58 +80,4 @@ class usrpDat(object):
         for x in range(0,len(self.i)):
             self.complex_data.append(np.complex(self.q[x], self.i[x]))
         
-    def get_window(self, n=None):
-        if not n:
-            n = self.framelength
-        assert self.window in ['rectangular',
-                               'bartlett', 'blackman', 'hamming', 'hanning']
-        if self.window == 'rectangular':
-            return np.ones(n)
-        elif self.window == 'bartlett':
-            return np.bartlett(n)
-        elif self.window == 'blackman':
-            return np.blackman(n)
-        elif self.window == 'hamming':
-            return np.hamming(n)
-        else:
-            return np.hanning(n)
-
-    def fft_freqs(self):
-        n = len(self.complex_data)
-        ts = 1.0 / self.fs
-        f = np.fft.fftfreq(n, ts)
-        return np.fft.fftshift(f)
-
-    def get_fft(self, x=None, n=0, l=0):
     
-        if n and l:
-            nf = n
-            lf = l
-        else:
-            nf = 1
-            lf = len(self.complex_data)
-           
-            if x is not None:
-                lf = len(x)
-
-        if x is None:
-            data = self.complex_data
-        else:
-            data = x
-
-        termination = 50  
-        data = np.reshape(data, (nf, lf))
-        freqs = self.fft_freqs()
-        v_peak_iq = np.fft.fft(
-            data * self.get_window(lf), axis=1)
-        v_peak_iq = np.average(v_peak_iq, axis=0) / lf * nf
-        v_rms = abs(v_peak_iq) / np.sqrt(2)
-        p_avg = v_rms ** 2 / termination
-        
-        return freqs, np.fft.fftshift(p_avg), np.fft.fftshift(v_peak_iq)
-
-    def get_dbm(watt):
-        
-        if isinstance(watt, np.ndarray):
-            watt[watt <= 0] = 10 ** -30
-        return 10 * np.log10(np.array(watt) * 1000)
