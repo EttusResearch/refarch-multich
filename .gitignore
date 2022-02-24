@@ -1,5 +1,5 @@
 .vscode/settings.json
-build/
 .vscode/c_cpp_properties.json
 uhd_GitSource
 tools/temp/
+**/build
