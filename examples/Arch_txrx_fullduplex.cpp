@@ -7,7 +7,7 @@
 
 /*******************************************************************************************************************
 Full TX-RX Loopback to/from host
-ALL TX -> ALL RX.
+ALL TX -> ALL RX or SINGLE TX -> ALL RX.
 If the user sets the number of samples to zero, this function will stream
 continuously. The multithreaded version
 currently has each USRP in its own thread. This version uses one RX streamer per device
@@ -25,7 +25,7 @@ and one TX streamer per channel.
 #include <memory>
 
 
-class full_duplex : public RefArch
+class fullDuplex : public RefArch
 {
     using RefArch::RefArch;
 
@@ -160,7 +160,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    full_duplex usrpSystem(argc, argv);
+ fullDuplex usrpSystem(argc, argv);
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
