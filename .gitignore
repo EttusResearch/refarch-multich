@@ -4,4 +4,3 @@ uhd_GitSource
 tools/temp/
 **/temp
 **/build
-**/__pycache__
