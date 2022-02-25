@@ -66,7 +66,7 @@ public:
         for (size_t i = 0; i < buffs.size(); i++) {
             buff_ptrs.push_back(&buffs[i].front());
         }
-        // Correctly lable output files based on run method, single TX->single RX or
+        // Correctly label output files based on run method, single TX->single RX or
         // single TX
         // -> All RX
         int rx_identifier = threadnum;
@@ -207,7 +207,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync time across devices
     usrpSystem.syncAllDevices();
     // Begin TX and RX
-    // INFO: Comment what each initilization does what type of data is stored in each.
+    // INFO: Comment what each initialization does what type of data is stored in each.
     usrpSystem.localTime();
     // Calculate startime for threads
     usrpSystem.updateDelayedStartTime();

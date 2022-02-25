@@ -12,7 +12,7 @@ main(){
     myarr=($(awk '$1 ~ /addr:/ && $1 !~ /mgmt_addr/ {print $2}' usrp_config.txt))
 
     COUNTER=100
-    echo 'WARNING: This proceedure reboots ALL USRPs connected to this host.'
+    echo 'WARNING: This procedure reboots ALL USRPs connected to this host.'
     tempText="Would you like to reboot all USRPs?"
     if user_input "$tempText"; then
       for i in "${myarr[@]}"
