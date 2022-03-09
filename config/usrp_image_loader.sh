@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#
+# Copyright 2010-2012,2014-2015 Ettus Research LLC
+# Copyright 2021 Ettus Research, a National Instruments Company
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
 #Updates the FPGA Images on Each USRP
 
 main(){

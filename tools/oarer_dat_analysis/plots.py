@@ -1,4 +1,9 @@
-
+#
+# Copyright 2010-2012,2014-2015 Ettus Research LLC
+# Copyright 2021 Ettus Research, a National Instruments Company
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
 import pylab as plt  
 import numpy as np
 from util import *
@@ -7,6 +12,7 @@ from usrpDat import *
 
 def plot_samps(usrpDat: usrpDat, baseRX: usrpDat, directory: str, start_point: int, end_point: int):
     #Plot Real Samples
+    log.info("Plotting Samples")
     subPlot1 = plt.subplot()
     i_samps,q_samps = usrpDat.deinterleave_iq()
     i_base_rx, q_base_rx = baseRX.deinterleave_iq()
