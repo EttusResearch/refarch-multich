@@ -1,4 +1,3 @@
-from email.mime import base
 import os
 import logging as log
 import numpy as np
@@ -17,7 +16,7 @@ def parse_args():
     parser.add_argument("-filename", type=str, default=None,help="Name of the input file.")
     parser.add_argument("-folder", type=str, default=None,  help="Folder to search for newest .dat files.")
     parser.add_argument("-fs", type=str, default=33330000.0, help="Sampling Rate of Data.")
-    parser.add_argument("-start-point", type=int, default=0,help="Starting point of plots")
+    parser.add_argument("-start-point", type=int, default=0,help="Starting point of plots, must be multiple of number of samples.")
     parser.add_argument("-end-point", type=int, default=0,help="Ending point of plots")
     parser.add_argument("-format", type=str, default="int16", help="Data Format, default: np.int16")
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -51,14 +50,19 @@ def get_file_list(folder):
     dir_list = os.listdir(folder)
     return dir_list
         
-def calculate_ptp_alignment_all(usrpDataDict: dict, baseRX):
+def calculate_ptp_alignment_all(usrpDataDict: dict, baseRX, points_per_window):
     result = {}
+    average_alignment = {}
     for key in usrpDataDict:       
         if key != baseRX:
             log.info("Calculating Alignment: " + baseRX + " to " + key)
             alignment = np.angle(np.conj(usrpDataDict[baseRX].complex_data) * usrpDataDict[key].complex_data, True)
             result[key] = alignment
-    return result
+            i = 0
+            average_alignment[key] = np.average(alignment.reshape(-1, points_per_window), axis=1)
+                
+
+    return result, average_alignment
 
 def create_plot_directories(identifier: str):
     # Create temp directory if it does not exist.
@@ -71,18 +75,5 @@ def create_plot_directories(identifier: str):
     os.mkdir(os.getcwd()+"/" + identifier )
     os.mkdir(os.getcwd()+"/" + identifier + "/ptp_alignment/")
     os.mkdir(os.getcwd()+"/" + identifier + "/samples/")
-    os.mkdir(os.getcwd()+"/" + identifier + "/phase_composite/")
+    os.mkdir(os.getcwd()+"/" + identifier + "/phase_average/")
 
-def calculate_phase_diff(usrpDataDict: dict, baseRX, fs, points_per_segment):
-    phase_diff = {}
-    phases = {}
-    test = ToneMeasurement()
-    phases[baseRX] = test.extract_phase_over_time(usrpDataDict[baseRX], float(fs), points_per_segment)
-    for key in usrpDataDict:       
-        if key != baseRX:
-            log.info("Calculating Phases: " + baseRX + " to " + key)
-            phases[key] = test.extract_phase_over_time(usrpDataDict[key], float(fs), points_per_segment)
-            diff = abs(phases[key] - phases[baseRX])
-            phase_diff[key] = diff
-    
-    return phase_diff, phases
