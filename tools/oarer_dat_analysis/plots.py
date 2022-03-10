@@ -55,3 +55,4 @@ def plot_ptp_average(usrpDat: usrpDat, baseRX: usrpDat, alignment, directory: st
     plt.xlabel("Time (us)", fontsize=10)
     plt.savefig(directory +"/phase_average/" + baseRX.rx_channel_number + "_to_" + usrpDat.rx_channel_number +".png",)
     subPlot3.clear()
+    
