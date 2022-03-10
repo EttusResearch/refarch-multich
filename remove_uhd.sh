@@ -10,7 +10,7 @@ main(){
     #check for sudo Priveleges
     check_root
 
-    tempText="Would you like to remove UHD? "
+    tempText="CAUTION: You are about to remove UHD. Would you like to continue? "
 
     if user_input "$tempText"; then
     echo "Removing UHD"
