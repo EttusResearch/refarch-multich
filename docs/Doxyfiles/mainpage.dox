@@ -1,0 +1,25 @@
+/*! \mainpage Table Of Contents
+
+Welcome to the Open Architecture for Radar and EW Research (OARER) manual. Here, 
+you will find information on how to use the system and how to use the Architecture.
+
+## Manual Contents
+
+### Documentation Pages
+\li \subpage page_rx_streaming "Dropped Packet Analysis"
+
+### Examples
+\li dynamicTX - Stream TX from file.
+\li fullDuplex - Simultaneously transmitting and receiving from/to the host
+\li iterative_loopback - Cycles through each Tx channel to all Rx channels. 
+\li \ref multifreq - Cycles through different frequencies
+\li recvToFile - single Tx to all Rx loopback to memory
+\li rx_only - receiving on all channels to memory
+
+### Further Information
+
+\li <a href="https://kb.ettus.com/Open_Architecture_For_Radar_and_EW_Research">Open Architecture for Radar and EW Research KB</a>
+\li <a href="http://www.ettus.com/">Ettus Research Website</a>
+
+*/
+// vim:ft=doxygen:
