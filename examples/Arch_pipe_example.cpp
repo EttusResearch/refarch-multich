@@ -128,7 +128,7 @@ public:
             thread_files.push_back(outfiles[threadnum*rx_channel_nums+i]);
         }
         uhd::set_thread_priority_safe(0.9F);
-        int total_num_samples_returned = 0;
+        int total_num_samples_returned = 0; 
         // Prepare buffers for received samples and metadata
         std::vector<boost::circular_buffer<std::complex<short>>> buffs(
             rx_channel_nums, boost::circular_buffer<std::complex<short>>(maximum_number_of_samples + 1));
@@ -156,14 +156,18 @@ public:
         }
         rx_streamer->issue_stream_cmd(stream_cmd);
         int loop_num = 0;
-        int total_sent = 0;
+        typedef std::chrono::high_resolution_clock Clock;
+        auto overTime = Clock::now(); 
         while (not RA_stop_signal_called
-               and (stream_cmd.num_samps > total_num_samples_returned or stream_cmd.num_samps == 0)) 
+               and stream_cmd.num_samps > total_num_samples_returned and !stream_cmd.num_samps == 0) 
                {
+            auto TempTime = Clock::now();
+            printf("%d::Receieve\n",threadnum);
             size_t samps_retuned = rx_streamer->recv(buff_ptrs, stream_cmd.num_samps, md, RA_rx_timeout);
             loop_num += 1;
+            printf("%d::Error check\n",threadnum);
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
-                std::cout << boost::format("Timeout while streaming") << std::endl;
+                std::cout << boost::format("Timeout while streaming") << std::endl <<std::flush;
                 break;
             }
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
@@ -171,7 +175,7 @@ public:
                     overflow_message    = false;
                     std::string tempstr = "\n thread:" + std::to_string(threadnum) + '\n'
                                           + "loop_num:" + std::to_string(loop_num) + '\n';
-                    std::cout << tempstr;
+                    std::cout << tempstr <<std::flush;
                 }
                 if (md.out_of_sequence != true) {
                     std::cerr
@@ -185,17 +189,21 @@ public:
                                % (RA_rx_rate * sizeof(std::complex<short>) / 1e6);
                     break;
                 }
+                printf("%d::Got Error\n",threadnum);
                 continue;
             }
             if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
                 throw std::runtime_error(
                     str(boost::format("Receiver error %s") % md.strerror()));
+                    break;
             }
             // Write to Pipe Implimentation
             total_num_samples_returned += samps_retuned;
             int buffer_number=0;
-            typedef std::chrono::high_resolution_clock Clock;
+            
+            int total_sent = 0;
             for (auto file : thread_files) {
+                printf("%d::Write to file\n",threadnum);
                 // sets the samples_remaining to either the number recieved from rev (samps_returned)
                 // or sets them to an ammount that gets us to the requested number of samples
                 size_t samples_remaining = 
@@ -214,14 +222,14 @@ public:
                         file_write_index += returned_num_bytes/sizeof(std::complex<short>);
                         samples_remaining -= returned_num_bytes/sizeof(std::complex<short>);
                         //Code used to benchmark the write rate. Just benchmarking first thread
-                        if (threadnum ==0 && buffer_number==0){
+                        //if (threadnum ==0 && buffer_number==0){
                             auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now()-timer).count();
                             iterations++;
                             deltaTime = deltaTime == 0 ? 1 : deltaTime;
                             combined_rate_in_miliseconds += (returned_num_bytes/sizeof(std::complex<short>))*1000/deltaTime;
                             total_sent += returned_num_bytes/sizeof(std::complex<short>);
                             timer = Clock::now();
-                        }
+                        //}
                         number_of_tries=NumberOfTriesToMake;
                     }
                     else if (number_of_tries <=0) {
@@ -241,19 +249,23 @@ public:
                     }
                 }
                 //Code used to benchmark the write rate. Just benchmarking first thread
-                if (threadnum ==0 && buffer_number==0){
+                //if (threadnum ==0 && buffer_number==0){
+                    auto deltaTimeMS = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-overTime).count();
                     _Float64 speed=0;
                     iterations = iterations == 0 ? 1 : iterations;
                     if (iterations>0) speed=(combined_rate_in_miliseconds/iterations);
                     std::cout   <<"returned_num_bytes: "<<file_write_index<<std::endl
+								<<" Samples remaining: "<<samples_remaining<<std::endl
+                                <<"        Total Time: "<<deltaTimeMS<<std::endl
                                 <<"         Rate KS/s:"<<speed<<std::endl
                                 <<"        iterations:"<<iterations<<std::endl
-                                <<"             total:"<<total_sent<<std::endl;}
+                                <<"             total:"<<total_sent<<std::endl;//}
                 ++buffer_number;
             }
         }
         //End of recv
         for (auto file : thread_files) {
+            printf("%d::closingFiles\n",threadnum);
             file->closeFile();
         }
     }
