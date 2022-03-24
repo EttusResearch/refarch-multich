@@ -29,6 +29,8 @@ class usrpDat(object):
         self.rx_channel_number = self.extract_channel_rx()
         self.tx_channel_number = self.extract_channel_tx()
         self.data_array_full = None
+        #TODO
+        self.ptpskew = None
        
     def read_samples(self, datatype, offset):
         temp = np.fromfile(self.folder + "/" + self.filename, dtype=datatype)
