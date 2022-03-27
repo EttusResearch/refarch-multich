@@ -20,12 +20,11 @@ from util import *
 
 def main():
     
-    folder_list = get_last_num_folders("/mnt/md0/", 10)
-    for folder in folder_list:
-        print(folder)
+    #folder_list = get_last_num_folders("/mnt/md0/", 10)
+    ##    print(folder)
 
     
-   #run_cpp_example("Arch_rfnoc_txrx_loopback", '/home/ts-cogrf/Documents/runconfig2.cfg')
+   run_cpp_example("/home/ts-cogrf/Documents/dylan_workarea_dev/refarch-multich-dev/build", "Arch_rfnoc_txrx_loopback", '/home/ts-cogrf/Documents/runconfig2.cfg')
 
 if __name__ == "__main__":
     sys.exit(not main())

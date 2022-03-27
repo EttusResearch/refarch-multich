@@ -14,7 +14,7 @@ from usrpDat import *
 from util import *
 class usrpDat(object):
 
-    def __init__(self, filename, datatype, filesize, args) -> None:
+    def __init__(self, filename, datatype, filesize) -> None:
         
         self.filename = filename
         self.datatype = datatype

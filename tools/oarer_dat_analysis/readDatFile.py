@@ -27,7 +27,7 @@ def main():
         iq_data = get_iq_object(args.filename, args.format, filesize)
         #TODO: Finish for single File
     elif args.folder:
-        iq_data_dict, complex_dict = read_in_folders(args.folder,"/mnt/md0/")
+        iq_data_dict= read_in_folders(args.folder,"/mnt/md0/")
 
     alignment, avg_alignment = calculate_ptp_alignment_all(iq_data_dict, args.base_rx, args.pps)
     create_plot_directories("temp")
