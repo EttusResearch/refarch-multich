@@ -8,7 +8,7 @@
 /*******************************************************************************************************************
 Full TX-RX Loopback to/from host with dynamic TX.
 Change each TX function to suit the application needs.
-This example demonstrates a 4 channel system (Two USRPs). 
+This example demonstrates a 4 channel system (Two USRPs).
 ALL TX -> ALL RX or SINGLE TX -> ALL RX.
 If the user sets the number of samples to zero, this function will stream
 continuously. The multithreaded version
@@ -264,7 +264,6 @@ public:
         md.has_time_spec  = true;
         md.time_spec      = RA_start_time;
         if (RA_TX_All_Chan == true) {
-            
             // start transmit worker thread 0, not for use with replay block.
             std::cout << "Spawning TX thread: " << 0 << std::endl;
             std::thread tx0(
@@ -316,10 +315,11 @@ public:
                 md,
                 1);
             RA_tx_vector_thread.push_back(std::move(tx3));
-            
+
         } else {
             // start transmit worker thread, not for use with replay block.
-            std::cout << "Spawning Single TX thread, Channel: " << RA_singleTX << std::endl;
+            std::cout << "Spawning Single TX thread, Channel: " << RA_singleTX
+                      << std::endl;
             std::thread tx(
                 [this](uhd::tx_streamer::sptr tx_streamer,
                     uhd::tx_metadata_t metadata,
@@ -332,7 +332,6 @@ public:
             RA_tx_vector_thread.push_back(std::move(tx));
         }
     }
-    
 };
 /***********************************************************************
  * Main function
