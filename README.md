@@ -1,7 +1,3 @@
-# Development Branch!
-
-You are currently in the development branch of the Open Architecture for Radar and EW Research. Please checkout either a tagged release or a stable branch. This Development branch has the latest features that the team is working on. There will likely be bugs and some features may not be completely implemented. Developing applications based off this branch is not recommended. Use this branch to watch and give feedback on what we are currently working on!
-
 # Open Architecture for Radar and EW Research
 
 Welcome to the Open Architecture for Radar and EW Research software distribution. refarch-multich is the free and open-source reference architecture code for building a multi-channel USRP-based Radar and EW Research system, designed by NI.
