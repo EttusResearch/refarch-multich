@@ -27,7 +27,7 @@ and one TX streamer per channel.
 #include <memory>
 
 
-class dynamicTX : public RefArch
+class Arch_dynamic_tx : public RefArch
 {
     using RefArch::RefArch;
 
@@ -339,7 +339,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    dynamicTX usrpSystem(argc, argv);
+    Arch_dynamic_tx usrpSystem(argc, argv);
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();

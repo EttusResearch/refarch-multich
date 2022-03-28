@@ -29,7 +29,7 @@ single TX -> # of RX.
 
 #define NumberOfTriesToMake 5000
 
-class Pipe_Example : public RefArch
+class Arch_pipe : public RefArch
 {
 public:
     using RefArch::RefArch;
@@ -405,7 +405,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    Pipe_Example usrpSystem(argc, argv);
+    Arch_pipe usrpSystem(argc, argv);
     usrpSystem.parseConfig();
 
     usrpSystem.testFileSize();

@@ -9,12 +9,14 @@ you will find information on how to use the system and how to use the Architectu
 \li \subpage page_rx_streaming "Dropped Packet Analysis"
 
 ### Examples
-\li dynamicTX - Stream TX from file.
-\li fullDuplex - Simultaneously transmitting and receiving from/to the host
-\li iterative_loopback - Cycles through each Tx channel to all Rx channels. 
-\li \ref multifreq - Cycles through different frequencies
-\li recvToFile - single Tx to all Rx loopback to memory
-\li rx_only - receiving on all channels to memory
+\li Arch_rfnoc_txrx_loopback_mem.cpp - Base example that demonstrates single Tx to all Rx loopback to Memory
+\li Arch_rfnoc_txrx_loopback - The base example but streamed to file
+\li Arch_dynamic_tx - Stream TX from file.
+\li Arch_txrx_fullduplex - Simultaneously transmitting and receiving from/to the host
+\li Arch_iterative_loopback - Cycles through each Tx channel to all Rx channels. 
+\li Arch_multifreq_loopback - Cycles through different frequencies
+\li Arch_rx_to_mem - receiving on all channels to memory
+\li Arch_pipe - Built to connect to third party applications. See the MATLAB example for more information.
 
 ### Further Information
 

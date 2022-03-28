@@ -25,7 +25,7 @@ and one TX streamer per channel.
 #include <memory>
 
 
-class fullDuplex : public RefArch
+class Arch_txrx_fullduplex : public RefArch
 {
     using RefArch::RefArch;
 
@@ -160,7 +160,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    fullDuplex usrpSystem(argc, argv);
+    Arch_txrx_fullduplex usrpSystem(argc, argv);
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
