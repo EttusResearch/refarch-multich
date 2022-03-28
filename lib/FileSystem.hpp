@@ -19,7 +19,7 @@ protected:
     std::string file_location;
     std::vector<std::thread> threads;
     bool stop_all_file_threads = false;
-    void BACKGROUND_open(int oFlag);
+    void backgroundOpen(int oFlag);
 public:
     FileLinux(const std::string& file);
     bool isFileOpen(){return file_id >= 0;}
@@ -36,11 +36,11 @@ private:
     bool pipe_background_process = false;
     void readSamplesBlocking(uint16_t num_of_samples);
     std::vector<int32_t> recv_buff;
-    ssize_t ammount_of_data_returned=0;
+    ssize_t amount_of_data_returned=0;
     int32_t *buf;
 public:
     std::vector<int32_t> returnedValues(){return recv_buff;}
-    bool didBackgroundReturn(){return ammount_of_data_returned>0;}
+    bool didBackgroundReturn(){return amount_of_data_returned>0;}
     void openPipeFile(int oFlag);
     int setfileSize(int file_size);
     PipeFile(const std::string& file);

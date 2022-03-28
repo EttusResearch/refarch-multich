@@ -40,7 +40,7 @@ public:
     }
 
     // Easy way of adding custom values to configuration file.
-    void addAditionalOptions() override
+    void addAdditionalOptions() override
     {
         namespace po = boost::program_options;
         RA_desc.add_options()("repeat_delay",
@@ -222,7 +222,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync time across devices
     usrpSystem.syncAllDevices();
     // Begin TX and RX
-    // INFO: Comment what each initilization does what type of data is stored in each.
+    // INFO: Comment what each initialization does what type of data is stored in each.
     usrpSystem.localTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     int saved_user_delay_time = usrpSystem.RA_delay_start_time;

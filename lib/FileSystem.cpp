@@ -24,7 +24,7 @@ FileLinux::FileLinux(const std::string& file){
  * 
  * @param oFlag Flag that is | with O_NONBLOCK
  */
-void FileLinux::BACKGROUND_open(int oFlag){
+void FileLinux::backgroundOpen(int oFlag){
     do {
         file_id = open(file_location.c_str(), oFlag | O_NONBLOCK);
         //Delay to give some time for reader or writer to catchup.
@@ -42,7 +42,7 @@ void FileLinux::openFile(int oFlag){
     if (!background_open_active){
         background_open_active = true; 
         std::thread t(
-        [this](int oFlag){BACKGROUND_open(oFlag);}
+        [this](int oFlag){backgroundOpen(oFlag);}
         ,oFlag);
         threads.push_back(std::move(t));
     }
@@ -119,7 +119,7 @@ PipeFile::PipeFile(const std::string& file) : FileLinux(file){
 int PipeFile::readSamplesNonBlocking(uint16_t num_of_samples) {
     if (!pipe_background_process){
         pipe_background_process = true;
-        ammount_of_data_returned=0;
+        amount_of_data_returned=0;
         std::thread t([this](uint16_t num_of_samples){
             readSamplesBlocking(num_of_samples);},
             num_of_samples);
@@ -140,8 +140,8 @@ void PipeFile::readSamplesBlocking(uint16_t num_of_samples){
     recv_buff.resize(num_of_samples);
     buf = &recv_buff.front();
     do{
-        ammount_of_data_returned= readFileBlocking(buf, sizeof(int32_t)*num_of_samples);
-    }while(ammount_of_data_returned <= 0 && !stop_all_file_threads);
+        amount_of_data_returned= readFileBlocking(buf, sizeof(int32_t)*num_of_samples);
+    }while(amount_of_data_returned <= 0 && !stop_all_file_threads);
     pipe_background_process = false;
 }
 

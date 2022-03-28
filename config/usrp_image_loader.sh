@@ -19,7 +19,7 @@ main(){
     
     sudo uhd_images_downloader
     
-    echo 'WARNING: This proceedure updates ALL USRPs connected to this host.'
+    echo 'WARNING: This procedure updates ALL USRPs connected to this host.'
     tempText="Would you like to update the FPGA Images of all USRPs?"
     if user_input "$tempText"; then
     

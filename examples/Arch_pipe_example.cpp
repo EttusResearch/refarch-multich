@@ -42,7 +42,7 @@ public:
      * @brief Used to add options to the configuration file.
      * 
      */
-    void addAditionalOptions() override{
+    void addAdditionalOptions() override{
         namespace po = boost::program_options;
         RA_desc.add_options()
         ("PipeFolderLocation",
