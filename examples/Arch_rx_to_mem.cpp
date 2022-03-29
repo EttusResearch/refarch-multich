@@ -18,7 +18,7 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <csignal>
 #include <thread>
 
-class rx_only : public RefArch
+class Arch_rx_to_mem : public RefArch
 {
 public:
     using RefArch::RefArch;
@@ -87,7 +87,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    rx_only usrpSystem(argc, argv);
+    Arch_rx_to_mem usrpSystem(argc, argv);
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();

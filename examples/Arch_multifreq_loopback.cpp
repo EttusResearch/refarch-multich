@@ -24,7 +24,7 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <memory>
 #include <thread>
 
-class multifreq : public RefArch
+class Arch_multifreq_loopback : public RefArch
 {
 public:
     using RefArch::RefArch;
@@ -171,7 +171,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    multifreq usrpSystem(argc, argv);
+    Arch_multifreq_loopback usrpSystem(argc, argv);
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();

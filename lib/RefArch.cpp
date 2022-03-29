@@ -409,7 +409,7 @@ void RefArch::checkRXSensorLock()
             uhd::sensor_value_t rx_sensor_value = rctrl->get_rx_sensor(name, 0);
             std::cout << "Checking RX LO Lock: " << rx_sensor_value.to_pp_string()
                       << std::endl;
-            //TODO: change to !rx_sensor_value.to_bool()
+            // TODO: change to !rx_sensor_value.to_bool()
             while (rx_sensor_value.to_pp_string() != "all_los: locked") {
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
@@ -427,8 +427,8 @@ void RefArch::checkTXSensorLock()
             uhd::sensor_value_t tx_sensor_value = rctrl->get_tx_sensor(name, 0);
             std::cout << "Checking TX LO Lock: " << tx_sensor_value.to_pp_string()
                       << std::endl;
-            //TODO: change to !tx_sensor_value.to_bool()
-            while (tx_sensor_value.to_pp_string() != "all_los: locked") { 
+            // TODO: change to !tx_sensor_value.to_bool()
+            while (tx_sensor_value.to_pp_string() != "all_los: locked") {
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             std::cout << "TX LO LOCKED" << std::endl;
@@ -455,7 +455,8 @@ int RefArch::importData()
     // Open the file
     std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     if (!infile.is_open()) {
-        std::cerr << "Could not open specified file" << std::endl;
+        std::cerr << "Could not open Replay file. Try using absolute path:" << std::endl
+                  << RA_file << std::endl;
         exit(0);
         return EXIT_FAILURE;
     }
@@ -510,7 +511,7 @@ int RefArch::importData()
             replay_start_time = std::chrono::system_clock::now();
             do {
                 fullness = RA_replay_ctrls[i]->get_record_fullness(0);
-                if (fullness != 0){
+                if (fullness != 0) {
                     std::cout << "BREAK" << std::endl;
                     break;
                 }
@@ -1371,6 +1372,7 @@ void RefArch::joinAllThreads()
     }
     RA_rx_vector_thread.clear();
     // Stop Transmitting once RX is complete
+    bool temp_stop_signal = RA_stop_signal_called;
     RA_stop_signal_called = true;
     // Join TX Threads
     for (auto& tx : RA_tx_vector_thread) {
@@ -1378,4 +1380,5 @@ void RefArch::joinAllThreads()
     }
     RA_tx_vector_thread.clear();
     std::cout << "Threads Joined" << std::endl;
+    RA_stop_signal_called = temp_stop_signal; // return stop_signal_called
 }

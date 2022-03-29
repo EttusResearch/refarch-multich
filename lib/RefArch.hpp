@@ -21,7 +21,7 @@ public:
      * @brief For adding custom additional Options to the configuration file
      * See RefArch::addProgramOptions() for default variables
      * Use the following code to generate additional variables.
-     * 
+     *
      *      namespace po = boost::program_options;
      *      RA_desc.add_options()
      *          ("cfgFile",
@@ -45,8 +45,8 @@ public:
      */
     virtual void killLOs();
     /**
-     * @brief Uses the parsed configuration properties to 
-     * configure the LO sources. 
+     * @brief Uses the parsed configuration properties to
+     * configure the LO sources.
      * @details all LO sources to External
      * Distributor- TX/RX export = False
      * Source-      TX export = False
@@ -68,7 +68,7 @@ public:
     virtual void updateDelayedStartTime();
     /**
      * @brief Uses the #RA_file waveform to fill all the replayblocks
-     * 
+     *
      * @details the #RA_file then configures the replay block
      * Sends the data to the replay block
      * @return int Returns early if we are unable to fill all replayblocks
@@ -84,18 +84,18 @@ public:
     static void sigIntHandler(int); // This has to be a void static. Can't override
 
     /**
-     * @brief Used for a few examples to write to file. This function  
+     * @brief Used for a few examples to write to file. This function
      * can be removed in later releases. Please use with caution.
-     * 
-     * @param base_fn 
-     * @param rx_chan_num 
-     * @param tx_chan_num 
-     * @param run_num 
-     * @param tx_freq 
-     * @param folder_name 
-     * @param rx_streamer_string 
-     * @param rx_file_location 
-     * @return std::string 
+     *
+     * @param base_fn
+     * @param rx_chan_num
+     * @param tx_chan_num
+     * @param run_num
+     * @param tx_freq
+     * @param folder_name
+     * @param rx_streamer_string
+     * @param rx_file_location
+     * @return std::string
      */
     virtual std::string generateRxFilename(const std::string& base_fn,
         const size_t rx_chan_num,
@@ -107,7 +107,7 @@ public:
         const std::vector<std::string>& rx_file_location);
     /**
      * @brief Create the USRP sessions
-     * 
+     *
      */
     virtual void buildGraph();
     /**
@@ -116,11 +116,13 @@ public:
      */
     virtual void buildRadios();
     /**
-     * @brief Seek DDCs & DUCs on each USRP and assemble a vector of DDC & DUC controllers.
+     * @brief Seek DDCs & DUCs on each USRP and assemble a vector of DDC & DUC
+     * controllers.
      */
     virtual void buildDDCDUC();
     /**
-     * @brief Seek Replay Blocks on each USRP and assemble a vector of Replay Block Controllers
+     * @brief Seek Replay Blocks on each USRP and assemble a vector of Replay Block
+     * Controllers
      */
     virtual void buildReplay();
     virtual void commitGraph();
@@ -128,7 +130,7 @@ public:
      * @brief Connects Replay Block to TX
      *  Connects RX Streamer <- (2)DDC <- (2)RX channels
      *  Connects Replay block -> DUC -> TX channel
-     * 
+     *
      * @details If 0 #RA_duc_ctrls then Replay Block -> TX channel directly
      */
     virtual void connectGraphMultithread();
@@ -141,20 +143,20 @@ public:
     /**
      * @brief Builds 1 RX streamer per 2 RX channels.
      *  Builds a TX streamer for a Replay Block.
-     * 
+     *
      * @details Both the TX and RX vectors are padded (duplicate)
      */
     virtual void buildStreamsMultithread();
     /**
      * @brief Builds 1 RX streamer per 2 RX channels.
      *  Builds 1 TX streamer per 1 TX channel
-     * 
+     *
      * @details RX vector is padded (duplicate)
      */
     virtual void buildStreamsMultithreadHostTX();
     /**
      * @brief Set the Radio Rates to #RA_rx_rate and #RA_TX_rate
-     * 
+     *
      * @return int 0 on success. 1 on Failure
      */
     virtual int setRadioRates();
@@ -167,11 +169,11 @@ public:
      */
     virtual void tuneTX();
     /**
-     * @brief Set RX Gain of #RA_rx_gain on all Devices 
+     * @brief Set RX Gain of #RA_rx_gain on all Devices
      */
     virtual void setRXGain();
     /**
-     * @brief Set TX Gain of #RA_tx_gain on all Devices 
+     * @brief Set TX Gain of #RA_tx_gain on all Devices
      */
     virtual void setTXGain();
     /**
@@ -192,8 +194,8 @@ public:
     virtual void setTXAnt();
     /**
      * @brief Parses the configuration file for default parameters
-     * and user defined variables. Converts address arguments to 
-     * usable format. 
+     * and user defined variables. Converts address arguments to
+     * usable format.
      */
     virtual void parseConfig();
     /**
@@ -210,10 +212,10 @@ public:
     virtual void spawnTransmitThreads();
     /**
      * @brief Main loop to acquire samples. Typically all examples override this function
-     * 
+     *
      * @param rx_channel_nums number of channels per streamer
      * @param threadnum thread number
-     * @param rx_streamer 
+     * @param rx_streamer
      */
     virtual void recv(const int rx_channel_nums,
         const int threadnum,
@@ -221,8 +223,8 @@ public:
     /**
      * @brief Main loop to stream samples from host. Typically streaming examples
      *  will override this function
-     * 
-     * @param tx_streamer 
+     *
+     * @param tx_streamer
      * @param metadata meta data that was created from RefArch::spawnTransmitThreads()
      * @param num_channels number of channels per streamer
      */
@@ -284,7 +286,7 @@ protected:
     uhd::tx_streamer::sptr RA_tx_stream;
     std::vector<uhd::tx_streamer::sptr> RA_tx_stream_vector;
     /**
-     * @brief Holds each channels streamer. By default each USRP channel 0 and 1 
+     * @brief Holds each channels streamer. By default each USRP channel 0 and 1
      *  use the same streamer. RA_rx_stream_vector[0] == RA_rx_stream_vector[1]
      */
     std::vector<uhd::rx_streamer::sptr> RA_rx_stream_vector;
@@ -301,7 +303,7 @@ protected:
     // Load from disk
     std::string RA_args;
 
-    double RA_tx_rate,RA_tx_freq, RA_tx_gain, RA_tx_bw;
+    double RA_tx_rate, RA_tx_freq, RA_tx_gain, RA_tx_bw;
     double RA_rx_rate, RA_rx_freq, RA_rx_gain, RA_rx_bw;
     std::string RA_ref;
     std::string RA_tx_ant, RA_rx_ant;
