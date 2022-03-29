@@ -1,3 +1,9 @@
+//
+// Copyright 2021-2022 Ettus Research, a National Instruments Brand
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+
 #include "RefArch.hpp"
 #include <uhd/rfnoc/mb_controller.hpp>
 #include <uhd/utils/thread.hpp>
@@ -5,7 +11,6 @@
 #include <boost/circular_buffer.hpp>
 #include <csignal>
 #include <fstream>
-
 
 #if HAS_STD_FILESYSTEM
 #    if HAS_STD_FILESYSTEM_EXPERIMENTAL
