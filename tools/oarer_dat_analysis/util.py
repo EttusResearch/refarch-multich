@@ -180,18 +180,20 @@ def batch_folder_import(path0: str, numfolders = 1, datatype = "int16", start_po
 
     return path0_folderdict
 
-def batch_analyze_plot(dict0 : dict, ppw, numfolders = 1, base_rx = "rx_00"):
+def batch_analyze_plot(dict0 : dict, ppw, numfolders = 1, base_rx = "rx_00", start_point = 0, end_point = 0):
+    alignment_dict = {}
+    avg_alignment_dict = {}
+    
     for k_folder, v_folder in dict0.items():
-        alignment, avg_alignment = calculate_ptp_alignment_all(v_folder, base_rx, ppw)
+        alignment_dict[k_folder], avg_alignment_dict[k_folder] = calculate_ptp_alignment_all(v_folder, base_rx, ppw)
         create_plot_directories_tests(str(k_folder))
-        #TODO: Finish 
-        for data in alignment:
-            plot_ptp_average(iq_data_dict[data], iq_data_dict[args.base_rx], avg_alignment, "temp", args.start_point, args.end_point, args.pps)
-            plot_ptp_alignment(iq_data_dict[data], iq_data_dict[args.base_rx], alignment, "temp", args.start_point, args.end_point)
-        for data in iq_data_dict:
-            if data != args.base_rx:
-                plot_samps(iq_data_dict[data], iq_data_dict[args.base_rx], "temp",  args.start_point, args.end_point)
-
+        for data in avg_alignment_dict[k_folder]:
+            #print(alignment_dict[k_folder])
+            #print(dict0[k_folder][base_rx])
+            avg_output_dir = str(k_folder) 
+            plot_ptp_average(dict0[k_folder][data], dict0[k_folder][base_rx], avg_alignment_dict[k_folder],avg_output_dir , start_point, end_point, ppw)
+            #plot_ptp_alignment(iq_data_dict[data], iq_data_dict[args.base_rx], alignment, "temp", args.start_point, args.end_point)
+   
     
 
 def create_plot_directories_tests(identifier: str):
@@ -200,5 +202,4 @@ def create_plot_directories_tests(identifier: str):
     os.mkdir(identifier + "/ptp_alignment/")
     os.mkdir(identifier + "/samples/")
     os.mkdir(identifier + "/phase_average/")
-
 

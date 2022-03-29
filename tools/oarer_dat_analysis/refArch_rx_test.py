@@ -68,14 +68,14 @@ def test_ten_run(params, arch_params):
     temp_location = os.getcwd() + "/temp/" + d1
     os.mkdir(temp_location)
     #Run example 10 times
-    run_arch.run_batch(params.build_path, params.example, ITERATIONS, params.cfgFile, arch_params)
+    #run_arch.run_batch(params.build_path, params.example, ITERATIONS, params.cfgFile, arch_params)
     #Move data to temp directory for analysis
     data_location = move_data(params,ITERATIONS,temp_location, d1)
 
     # Read in IQ Data 
     data0_folderdict = batch_folder_import(data_location, ITERATIONS, start_point = params.start_point, fs=params.fs, ppw=params.ppw)
-
-    batch_analyze_plot(data0_folderdict, params.ppw, ITERATIONS, params.base_rx)
+    
+    batch_analyze_plot(data0_folderdict, params.ppw, ITERATIONS, params.base_rx, params.start_point, params.end_point)
     
 
 
@@ -89,11 +89,11 @@ if __name__ == "__main__":
     parser.add_argument("--output-path0", type=str, required=True, help="Path of output data")
     parser.add_argument("--output-path1", type=str, required=False, help="Path of output data (second location)")
     parser.add_argument("-v", "--verbose", action="store_true")
-    parser.add_argument('-ppw', type=int, default=500, help='Points Per Window')
-    parser.add_argument("-fs", type=str, default=250000000.0, help="Sampling Rate of Data. Check Config File.")
-    parser.add_argument("-start-point", type=int, default=1000,help="Starting point of plots, must be multiple of number of samples.")
-    parser.add_argument("-end-point", type=int, default=16000,help="Ending point of plots. ")
-    parser.add_argument("-base-rx",type=str, default="rx_00", help="Base RX channel to measure against, format: rx_##")
+    parser.add_argument('--ppw', type=int, default=500, help='Points Per Window')
+    parser.add_argument("--fs", type=str, default=250000000.0, help="Sampling Rate of Data. Check Config File.")
+    parser.add_argument("--start-point", type=int, default=1000,help="Starting point of plots, must be multiple of number of samples.")
+    parser.add_argument("--end-point", type=int, default=16000,help="Ending point of plots. ")
+    parser.add_argument("--base-rx",type=str, default="rx_00", help="Base RX channel to measure against, format: rx_##")
     params = parser.parse_args(rest);
     if params.verbose:
         log.basicConfig(level=log.DEBUG)
