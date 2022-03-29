@@ -330,7 +330,7 @@ public:
                 << (boost::format(
                         " Could not set buffer size to %d. Instead set to %d \n"
                         " Try setting permissions of this executable with this command\n "
-                        " sudo setcap 'CAP_SYS_RESOURCE=+ep' Arch_pipe_example\n "
+                        " sudo setcap 'CAP_SYS_RESOURCE=+ep' Arch_pipe\n "
                         " Or by reducing the pipe file buffer size inside the "
                         "configuration file. ")
                        % pipe_file_buffer_size % file_size_buffer);
