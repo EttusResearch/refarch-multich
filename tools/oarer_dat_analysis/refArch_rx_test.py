@@ -21,7 +21,7 @@ import shutil
 import logging as log
 
 
-#@pytest.fixture
+""" #@pytest.fixture
 def move_data(params, iterations, temp_location, d1):
     # Move data to temp folder for analysis
     # Will move iterations number of folders
@@ -52,12 +52,12 @@ def move_data(params, iterations, temp_location, d1):
             for file in os.listdir(src1):
                 shutil.copy2(file, dst1)
     print("Received Files moved to: {} ".format(temp_location))
-    return temp_location
+    return temp_location """
 
 
 def test_ten_run(params, arch_params):
     #Run provided example 10 times
-    ITERATIONS = 10
+    ITERATIONS = 1
     now = datetime.datetime.now()
     d1 = "rx_test_" + now.strftime("%m_%d_%Y_%H_%M_%S")
 
@@ -67,15 +67,16 @@ def test_ten_run(params, arch_params):
         print("{:14} {}".format(key, val))
     temp_location = os.getcwd() + "/temp/" + d1
     os.mkdir(temp_location)
+    save_directory = temp_location
     #Run example 10 times
     #run_arch.run_batch(params.build_path, params.example, ITERATIONS, params.cfgFile, arch_params)
     #Move data to temp directory for analysis
-    data_location = move_data(params,ITERATIONS,temp_location, d1)
+    data_location = move_data(params, params.n, ITERATIONS,temp_location, d1)
 
     # Read in IQ Data 
     data0_folderdict = batch_folder_import(data_location, ITERATIONS, start_point = params.start_point, fs=params.fs, ppw=params.ppw)
     
-    batch_analyze_plot(data0_folderdict, params.ppw, ITERATIONS, params.base_rx, params.start_point, params.end_point)
+    batch_analyze_plot(data0_folderdict, params.ppw, params.base_rx, None, params.start_point, params.end_point)
     
 
 
@@ -86,8 +87,9 @@ if __name__ == "__main__":
     parser.add_argument("--example", type=str, required=True, help="Name of example")
     parser.add_argument("--build-path", type=str, required=True, help="Path to build directory")
     parser.add_argument("--iterations", type=int, required=False, help="Iterations to run example")
-    parser.add_argument("--output-path0", type=str, required=True, help="Path of output data")
-    parser.add_argument("--output-path1", type=str, required=False, help="Path of output data (second location)")
+    parser.add_argument("--folder0", type=str, required=True, help="Path of output data")
+    parser.add_argument("--folder1", type=str, required=False, help="Path of output data (second location)")
+    parser.add_argument("-n", action="store_true", default=True, help="Import the newest folder(s) from -folder and/or -folder1")
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument('--ppw', type=int, default=500, help='Points Per Window')
     parser.add_argument("--fs", type=str, default=250000000.0, help="Sampling Rate of Data. Check Config File.")

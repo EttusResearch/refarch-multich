@@ -28,6 +28,8 @@ class usrpDat(object):
         self.filesize = filesize
         self.rx_channel_number = self.extract_channel_rx()
         self.tx_channel_number = self.extract_channel_tx()
+        self.run_number = self.extract_run_number()
+        self.channel_string = self.tx_channel_number + self.rx_channel_number +  self.run_number
         self.data_array_full = None
         #TODO
         self.ptpskew = None
@@ -36,6 +38,7 @@ class usrpDat(object):
         temp = np.fromfile(self.folder + "/" + self.filename, dtype=datatype)
         self.data_array_full = temp 
         self.data_array = temp[offset*2:]
+    
         
     def extract_channel_rx(self):
         """Look in filename for rx channel"""
@@ -45,9 +48,15 @@ class usrpDat(object):
 
     def extract_channel_tx(self):
         """Look in filename for tx channel"""
-        match_tx= re.search("tx_[0-9][0-9]", self.filename)
+        match_tx= re.search("tx_[0-9][0-9]_", self.filename)
         self.tx_channel_number = match_tx.group() 
         return self.tx_channel_number
+
+    def extract_run_number(self):
+        """Look in filename for tx channel"""
+        match_run= re.search("_run_[0-9][0-9]", self.filename)
+        self.run_number = match_run.group() 
+        return self.run_number
 
     def deinterleave_iq(self):
         """Deinterleave a 1D array into two 1D arrays [0,1,2,3]>>>[[0,2],[1,3]]"""
