@@ -1,17 +1,9 @@
 //
-<<<<<<< HEAD
-// Copyright 2010-2012,2014-2015 Ettus Research LLC
-// Copyright 2021 Ettus Research, a National Instruments Company
-//
-// SPDX-License-Identifier: GPL-3.0-or-later
-//
-=======
 // Copyright 2021-2022 Ettus Research, a National Instruments Brand
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
->>>>>>> 4adf8eb4444d4b4a2bd9a5a9dabef7bd3b836fc9
 #include "RefArch.hpp"
 #include <uhd/rfnoc/mb_controller.hpp>
 #include <uhd/utils/thread.hpp>

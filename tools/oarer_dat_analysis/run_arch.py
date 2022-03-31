@@ -1,9 +1,11 @@
-"""
-Copyright 2019 Ettus Research, A National Instrument Brand
-SPDX-License-Identifier: GPL-3.0-or-later
-Helper script that provides a Python interface to run the RefArch C++
-example.
-"""
+#
+#  Copyright 2021-2022 Ettus Research, a National Instruments Brand
+#
+#  SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Helper functions that provides a Python interface to run the RefArch C++
+# example.
+
 import argparse
 import subprocess
 from util import * 
