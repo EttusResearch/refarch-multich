@@ -77,4 +77,3 @@ class usrpDat(object):
         for x in range(0,len(self.i)):
             self.complex_data.append(np.complex(self.q[x], self.i[x]))
         
-    

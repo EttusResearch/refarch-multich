@@ -95,5 +95,3 @@ if __name__ == "__main__":
     parser.add_argument("--iterations", type=int, required=True, help="Iterations to run example")
     params = parser.parse_args(rest);
     run_batch(params.build_path, params.example,params.iterations, params.cfgFile, arch_params)
-
-   
