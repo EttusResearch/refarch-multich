@@ -1,6 +1,6 @@
-.vscode/settings.json
-build/
-.vscode/c_cpp_properties.json
+**/.vscode
 uhd_GitSource
-tools/temp/
-/.vscode
+**/temp
+**/build
+**/__pycache__
+

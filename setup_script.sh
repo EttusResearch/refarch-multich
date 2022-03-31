@@ -1,7 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2010-2012,2014-2015 Ettus Research LLC
-# Copyright 2021 Ettus Research, a National Instruments Company
+# Copyright 2021-2022 Ettus Research, a National Instruments Brand
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
@@ -50,8 +49,8 @@ main(){
     #Build the UHD driver and install it to system
     mkdir host/build
     cd host/build
-    cmake ..
-    make -j
+    cmake .. -DENABLE_PYTHON_API=ON
+    make -j 
     make install
 
     #Update Library files to include UHD for the build
