@@ -48,7 +48,7 @@ def parse_args():
 
 def calculate_window(signal_freq: int, fs):
     T = 1/signal_freq # Period
-    two_T = 2*T # Two Periods
+    two_T = 4*T # four Periods
     samples = float(fs)*two_T # Samples for two periods
     return int(samples)
 
@@ -112,7 +112,7 @@ def batch_folder_import( path0: str , ppw, new = True, numfolders = 1, datatype 
             iq_data.determine_nsamps()
             if (iq_data.nsamples - start_point) % ppw != 0:
                 x = (iq_data.nsamples-start_point) % ppw
-                sys.exit("ERROR: PPW ("+str(ppw)+") must be multiple of nsamps: " + str(iq_data.nsamples) +"\nIncrease samples by: " + str(x) + " or use start_point = " + str(start_point+x))
+                sys.exit("ERROR: PPW ("+str(ppw)+") : "+"\nIncrease samples by: " + str(x) + " or use start_point = " + str(start_point+x))
             iq_data.deinterleave_iq()
             iq_data.convert_to_complex()
             channel_string = iq_data.tx_channel_number + iq_data.rx_channel_number + iq_data.run_number
@@ -213,4 +213,3 @@ def move_data(params, new, iterations, temp_location, d1):
                 shutil.copy2(file, dst0)
     print("Received Files moved to: {} ".format(temp_location))
     return temp_location
-    
