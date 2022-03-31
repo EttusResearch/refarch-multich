@@ -49,8 +49,8 @@ main(){
     #Build the UHD driver and install it to system
     mkdir host/build
     cd host/build
-    cmake ..
-    make -j
+    cmake .. -DENABLE_PYTHON_API=ON
+    make -j 
     make install
 
     #Update Library files to include UHD for the build
