@@ -1,5 +1,9 @@
 #!/bin/bash
-
+#
+# Copyright 2021-2022 Ettus Research, a National Instruments Brand
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
 #This script updates the ip addresses of each USRP SFP1 Port. 
 #Change sfp1 to sfp0 for the sfp0 port. 
 
