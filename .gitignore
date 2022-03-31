@@ -2,4 +2,5 @@
 build/
 .vscode/c_cpp_properties.json
 uhd_GitSource
-tools/temp/
+**/temp/
+**/__pycache__
