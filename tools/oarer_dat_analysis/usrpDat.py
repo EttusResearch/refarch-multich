@@ -10,8 +10,11 @@ import logging as log
 import numpy as np
 import re
 import sys
+
+import sklearn
 from usrpDat import *
 from util import *
+from sklearn import preprocessing
 class usrpDat(object):
 
     def __init__(self, filename, datatype, filesize) -> None:
@@ -65,7 +68,7 @@ class usrpDat(object):
 
     def determine_nsamps(self):
         if (self.datatype == "int16"):
-            self.nsamples = self.filesize/4
+            self.nsamples = int(self.filesize/4)
         else:
            print("Unknown data format, not yet supported..")
            sys.exit() 

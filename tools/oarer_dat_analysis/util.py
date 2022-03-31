@@ -15,6 +15,8 @@ import numpy as np
 import glob 
 import configargparse, argparse
 import shutil
+
+from sklearn.model_selection import KFold
 from usrpDat import *
 from usrpDat import usrpDat
 from util import *
@@ -22,6 +24,7 @@ import os
 import subprocess
 import pathlib
 import plots as plotutil
+from sklearn import preprocessing
 
 
 def parse_args():
@@ -29,8 +32,8 @@ def parse_args():
     parser = configargparse.ArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description=description, default_config_files=['~/*.conf'])
     parser.add_argument("-filename", type=str, default=None,help="Name of the input file.")
-    parser.add_argument("-folder0", type=str, required=True, default=None,  help="First folder to search for newest .dat files or parent directory for use with -n flag.")
-    parser.add_argument("-folder1", type=str, required=False,  help="Second folder to search for newest .dat files or parent directory for use with -n flag.")
+    parser.add_argument("-folder0", type=str, required=True, default=None,  help="First folder to search for newest .dat files or parent directory for use with -n flag")
+    parser.add_argument("-folder1", type=str, required=False,  help="Second folder to search for newest .dat files or parent directory for use with -n flag")
     parser.add_argument("-n", action="store_true", help="Import the newest folder(s) from -folder and/or -folder1")
     parser.add_argument("-numfolders", type=int, default=1, help="X number of new folders to import, for use with -n flag.")
     parser.add_argument("-fs", type=str, default=33330000.0, help="Sampling Rate of Data.")
@@ -39,9 +42,16 @@ def parse_args():
     parser.add_argument("-format", type=str, default="int16", help="Data Format, default: int16")
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-base-rx",type=str, default="rx_00", help="Base RX channel to measure against, format: rx_##")
-    parser.add_argument('-ppw', type=int, default=500, help='Points Per Window')
+    parser.add_argument("-signal-freq", type=int, required=False, help="Frequency of transmitted sinusoid. Automatically calculates ppw.")
+    parser.add_argument('-ppw', type=int, help='Points Per Window, optional, will override value calculated with signal-freq.')
     args = parser.parse_args()
     return args
+
+def calculate_window(signal_freq: int, fs):
+    T = 1/signal_freq # Period
+    two_T = 2*T # Two Periods
+    samples = float(fs)*two_T # Samples for two periods
+    return int(samples)
 
 def get_iq_object(filename, datatype, filesize):
     _, file_extension = os.path.splitext(filename)
@@ -74,44 +84,17 @@ def calculate_ptp_alignment_all(usrpDataDict: dict, baseRX, points_per_window):
         if key != baseRX and tx_channel_number == base_tx_channel_number and run_number == base_run_number:
             log.info("Calculating Alignment: " + baseRX + " to " + key)
             alignment = np.angle(np.conj(usrpDataDict[baseRX].complex_data) * usrpDataDict[key].complex_data, True)
+            mean_alignment = np.mean(alignment)
+            #alignment -= mean_alignment
             result[key] = alignment
+            #print(alignment)
+            #print(np.mean(alignment))
+            #result[key] = preprocessing.normalize(alignment[:,np.newaxis], axis=0, copy=False).ravel()
             average_alignment[key] = np.average(alignment.reshape(-1, points_per_window), axis=1)
     return result, average_alignment
 
-def read_in_folders(path0 : str, path1 = ""):
-    #Read in one or two seperate folders
-    #This assumes you have setup the RefArch to have one or two RAID arrays or drives.
-    #A path to each RAID array or drive would be passed to this function.
-    #This would need to be modified for more than two RAID arrays or file locations. 
-    args = parse_args()
-    folder_list=[]
-    log.info("Reading in folder: {}.".format(path0))
-    folder_list.append(path0)
-    if path1 != "":
-        log.info("Reading in folder: {}.".format(path1))
-        folder_list.append(path1)
-    iq_data_dict = {}
-    complex_dict = {}
-    for folder in folder_list:
-        for file in os.listdir(folder):
-            log.info("File {} selected.".format(file))
-            filesize = os.path.getsize(str(folder) + '/' + file)
-            iq_data = get_iq_object(file, args.format, filesize)
-            iq_data.folder = str(folder)
-            iq_data.fs = float(args.fs)
-            iq_data.read_samples(args.format, args.start_point)
-            iq_data.determine_nsamps()
-            if iq_data.nsamples % args.ppw != 0:
-                sys.exit("ERROR: PPW ("+str(args.ppw)+") must be multiple of nsamps: " + str(iq_data.nsamples))
-            iq_data.deinterleave_iq()
-            iq_data.convert_to_complex()
-            channel_string = iq_data.tx_channel_number +  iq_data.rx_channel_number + iq_data.run_number
-            iq_data_dict[channel_string] = iq_data
-            # Convert data to complex and save to dict. 
-            complex_dict[channel_string] = iq_data.complex_data 
-    return iq_data_dict, complex_dict
 
-def batch_folder_import( path0: str , new = True, numfolders = 1, datatype = "int16", start_point = 1000, fs = 33330000.0, ppw = 500):
+def batch_folder_import( path0: str , ppw, new = True, numfolders = 1, datatype = "int16", start_point = 1000, fs = 33330000.0):
     folderlist = []
     log.info("Reading in folder: {}.".format(path0))
     folderlist= get_last_num_folders(path0, numfolders)
@@ -128,8 +111,9 @@ def batch_folder_import( path0: str , new = True, numfolders = 1, datatype = "in
             iq_data.fs = float(fs)
             iq_data.read_samples(datatype, start_point)
             iq_data.determine_nsamps()
-            if iq_data.nsamples % ppw != 0:
-                sys.exit("ERROR: PPW ("+str(ppw)+") must be multiple of nsamps: " + str(iq_data.nsamples))
+            if (iq_data.nsamples - start_point) % ppw != 0:
+                x = (iq_data.nsamples-start_point) % ppw
+                sys.exit("ERROR: PPW ("+str(ppw)+") must be multiple of nsamps: " + str(iq_data.nsamples) +"\nIncrease samples by: " + str(x) + " or use start_point = " + str(start_point+x))
             iq_data.deinterleave_iq()
             iq_data.convert_to_complex()
             channel_string = iq_data.tx_channel_number + iq_data.rx_channel_number + iq_data.run_number
@@ -144,8 +128,6 @@ def batch_analyze_plot(dict0 : dict, ppw,  baseRX , save_directory = None, start
         # dict0, alignment_dict, avg_alignment_dict are dictionaries of dictionairies. 
         # Keys are the path to the test directory and data
         tx_list, rx_list, run_list = extract_file_info(v_folder)
-        print(tx_list)
-        print(run_list)
         if save_directory == None:
             create_plot_directories(str(k_folder))
         else:
@@ -161,7 +143,7 @@ def batch_analyze_plot(dict0 : dict, ppw,  baseRX , save_directory = None, start
                 else:
                     image_output = save_directory
                 for data in avg_alignment_dict[k_folder]:
-                    plotutil.plot_ptp_average(dict0[k_folder][data], dict0[k_folder][base_channel_string], avg_alignment_dict[k_folder], image_output , start_point, end_point, ppw)
+                    plotutil.plot_ptp_average(dict0[k_folder][data], dict0[k_folder][base_channel_string], avg_alignment_dict[k_folder], image_output , start_point)
                 for data in alignment_dict[k_folder]:
                     plotutil.plot_ptp_alignment(dict0[k_folder][data], dict0[k_folder][base_channel_string], alignment_dict[k_folder], image_output , start_point, end_point)
                 for data in dict0[k_folder]:

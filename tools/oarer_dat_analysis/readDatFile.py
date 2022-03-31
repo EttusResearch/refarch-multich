@@ -34,8 +34,12 @@ def main():
     os.mkdir(temp_location)
    
     data_location = move_data(args, args.n,  args.numfolders, temp_location, d1)
-    data_folderdict = batch_folder_import(data_location, args.n, args.numfolders, start_point = args.start_point, fs=args.fs, ppw=args.ppw)
-    batch_analyze_plot(data_folderdict, args.ppw, args.base_rx, temp_location, args.start_point, args.end_point)
+    if args.ppw:
+        ppw = args.ppw
+    else:
+        ppw = calculate_window(args.signal_freq, args.fs)
+    data_folderdict = batch_folder_import(data_location, ppw, args.n, args.numfolders, start_point = args.start_point, fs=args.fs)
+    batch_analyze_plot(data_folderdict, ppw, args.base_rx, temp_location, args.start_point, args.end_point)
    
             
 if __name__ == "__main__":

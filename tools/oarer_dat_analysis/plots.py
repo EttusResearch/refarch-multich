@@ -41,7 +41,7 @@ def plot_ptp_alignment(usrpDat: usrpDat, base: usrpDat, alignment, directory: st
     plt.savefig(directory +"/ptp_alignment/" + base.channel_string + "_to_" + usrpDat.channel_string +".png",)
     subPlot2.clear()
 
-def plot_ptp_average(usrpDat: usrpDat, base: usrpDat, alignment, directory: str, start_point: int, end_point: int, pps: int):
+def plot_ptp_average(usrpDat: usrpDat, base: usrpDat, alignment, directory: str, start_point: int):
      # Plot the mean alignment
     subPlot3 = plt.subplot()
     log.info("Plotting mean alignment")
