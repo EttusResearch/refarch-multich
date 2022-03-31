@@ -1,11 +1,18 @@
 #!/bin/bash
 #
+<<<<<<< HEAD
 # Copyright 2010-2012,2014-2015 Ettus Research LLC
 # Copyright 2021 Ettus Research, a National Instruments Company
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
+=======
+# Copyright 2021-2022 Ettus Research, a National Instruments Brand
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+>>>>>>> 4adf8eb4444d4b4a2bd9a5a9dabef7bd3b836fc9
 #Script for updating linux filesystem of ALL usrps connected to the host. 
 
 main(){
@@ -20,7 +27,7 @@ main(){
     myarr=($(awk '$1 ~ /addr:/ && $1 !~ /mgmt_addr/ {print $2}' usrp_config.txt))
     printf '%s\n' "${myarr[@]}"
 
-    echo 'WARNING: This proceedure updates ALL USRPs connected to this host.'
+    echo 'WARNING: This procedure updates ALL USRPs connected to this host.'
     tempText="Would you like to update the filesystem of all USRPs?"
     if user_input "$tempText"; then
       
@@ -48,10 +55,10 @@ main(){
         echo 'It is recommended that uhd_usrp_probe be used to verify functionality.'
         tempText="If the USRP appears to be functioning, would you like to commit the file system update?"
         if user_input "$tempText"; then
-          echo -e "Commiting file system...\n"
+          echo -e "Committing file system...\n"
           mender_commit "$i" &
         else 
-        echo -e "If the USRP does not appear to be functioning corectly, please reboot and try the update process manually. See the N320/N321 getting started guide for more details./n"
+        echo -e "If the USRP does not appear to be functioning correctly, please reboot and try the update process manually. See the N320/N321 getting started guide for more details./n"
         fi
       done
       wait

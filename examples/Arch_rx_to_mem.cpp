@@ -1,6 +1,5 @@
 //
-// Copyright 2010-2012,2014-2015 Ettus Research LLC
-// Copyright 2021 Ettus Research, a National Instruments Company
+// Copyright 2021-2022 Ettus Research, a National Instruments Brand
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -18,7 +17,7 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <csignal>
 #include <thread>
 
-class rx_only : public RefArch
+class Arch_rx_to_mem : public RefArch
 {
 public:
     using RefArch::RefArch;
@@ -45,7 +44,7 @@ public:
         } else {
             throw std::runtime_error("Unknown type " + RA_format);
         }
-        std::cout << "Recieving data (Press Ctrl+C to stop)..." << std::endl;
+        std::cout << "Receiving data (Press Ctrl+C to stop)..." << std::endl;
 
         for (auto& i : vectorThread) {
             i.join();
@@ -87,7 +86,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    rx_only usrpSystem(argc, argv);
+    Arch_rx_to_mem usrpSystem(argc, argv);
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();

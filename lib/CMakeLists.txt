@@ -9,6 +9,8 @@
 add_library(Arch_lib STATIC 
     RefArch.hpp
     RefArch.cpp
+    FileSystem.hpp
+    FileSystem.cpp
     )
 target_link_libraries(Arch_lib PRIVATE UHD_BOOST)
 

@@ -1,17 +1,16 @@
 #!/bin/bash
 #
-# Copyright 2010-2012,2014-2015 Ettus Research LLC
-# Copyright 2021 Ettus Research, a National Instruments Company
+# Copyright 2021-2022 Ettus Research, a National Instruments Brand
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
 ###1) open a terminal and set working directory to tools directory
-###2) execute the this script with root priveleges "sudo ./setup_script.sh"
+###2) execute the this script with root privileges "sudo ./setup_script.sh"
 
 main(){
 
-  #check for sudo Priveleges
+  #check for sudo Privileges
   check_root
 
   #Set working directory to script location.
@@ -34,7 +33,7 @@ main(){
   if find_UHD_install; then
     echo "Found installation of UHD skipping install!"
   else
-    #This file will add UHD libraries to the enviroment so UHD commands
+    #This file will add UHD libraries to the environment so UHD commands
     #can be executed without a setup step.
     cp -f config/export_uhd_lib.sh /etc/profile.d/
 
@@ -54,7 +53,7 @@ main(){
     make -j 
     make install
 
-    #Update Library files to include UHD for the cogrf build
+    #Update Library files to include UHD for the build
     ldconfig /usr/local/lib/
   fi
 
@@ -70,7 +69,7 @@ main(){
   network_buffers_update
   sysctl -p /etc/sysctl.conf
 
-  #Build cogrf
+  #Build 
   cd "$DIR"
   mkdir build
   cd build
@@ -118,7 +117,7 @@ if [[ $VAR == *"libuhd"* ]]; then
     return 0
   else
     echo ""
-    echo "Warning: You dont have the correct version looking for UHD4.0.0. Instead found"
+    echo "Warning: You don't have the correct version looking for UHD4.0.0. Instead found"
     echo $VAR
 
     tempText="Would you like to install UHD 4.1.0? "
@@ -154,7 +153,7 @@ check_root(){
   fi
 }
 
-#checks network buffers and updates the values if they arn't high enough
+#checks network buffers and updates the values if they aren't high enough
 network_buffers_update(){
     VAR=$(cat /etc/sysctl.conf | grep "net.core")
     if [[ $VAR == *"net.core"* ]]; then

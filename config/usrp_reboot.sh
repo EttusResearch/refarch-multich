@@ -1,10 +1,18 @@
 #!/bin/bash
 #
+<<<<<<< HEAD
 # Copyright 2010-2012,2014-2015 Ettus Research LLC
 # Copyright 2021 Ettus Research, a National Instruments Company
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
+=======
+# Copyright 2021-2022 Ettus Research, a National Instruments Brand
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+>>>>>>> 4adf8eb4444d4b4a2bd9a5a9dabef7bd3b836fc9
 #Reboot All USRPS
 main(){
     check_root
@@ -17,7 +25,7 @@ main(){
     myarr=($(awk '$1 ~ /addr:/ && $1 !~ /mgmt_addr/ {print $2}' usrp_config.txt))
 
     COUNTER=100
-    echo 'WARNING: This proceedure reboots ALL USRPs connected to this host.'
+    echo 'WARNING: This procedure reboots ALL USRPs connected to this host.'
     tempText="Would you like to reboot all USRPs?"
     if user_input "$tempText"; then
       for i in "${myarr[@]}"
