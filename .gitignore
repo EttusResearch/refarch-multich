@@ -1,11 +1,6 @@
 **/.vscode
 uhd_GitSource
-<<<<<<< HEAD
-**/temp/
-**/__pycache__
-=======
 **/temp
 **/build
 **/__pycache__
 
->>>>>>> e4aff7d3465662b0a7a9ccc5ddeea69adb1b8e35
