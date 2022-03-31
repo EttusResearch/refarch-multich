@@ -13,7 +13,7 @@
 ## Expected Behavior ##
 <!--- [What you expect to happen] -->
 
-## Actual Behaviour ##
+## Actual Behavior ##
 <!--- [What happens instead e.g. error message] -->
 
 ## Steps to reproduce the problem ##

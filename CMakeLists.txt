@@ -68,6 +68,7 @@ target_link_libraries(UHD_BOOST INTERFACE ${UHD_LIBRARIES} ${Boost_LIBRARIES})
 ########################################################################
 
 add_subdirectory(lib)
+add_subdirectory(docs)
 
 ########################################################################
 # Make the executable
@@ -96,6 +97,10 @@ target_link_libraries(Arch_rx_to_mem PRIVATE UHD_BOOST Arch_lib)
 add_executable(Arch_txrx_fullduplex examples/Arch_txrx_fullduplex.cpp)
 message(STATUS "Linking Arch_txrx_fullduplex.")
 target_link_libraries(Arch_txrx_fullduplex PRIVATE UHD_BOOST Arch_lib)
+
+add_executable(Arch_pipe examples/Arch_pipe.cpp)
+message(STATUS "Linking Arch_pipe.")
+target_link_libraries(Arch_pipe PRIVATE UHD_BOOST Arch_lib)
 
 add_executable(Arch_dynamic_tx examples/Arch_dynamic_tx.cpp)
 message(STATUS "Linking Arch_dynamic_tx.")

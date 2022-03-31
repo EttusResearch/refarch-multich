@@ -1,6 +1,5 @@
 //
-// Copyright 2010-2012,2014-2015 Ettus Research LLC
-// Copyright 2021 Ettus Research, a National Instruments Company
+// Copyright 2021-2022 Ettus Research, a National Instruments Brand
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -69,9 +68,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Load Replay Block Buffers with data to transmit
     usrpSystem.importData();
     // Sync time across devices
-    usrpSystem.syncAllDevices();
+    std::cout << std::endl << usrpSystem.syncAllDevices() << std::endl;
     // Begin TX and RX
-    // INFO: Comment what each initilization does what type of data is stored in each.
+    // INFO: Comment what each initialization does what type of data is stored in each.
     // Sync times across threads
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);

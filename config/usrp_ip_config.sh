@@ -1,5 +1,14 @@
 #!/bin/bash
-
+#
+<<<<<<< HEAD
+# Copyright 2010-2012,2014-2015 Ettus Research LLC
+# Copyright 2021 Ettus Research, a National Instruments Company
+=======
+# Copyright 2021-2022 Ettus Research, a National Instruments Brand
+>>>>>>> 4adf8eb4444d4b4a2bd9a5a9dabef7bd3b836fc9
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
 #This script updates the ip addresses of each USRP SFP1 Port. 
 #Change sfp1 to sfp0 for the sfp0 port. 
 
@@ -14,7 +23,7 @@ main(){
     myarr=($(awk '$1 ~ /addr:/ && $1 !~ /mgmt_addr/ {print $2}' usrp_config.txt))
     rm USRP_IP.txt
     rm sfp1.network
-    echo 'WARNING: This proceedure updates ALL USRPs connected to this host.'
+    echo 'WARNING: This procedure updates ALL USRPs connected to this host.'
     tempText="Would you like to update the SFP1 IP address of all USRPs?"
     if user_input "$tempText"; then
       COUNTER=100

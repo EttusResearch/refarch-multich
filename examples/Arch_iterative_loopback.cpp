@@ -1,6 +1,5 @@
 //
-// Copyright 2010-2012,2014-2015 Ettus Research LLC
-// Copyright 2021 Ettus Research, a National Instruments Company
+// Copyright 2021-2022 Ettus Research, a National Instruments Brand
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -24,7 +23,7 @@ currently has each USRP in its own thread. This version uses one RX streamer per
 #include <memory>
 #include <thread>
 
-class iterative_loopback : public RefArch
+class Arch_iterative_loopback : public RefArch
 {
     using RefArch::RefArch;
 
@@ -40,7 +39,7 @@ public:
     }
 
     // Easy way of adding custom values to configuration file.
-    void addAditionalOptions() override
+    void addAdditionalOptions() override
     {
         namespace po = boost::program_options;
         RA_desc.add_options()("repeat_delay",
@@ -173,7 +172,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    iterative_loopback usrpSystem(argc, argv);
+    Arch_iterative_loopback usrpSystem(argc, argv);
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
@@ -222,7 +221,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync time across devices
     usrpSystem.syncAllDevices();
     // Begin TX and RX
-    // INFO: Comment what each initilization does what type of data is stored in each.
+    // INFO: Comment what each initialization does what type of data is stored in each.
     usrpSystem.localTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     int saved_user_delay_time = usrpSystem.RA_delay_start_time;
@@ -231,7 +230,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         for (usrpSystem.RA_singleTX = 0;
              usrpSystem.RA_singleTX < usrpSystem.RA_replay_ctrls.size();
              usrpSystem.RA_singleTX++) {
-            usrpSystem.RA_stop_signal_called = false;
             // Calculate starttime for threads
             usrpSystem.updateDelayedStartTime();
             usrpSystem.spawnReceiveThreads();
