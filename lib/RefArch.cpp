@@ -1,3 +1,9 @@
+//
+// Copyright 2021-2022 Ettus Research, a National Instruments Brand
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+
 #include "RefArch.hpp"
 #include <uhd/rfnoc/mb_controller.hpp>
 #include <uhd/utils/thread.hpp>
@@ -5,7 +11,6 @@
 #include <boost/circular_buffer.hpp>
 #include <csignal>
 #include <fstream>
-
 
 #if HAS_STD_FILESYSTEM
 #    if HAS_STD_FILESYSTEM_EXPERIMENTAL
@@ -35,9 +40,9 @@ bool RefArch::RA_stop_signal_called = false;
 void RefArch::parseConfig()
 {
     addProgramOptions();
-    addAditionalOptions(); // Overloaded by User
+    addAdditionalOptions(); // Overloaded by User
     storeProgramOptions();
-    addAddresstoArgs();
+    addAddressToArgs();
 }
 
 
@@ -47,7 +52,7 @@ void RefArch::addProgramOptions()
     namespace po = boost::program_options;
     // clang-format off
         //TODO: Verify we are still using the comments for each value in
-        //or if we can delete and push explaination to top of each structure
+        //or if we can delete and push explanation to top of each structure
 
         RA_desc.add_options()
         ("cfgFile",
@@ -136,11 +141,11 @@ void RefArch::addProgramOptions()
             "Transmit on all TX Channels")
         ("time_requested", 
             po::value<double>(&RA_time_requested)->default_value(0.0), 
-            "Single Loopback Continous Time Limit (s).")
+            "Single Loopback Continuous Time Limit (s).")
         ;
     // clang-format on
 }
-void RefArch::addAddresstoArgs()
+void RefArch::addAddressToArgs()
 {
     RA_argsWithAddress = "" + RA_args;
     for (const auto& addr : RA_address) {
@@ -155,7 +160,7 @@ void RefArch::storeProgramOptions()
     po::store(po::command_line_parser(RA_argc, RA_argv).options(RA_desc).run(), RA_vm);
     // store program options from config file
     if (RA_vm.count("cfgFile")) {
-        // Have to use a special way of recieving cfgFile because we haven't run notify
+        // Have to use a special way of receiving cfgFile because we haven't run notify
         std::cout << "Load cfg_file: " << RA_vm["cfgFile"].as<std::string>() << std::endl;
         // standard streams don't accept a standard string, so pass the string using
         // c_str()
@@ -171,7 +176,6 @@ void RefArch::storeProgramOptions()
     }
     po::notify(RA_vm);
 }
-// sync
 void RefArch::setSources()
 {
     // Set clock reference
@@ -410,6 +414,7 @@ void RefArch::checkRXSensorLock()
             uhd::sensor_value_t rx_sensor_value = rctrl->get_rx_sensor(name, 0);
             std::cout << "Checking RX LO Lock: " << rx_sensor_value.to_pp_string()
                       << std::endl;
+            // TODO: change to !rx_sensor_value.to_bool()
             while (rx_sensor_value.to_pp_string() != "all_los: locked") {
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
@@ -427,6 +432,7 @@ void RefArch::checkTXSensorLock()
             uhd::sensor_value_t tx_sensor_value = rctrl->get_tx_sensor(name, 0);
             std::cout << "Checking TX LO Lock: " << tx_sensor_value.to_pp_string()
                       << std::endl;
+            // TODO: change to !tx_sensor_value.to_bool()
             while (tx_sensor_value.to_pp_string() != "all_los: locked") {
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
@@ -454,7 +460,8 @@ int RefArch::importData()
     // Open the file
     std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     if (!infile.is_open()) {
-        std::cerr << "Could not open specified file" << std::endl;
+        std::cerr << "Could not open Replay file. Try using absolute path:" << std::endl
+                  << RA_file << std::endl;
         exit(0);
         return EXIT_FAILURE;
     }
@@ -509,9 +516,10 @@ int RefArch::importData()
             replay_start_time = std::chrono::system_clock::now();
             do {
                 fullness = RA_replay_ctrls[i]->get_record_fullness(0);
-                if (fullness != 0)
+                if (fullness != 0) {
                     std::cout << "BREAK" << std::endl;
-                break;
+                    break;
+                }
                 time_diff = std::chrono::system_clock::now() - replay_start_time;
                 time_diff =
                     std::chrono::duration_cast<std::chrono::milliseconds>(time_diff);
@@ -873,7 +881,7 @@ void RefArch::connectGraphMultithreadHostTX()
 void RefArch::buildStreamsMultithread()
 {
     // TODO: Think about renaming
-    // Build Streams for multithreaded implementation streaming from Repplay Block.
+    // Build Streams for multithreaded implementation streaming from Replay Block.
     // Each Channel gets its own RX streamer.
     // Constants related to the Replay block
     const size_t replay_word_size = 8; // Size of words used by replay block
@@ -1238,7 +1246,7 @@ void RefArch::transmitFromFile(
 }
 void RefArch::transmitFromReplay()
 {
-    // TODO: Seperate out replay TX
+    // TODO: Separate out replay TX
     std::cout << "Replaying data (Press Ctrl+C to stop)..." << std::endl;
     uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
     if (RA_nsamps <= 0) {
@@ -1369,6 +1377,7 @@ void RefArch::joinAllThreads()
     }
     RA_rx_vector_thread.clear();
     // Stop Transmitting once RX is complete
+    bool temp_stop_signal = RA_stop_signal_called;
     RA_stop_signal_called = true;
     // Join TX Threads
     for (auto& tx : RA_tx_vector_thread) {
@@ -1376,4 +1385,5 @@ void RefArch::joinAllThreads()
     }
     RA_tx_vector_thread.clear();
     std::cout << "Threads Joined" << std::endl;
+    RA_stop_signal_called = temp_stop_signal; // return stop_signal_called
 }

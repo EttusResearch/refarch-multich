@@ -1,0 +1,95 @@
+/*! \page page_rx_streaming Dropped Packets Analysis RX
+
+## Troubleshooting Guide
+When sampling at higher rates you may encounter different bottlenecks 
+that must be pinpointed and resolved.  
+
+First check whether the server can handle that amount of data to memory.
+Do this by running the <i>rfnoc_txrx_loopback_mem</i> example. Running this 
+example at higher rates will eventually drop packets or produce 
+overruns. This is indicated by an 'O' (overrun on the USRP) or 'D' 
+(dropped packed on the host) in the terminal.  
+    <ul>
+    <li> If the terminal is printing 'D', either a packet was lost or the 
+    packet was received out of order.  
+
+    <li> Usually when an 'O' is received, the host machine (the server) did not 
+    have enough link budget—a token-based system where the host machine 
+    provides a quantity of tokens to the USRP. The USRP can send a packet 
+    only if there is a token available; every packet sent consumes a token, 
+    and once the packet send is finalized the token is made available for 
+    another packet. Tokens are used for flow control to make the data 
+    transport between the USRP and the host machine more stable. 
+    </ul>
+
+To resolve dropped packets, you must know from where the dropped 
+packets originate. A very high-level overview of this system is shown 
+in the following figure. 
+
+\image html RX_Analysis_1.png "Packet Analysis" width=200
+
+Both the *softIRQ.sh* and *nicPacketDrops.sh* scripts are found in the
+/lib/ folder of the [Open Architecture for Radar and EW
+GitHub](https://github.com/EttusResearch/refarch-multich). 
+
+Use the <i>softIRQ.sh</i> script to pinpoint dropped Rx packets that originate 
+from the Kernel to the User Space. Use the <i>nicPacketDrops.sh</i> script to 
+pinpoint dropped packets between the interface of the NIC and Kernel. 
+When running either of these scripts you can read the help by running 
+<center><i>
+./softIRQ.sh -h 
+
+./nicPacketDrops.sh -h 
+</i></center>
+
+These scripts are meant to be used in parallel with a running instance 
+of the Open Architecture for Radar and EW Research. The script 
+highlights any changes in value every 2 seconds. An example of the 
+softIRQ.sh is shown in the following figure. 
+
+\image html RX_Analysis_2.png "softIRQ.sh" width=50%
+
+The <i>softIRQ.sh</i> script displays both dropped and squeezed Rx packets. 
+Dropped packets occur when there is no room in the queue. Squeezed 
+packets occur when the budget is consumed or the time limit is reached 
+before the remaining work can be done. The rest of the values listed 
+provide more information that can be found in the Packagecloud Blog 
+link found below.  
+
+If you are experiencing dropped or squeezed packets, you may need to 
+increase or decrease the net.core values. Use the <i>sysctl_config.sh</i> 
+script in the <i>/config/</i> folder to assist in this modification. Open 
+this script file to view and change the different net.core values. First try 
+running the <i>sysctl_config.sh</i> file with the default parameters to 
+see if this fixes the dropped or squeezed packets. If the default values 
+do not fix the issue, modify the values at the end of the script file. You 
+can modify this script while running both the streaming application and 
+the <i>softIRQ.sh</i> file to view in real-time how each parameter affects 
+the number of dropped packets. For dropped packets, try increasing the value 
+of <i>netdev_max_backlog</i>. For squeezed packets, try increasing the value 
+of <i>netdev_budget_usecs</i> or <i>netdev_budget</i>. 
+
+The <i>nicPacketDrops.sh</i> script displays both dropped and errors packets 
+in both the Tx and Rx direction. The definition for these depends on the 
+driver implementation. Normally a dropped packet means that the driver 
+was unable to store the received packet. In some drivers they count 
+error packets as dropped values. To find the exact meaning of these 
+values a deep understanding of the device's source driver is required. 
+The most reliable way to resolve dropped or error packets is to increase 
+the Rx (and/or) Tx queues. This allows larger buffering so that the 
+Kernel can access more data in one pulling event. To adjust these values, 
+run the <i>nicrb.sh</i> script located in the <i>/config/</i> folder and 
+follow the instructions. 
+
+More information about the Linux Network stack and its optimizations can
+be found here [Monitoring and Tuning the Linux Networking Stack:Receiving Data - PackagecloudBlog]
+(https://blog.packagecloud.io/eng/2016/06/22/monitoring-tuning-linux-networking-stack-receiving-data/).
+
+Intel x710 Kernel driver information - [Linux Base Driver for theIntel(R) Ethernet Controller 700 Series]
+(https://www.kernel.org/doc/html/latest/networking/device_drivers/ethernet/intel/i40e.html)
+
+Intel e810 Kernel driver information - [Linux Base Driver for the Intel(R) Ethernet Controller 800 Series]
+(https://www.kernel.org/doc/html/latest/networking/device_drivers/ethernet/intel/ice.html)
+
+*/
+// vim:ft=doxygen:

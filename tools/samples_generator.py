@@ -1,3 +1,15 @@
+#!/usr/bin/env python3
+
+"""
+Copyright 2021-2022 Ettus Research, a National Instruments Brand
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Plot samples from .dat file. 
+DISCLAIMER: This is meant as an example and not as a analysis tool. 
+It is useful for determining if the data being received is noise or a signal. 
+
+"""
+
 import math 
 import struct
 import argparse

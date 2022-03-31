@@ -1,13 +1,12 @@
 //
-// Copyright 2010-2012,2014-2015 Ettus Research LLC
-// Copyright 2021 Ettus Research, a National Instruments Company
+// Copyright 2021-2022 Ettus Research, a National Instruments Brand
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
 /*******************************************************************************************************************
 Full TX-RX Loopback to/from host
-ALL TX -> ALL RX.
+ALL TX -> ALL RX or SINGLE TX -> ALL RX.
 If the user sets the number of samples to zero, this function will stream
 continuously. The multithreaded version
 currently has each USRP in its own thread. This version uses one RX streamer per device
@@ -25,7 +24,7 @@ and one TX streamer per channel.
 #include <memory>
 
 
-class recvToFile : public RefArch
+class Arch_txrx_fullduplex : public RefArch
 {
     using RefArch::RefArch;
 
@@ -66,7 +65,7 @@ public:
         for (size_t i = 0; i < buffs.size(); i++) {
             buff_ptrs.push_back(&buffs[i].front());
         }
-        // Correctly lable output files based on run method, single TX->single RX or
+        // Correctly label output files based on run method, single TX->single RX or
         // single TX
         // -> All RX
         int rx_identifier = threadnum;
@@ -160,7 +159,7 @@ public:
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // find configuration file -cfgFile adds to "desc" variable
-    recvToFile usrpSystem(argc, argv);
+    Arch_txrx_fullduplex usrpSystem(argc, argv);
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
@@ -207,7 +206,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync time across devices
     usrpSystem.syncAllDevices();
     // Begin TX and RX
-    // INFO: Comment what each initilization does what type of data is stored in each.
+    // INFO: Comment what each initialization does what type of data is stored in each.
     usrpSystem.localTime();
     // Calculate startime for threads
     usrpSystem.updateDelayedStartTime();
