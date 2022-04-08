@@ -84,7 +84,7 @@ public:
         std::vector<std::shared_ptr<std::ofstream>> outfiles;
         for (size_t i = 0; i < buffs.size(); i++) {
             // rx_identifier * 2 + i in order to get correct channel number in filename
-            const std::string this_filename = generateRxFilename(RA_file,
+            const std::string this_filename = generateRxFilename(RA_rx_file,
                 rx_identifier * 2 + i,
                 RA_singleTX,
                 run_number, // Cleanup: The only thing different between this function and
