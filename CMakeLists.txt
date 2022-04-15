@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 3.10.2)
 
 project(RefArch VERSION 1.0
-        DESCRIPTION "Open Architecture for Radar and EW Research Libaries and Examples"
+        DESCRIPTION "Multichannel RF Reference Architecture Libaries and Examples"
         LANGUAGES CXX)
 enable_testing()
 

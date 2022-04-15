@@ -29,7 +29,7 @@ in the following figure.
 \image html RX_Analysis_1.png "Packet Analysis" width=200
 
 Both the *softIRQ.sh* and *nicPacketDrops.sh* scripts are found in the
-/lib/ folder of the [Open Architecture for Radar and EW
+/lib/ folder of the [Multichannel RF Reference Architecture
 GitHub](https://github.com/EttusResearch/refarch-multich). 
 
 Use the <i>softIRQ.sh</i> script to pinpoint dropped Rx packets that originate 
@@ -43,7 +43,7 @@ When running either of these scripts you can read the help by running
 </i></center>
 
 These scripts are meant to be used in parallel with a running instance 
-of the Open Architecture for Radar and EW Research. The script 
+of the Multichannel RF Reference Architecture. The script 
 highlights any changes in value every 2 seconds. An example of the 
 softIRQ.sh is shown in the following figure. 
 

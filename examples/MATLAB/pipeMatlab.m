@@ -3,7 +3,7 @@
 %%
 %% SPDX-License-Identifier: GPL-3.0-or-later
 %%
-%% Pipe Example of how to interface with OARER %%
+%% Pipe Example of how to interface with MRFRA %%
 %{
     To use this example you must run the Arch_pip_example concurrently with
     this application. You must also specify a number of parameters the same

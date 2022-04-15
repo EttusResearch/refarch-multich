@@ -1,4 +1,4 @@
-# Open Architecture for Radar and EW Research: Licenses
+# Multichannel RF Reference Architecture: Licenses
 
 Please refer to the individual files to verify which license applies to them.
 

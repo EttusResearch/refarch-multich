@@ -1,6 +1,6 @@
 /*! \mainpage Table Of Contents
 
-Welcome to the Open Architecture for Radar and EW Research (OARER) manual. Here, 
+Welcome to the Multichannel RF Reference Architecture (MRFRA) manual. Here, 
 you will find information on how to use the system and how to use the Architecture.
 
 ## Manual Contents
@@ -20,7 +20,7 @@ you will find information on how to use the system and how to use the Architectu
 
 ### Further Information
 
-\li <a href="https://kb.ettus.com/Open_Architecture_For_Radar_and_EW_Research">Open Architecture for Radar and EW Research KB</a>
+\li <a href="https://kb.ettus.com/Multichannel_RF_Reference_Architecture">Multichannel RF Reference Architecture KB</a>
 \li <a href="http://www.ettus.com/">Ettus Research Website</a>
 
 */
