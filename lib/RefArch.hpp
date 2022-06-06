@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <boost/program_options.hpp>
 #include <thread>
+#include <uhd/utils/thread.hpp>
 
 // TODO: Need to rethink how to control the stop_signal
 
@@ -247,9 +248,22 @@ public:
      */
     virtual void joinAllThreads();
     /**
+     * @brief Spawns a thread dedicated to timing the receive loop.
+     * 
+     */
+    virtual void spawnTimer();
+    /**
+     * @brief Acts as timer for receive function. 
+     * 
+     * @param threadnum not used but may be in future. 
+     * @return virutal 
+     */
+    virtual void asyncTimer(int threadnum);
+    /**
      * @brief Used to shutdown all threads.
      */
     static bool RA_stop_signal_called;
+    std::thread RA_timerthread;
     std::vector<std::thread> RA_rx_vector_thread;
     std::vector<std::thread> RA_tx_vector_thread;
 

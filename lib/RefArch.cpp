@@ -1387,3 +1387,20 @@ void RefArch::joinAllThreads()
     std::cout << "Threads Joined" << std::endl;
     RA_stop_signal_called = temp_stop_signal; // return stop_signal_called
 }
+void RefArch::spawnTimer(){
+    int threadnum = 1; 
+    std::cout << "Spawning Timer Thread" << std::endl;
+    std::thread t([this](int threadnum){asyncTimer(threadnum);},threadnum);
+    RA_timerthread = std::move(t);
+    return;
+}
+//Async Timer
+void RefArch::asyncTimer(int threadnum){
+  std::cout << "Entering Thread" << std::flush;
+  int time =0;
+  while (RA_stop_signal_called == false and time <= RA_time_requested){
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    time++;
+  };
+  RA_stop_signal_called = true;
+}
