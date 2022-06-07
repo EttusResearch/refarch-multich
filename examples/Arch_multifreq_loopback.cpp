@@ -221,18 +221,23 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Begin TX and RX
     // INFO: Comment what each initialization does what type of data is stored in each.
     usrpSystem.localTime();
-    // Sync times across threads
-    usrpSystem.updateDelayedStartTime();
+    
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     for (double freq = 1000000000; freq <= 5500000000; freq += 100000000) {
+        
         usrpSystem.tuneRX(freq);
         usrpSystem.tuneTX(freq);
+        //Spawn Timer Thread
+        //usrpSystem.spawnTimer();
+        // Sync times across threads
+        usrpSystem.updateDelayedStartTime();
         usrpSystem.transmitFromReplay();
         usrpSystem.spawnReceiveThreads();
         usrpSystem.stopReplay();
+        // Join Threads
+        usrpSystem.joinAllThreads();
     }
-    // Join Threads
-    usrpSystem.joinAllThreads();
+    
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
     // Kill LO

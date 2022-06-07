@@ -48,7 +48,7 @@ def parse_args():
 
 def calculate_window(signal_freq: int, fs):
     T = 1/signal_freq # Period
-    two_T = 4*T # four Periods
+    two_T = 2*T # two Periods
     samples = float(fs)*two_T # Samples for two periods
     return int(samples)
 

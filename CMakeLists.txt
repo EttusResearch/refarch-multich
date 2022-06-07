@@ -110,6 +110,10 @@ add_executable(Arch_txrx_fullduplex_dpdk_mem examples/Arch_txrx_fullduplex_dpdk_
 message(STATUS "Linking Arch_txrx_fullduplex_dpdk_mem.")
 target_link_libraries(Arch_txrx_fullduplex_dpdk_mem PRIVATE UHD_BOOST Arch_lib)
 
+add_executable(Arch_txrx_fullduplex_dpdk examples/Arch_txrx_fullduplex_dpdk.cpp)
+message(STATUS "Linking Arch_txrx_fullduplex_dpdk.")
+target_link_libraries(Arch_txrx_fullduplex_dpdk PRIVATE UHD_BOOST Arch_lib)
+
 ########################################################################
 # Post Build Include Configuration files
 ########################################################################

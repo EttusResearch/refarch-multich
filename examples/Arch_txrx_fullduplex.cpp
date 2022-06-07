@@ -54,7 +54,7 @@ public:
         int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
     {
         uhd::set_thread_priority_safe(0.9F);
-        int num_total_samps = 0;
+        size_t num_total_samps = 0;
         std::unique_ptr<char[]> buf(new char[RA_spb]);
         // Prepare buffers for received samples and metadata
         uhd::rx_metadata_t md;
@@ -103,8 +103,7 @@ public:
         while (not RA_stop_signal_called
                and (RA_nsamps > num_total_samps or RA_nsamps == 0)
                and (RA_time_requested == 0.0
-                    or RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now()
-                           <= stop_time)) {
+                or not RA_stop_signal_called) ) {
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -211,6 +210,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Calculate startime for threads
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
+    //Spawn Timer Thread
+    usrpSystem.spawnTimer();
     // Transmit via replay block, must be before spawning receive threads.
     usrpSystem.spawnTransmitThreads();
     // Spawn receive Threads

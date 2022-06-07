@@ -74,6 +74,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync times across threads
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
+    //Spawn Timer Thread
+    usrpSystem.spawnTimer();
     // Transmit via replay block, must be before spawning receive threads.
     usrpSystem.transmitFromReplay();
     // Spawn receive Threads

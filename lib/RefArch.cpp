@@ -1154,7 +1154,7 @@ void RefArch::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx
 {
     // Receive to memory only, multi-threaded implementation.
     uhd::set_thread_priority_safe(0.9F);
-    int num_total_samps = 0;
+    size_t num_total_samps = 0;
     // Prepare buffers for received samples and metadata
     uhd::rx_metadata_t md;
     std::vector<boost::circular_buffer<std::complex<short>>> buffs(
@@ -1179,8 +1179,7 @@ void RefArch::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx
     int loop_num = 0;
     while (not RA_stop_signal_called and (RA_nsamps > num_total_samps or RA_nsamps == 0)
            and (RA_time_requested == 0.0
-                or RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now()
-                       <= stop_time)) {
+                and not RA_stop_signal_called)) {
         size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
         loop_num += 1;
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -1367,18 +1366,22 @@ void RefArch::spawnReceiveThreads()
     }
     return;
 }
-void RefArch::joinAllThreads()
-{
+void RefArch::joinAllThreads(){
     // Joins RX and TX threads if they exist.
     std::cout << "Waiting to join threads.." << std::endl;
     // Join RX Threads
     for (auto& rx : RA_rx_vector_thread) {
         rx.join();
     }
-    RA_rx_vector_thread.clear();
+    
     // Stop Transmitting once RX is complete
     bool temp_stop_signal = RA_stop_signal_called;
     RA_stop_signal_called = true;
+
+    RA_rx_vector_thread.clear();
+    if (RA_timerthread.joinable()){
+        RA_timerthread.join();
+    }
     // Join TX Threads
     for (auto& tx : RA_tx_vector_thread) {
         tx.join();
@@ -1396,7 +1399,6 @@ void RefArch::spawnTimer(){
 }
 //Async Timer
 void RefArch::asyncTimer(int threadnum){
-  std::cout << "Entering Thread" << std::flush;
   int time =0;
   while (RA_stop_signal_called == false and time <= RA_time_requested){
     std::this_thread::sleep_for(std::chrono::seconds(1));

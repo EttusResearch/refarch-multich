@@ -5,12 +5,11 @@
 //
 
 /*******************************************************************************************************************
-Full TX-RX Loopback to/from host
+Full TX-RX Loopback to/from host using DPDK.
 ALL TX -> ALL RX or SINGLE TX -> ALL RX.
 If the user sets the number of samples to zero, this function will stream
-continuously. The multithreaded version
-currently has each USRP in its own thread. This version uses one RX streamer per device
-and one TX streamer per channel.
+continuously. This version uses one RX streamer per channel
+and one TX streamer per channel. NOTE: This has only been tested with Mellonox NICs
 *******************************************************************************************************************/
 
 #include "RefArch.hpp"
@@ -272,27 +271,7 @@ void buildGraph() override
     std::cout << "Creating the RFNoC graph with args: " << RA_args << "..." << std::endl;
     RA_graph = uhd::rfnoc::rfnoc_graph::make(RA_args);
 }
-void joinAllThreads() override
-{
-    // Joins RX and TX threads if they exist.
-    std::cout << "Waiting to join threads.." << std::endl;
-    // Join RX Threads
-    for (auto& rx : RA_rx_vector_thread) {
-        rx.join();
-    }
-    RA_rx_vector_thread.clear();
-    RA_timerthread.join();
-    // Stop Transmitting once RX is complete
-    bool temp_stop_signal = RA_stop_signal_called;
-    RA_stop_signal_called = true;
-    // Join TX Threads
-    for (auto& tx : RA_tx_vector_thread) {
-        tx.join();
-    }
-    RA_tx_vector_thread.clear();
-    std::cout << "Threads Joined" << std::endl;
-    RA_stop_signal_called = temp_stop_signal; // return stop_signal_called
-}
+
 };
 /***********************************************************************
  * Main function

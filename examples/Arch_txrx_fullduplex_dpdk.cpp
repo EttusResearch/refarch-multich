@@ -5,14 +5,11 @@
 //
 
 /*******************************************************************************************************************
-Full TX-RX Loopback to/from host with dynamic TX.
-Change each TX function to suit the application needs.
-This example demonstrates a 4 channel system (Two USRPs).
+Full TX-RX Loopback to/from host using DPDK.
 ALL TX -> ALL RX or SINGLE TX -> ALL RX.
 If the user sets the number of samples to zero, this function will stream
-continuously. The multithreaded version
-currently has each USRP in its own thread. This version uses one RX streamer per device
-and one TX streamer per channel.
+continuously. This version uses one RX streamer per channel
+and one TX streamer per channel. NOTE: This has only been tested with Mellonox NICs
 *******************************************************************************************************************/
 
 #include "RefArch.hpp"
@@ -24,14 +21,18 @@ and one TX streamer per channel.
 #include <csignal>
 #include <fstream>
 #include <memory>
+#include <uhd/usrp/multi_usrp.hpp>
 
 
-class Arch_dynamic_tx : public RefArch
+
+class Arch_txrx_fullduplex : public RefArch
 {
     using RefArch::RefArch;
 
 public:
     std::string folder_name;
+    
+    
 
     void localTime()
     {
@@ -51,12 +52,13 @@ public:
         folder_name =
             month + day + year + "_" + hour + minute + seconds + "_" + RA_rx_file;
     }
+    
 
     void recv(
         int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
     {
         uhd::set_thread_priority_safe(0.9F);
-        int num_total_samps = 0;
+        size_t num_total_samps = 0;
         std::unique_ptr<char[]> buf(new char[RA_spb]);
         // Prepare buffers for received samples and metadata
         uhd::rx_metadata_t md;
@@ -75,14 +77,14 @@ public:
         for (size_t i = 0; i < buffs.size(); i++) {
             // rx_identifier * 2 + i in order to get correct channel number in filename
             const std::string this_filename = generateRxFilename(RA_rx_file,
-                rx_identifier * 2 + i,
+                threadnum,
                 RA_singleTX,
                 0,
                 RA_tx_freq,
                 folder_name,
                 RA_rx_file_channels,
                 RA_rx_file_location);
-            std::ofstream* outstream        = new std::ofstream;
+            auto outstream = std::shared_ptr<std::ofstream>(new std::ofstream());
             outstream->rdbuf()->pubsetbuf(buf.get(), RA_spb); // Important
             outstream->open(this_filename.c_str(), std::ofstream::binary);
             outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
@@ -105,7 +107,7 @@ public:
         while (not RA_stop_signal_called
                and (RA_nsamps > num_total_samps or RA_nsamps == 0)
                and (RA_time_requested == 0.0
-                or not RA_stop_signal_called)) {
+                    or not RA_stop_signal_called)) {
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -153,191 +155,161 @@ public:
         std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
                   << " samples..." << std::endl;
     }
+    void buildStreamsMultithreadHostTX() override
+{
+    // Build Streams for multithreaded implementation
+    // TX streams from Host, not replay.
+    // Each Device gets its own RX streamer.
+    // Each Channel gets its own TX streamer.
 
-    void transmitFromFile0(
-        uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
-    {
-        uhd::set_thread_priority_safe(0.9F);
-        std::vector<std::complex<float>> buff(RA_spb);
-        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
-        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
-        // send data until  the signal handler gets called
-        while (not RA_stop_signal_called) {
-            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
-            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
-
-            metadata.end_of_burst = infile.eof();
-            // send the entire contents of the buffer
-            tx_streamer->send(buffs, buff.size(), metadata);
-
-            metadata.start_of_burst = false;
-            metadata.has_time_spec  = false;
-        }
-
-        // send a mini EOB packet
-        metadata.end_of_burst = true;
-        tx_streamer->send("", 0, metadata);
+    // Constants related to the Replay block
+    const size_t replay_word_size = 8; // Size of words used by replay block
+    const size_t sample_size      = 4; // Complex signed 16-bit is 32 bits per sample
+    const size_t samples_per_word = 2; // Number of sc16 samples per word
+    uhd::device_addr_t streamer_args(RA_streamargs);
+    // create a receive streamer
+    // std::cout << "Samples per packet: " << spp << std::endl;
+    uhd::stream_args_t stream_args(RA_format, RA_otw);
+    stream_args.args = streamer_args;
+    std::cout << "Using streamer args: " << stream_args.args.to_string() << std::endl;
+    // One stream per channel
+    for (int rx_count = 0; rx_count < RA_radio_ctrls.size(); rx_count++) {
+        RA_rx_stream = RA_graph->create_rx_streamer(1, stream_args);
+        RA_rx_stream_vector.push_back(RA_rx_stream);
     }
-    void transmitFromFile1(
-        uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
-    {
-        uhd::set_thread_priority_safe(0.9F);
-        std::vector<std::complex<float>> buff(RA_spb);
-        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
-        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
-        // send data until  the signal handler gets called
-        while (not RA_stop_signal_called) {
-            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
-            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
+    /************************************************************************
+     * Set up streamer to Replay blocks
+     ***********************************************************************/
+    for (int i_s2r = 0; i_s2r < RA_radio_ctrls.size(); i_s2r = i_s2r + 1) {
+        streamer_args["block_id"]   = RA_duc_ctrls[i_s2r]->get_block_id().to_string();
+        streamer_args["block_port"] = std::to_string(0);
+        stream_args.args            = streamer_args;
+        stream_args.channels        = {0};
 
-            metadata.end_of_burst = infile.eof();
-            // send the entire contents of the buffer
-            tx_streamer->send(buffs, buff.size(), metadata);
-
-            metadata.start_of_burst = false;
-            metadata.has_time_spec  = false;
+        RA_tx_stream =
+            RA_graph->create_tx_streamer(stream_args.channels.size(), stream_args);
+        size_t tx_spp = RA_tx_stream->get_max_num_samps();
+        // Make sure that stream SPP is a multiple of the Replay Block Word Size
+        if (tx_spp % samples_per_word != 0) {
+            // Round SPP down to a multiple of the word size
+            tx_spp               = (tx_spp / samples_per_word) * samples_per_word;
+            streamer_args["spp"] = std::to_string(tx_spp);
+            stream_args.args     = streamer_args;
+            RA_tx_stream =
+                RA_graph->create_tx_streamer(stream_args.channels.size(), stream_args);
         }
-
-        // send a mini EOB packet
-        metadata.end_of_burst = true;
-        tx_streamer->send("", 0, metadata);
+        // Vector of tx streamers
+        RA_tx_stream_vector.push_back(RA_tx_stream);
     }
-    void transmitFromFile2(
-        uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
-    {
-        uhd::set_thread_priority_safe(0.9F);
-        std::vector<std::complex<float>> buff(RA_spb);
-        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
-        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
-        // send data until  the signal handler gets called
-        while (not RA_stop_signal_called) {
-            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
-            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
+}
 
-            metadata.end_of_burst = infile.eof();
-            // send the entire contents of the buffer
-            tx_streamer->send(buffs, buff.size(), metadata);
-
-            metadata.start_of_burst = false;
-            metadata.has_time_spec  = false;
-        }
-
-        // send a mini EOB packet
-        metadata.end_of_burst = true;
-        tx_streamer->send("", 0, metadata);
+void connectGraphMultithreadHostTX() override
+{
+    // This is the function that connects the graph for the multithreaded implementation
+    // streaming from host.
+    UHD_LOG_INFO("CogRF", "Connecting graph...");
+    // Connect Graph
+    for (size_t i = 0; i < RA_radio_ctrls.size(); i++) {
+        // connect radios to ddc
+        RA_graph->connect(RA_radio_block_list[i], 0, RA_ddc_ctrls[i]->get_block_id(), 0);
+        std::cout << "Connected " << RA_radio_block_list[i] << " to "
+                  << RA_ddc_ctrls[i]->get_block_id() << std::endl;
+                   std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    void transmitFromFile3(
-        uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
-    {
-        uhd::set_thread_priority_safe(0.9F);
-        std::vector<std::complex<float>> buff(RA_spb);
-        std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
-        std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
-        // send data until  the signal handler gets called
-        while (not RA_stop_signal_called) {
-            infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
-            size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
-
-            metadata.end_of_burst = infile.eof();
-            // send the entire contents of the buffer
-            tx_streamer->send(buffs, buff.size(), metadata);
-
-            metadata.start_of_burst = false;
-            metadata.has_time_spec  = false;
-        }
-
-        // send a mini EOB packet
-        metadata.end_of_burst = true;
-        tx_streamer->send("", 0, metadata);
-    }
-
-    void spawnTransmitThreads()
-    {
-        if (RA_spb == 0)
-            RA_spb = RA_tx_stream_vector[0]->get_max_num_samps() * 10;
-        // setup the metadata flags
-        uhd::tx_metadata_t md;
-        md.start_of_burst = true;
-        md.end_of_burst   = false;
-        md.has_time_spec  = true;
-        md.time_spec      = RA_start_time;
-        if (RA_TX_All_Chan == true) {
-            // start transmit worker thread 0, not for use with replay block.
-            std::cout << "Spawning TX thread: " << 0 << std::endl;
-            std::thread tx0(
-                [this](uhd::tx_streamer::sptr tx_streamer,
-                    uhd::tx_metadata_t metadata,
-                    int num_channels) {
-                    transmitFromFile0(tx_streamer, metadata, num_channels);
-                },
-                RA_tx_stream_vector[0],
-                md,
-                1);
-            RA_tx_vector_thread.push_back(std::move(tx0));
-
-            // start transmit worker thread 1, not for use with replay block.
-            std::cout << "Spawning TX thread: " << 1 << std::endl;
-            std::thread tx1(
-                [this](uhd::tx_streamer::sptr tx_streamer,
-                    uhd::tx_metadata_t metadata,
-                    int num_channels) {
-                    transmitFromFile1(tx_streamer, metadata, num_channels);
-                },
-                RA_tx_stream_vector[1],
-                md,
-                1);
-            RA_tx_vector_thread.push_back(std::move(tx1));
-
-            // start transmit worker thread 2, not for use with replay block.
-            std::cout << "Spawning TX thread: " << 2 << std::endl;
-            std::thread tx2(
-                [this](uhd::tx_streamer::sptr tx_streamer,
-                    uhd::tx_metadata_t metadata,
-                    int num_channels) {
-                    transmitFromFile2(tx_streamer, metadata, num_channels);
-                },
-                RA_tx_stream_vector[2],
-                md,
-                1);
-            RA_tx_vector_thread.push_back(std::move(tx2));
-
-            // start transmit worker thread 3, not for use with replay block.
-            std::cout << "Spawning TX thread: " << 3 << std::endl;
-            std::thread tx3(
-                [this](uhd::tx_streamer::sptr tx_streamer,
-                    uhd::tx_metadata_t metadata,
-                    int num_channels) {
-                    transmitFromFile3(tx_streamer, metadata, num_channels);
-                },
-                RA_tx_stream_vector[3],
-                md,
-                1);
-            RA_tx_vector_thread.push_back(std::move(tx3));
-
+    // Vector of streamer channels.
+    for (size_t i_chan = 0; i_chan < RA_rx_stream_vector.size(); i_chan++) {
+        if (i_chan % 2 == 0) {
+            RA_rx_stream_chan_vector.push_back(0);
         } else {
-            // start transmit worker thread, not for use with replay block.
-            std::cout << "Spawning Single TX thread, Channel: " << RA_singleTX
-                      << std::endl;
-            std::thread tx(
-                [this](uhd::tx_streamer::sptr tx_streamer,
-                    uhd::tx_metadata_t metadata,
-                    int num_channels) {
-                    transmitFromFile(tx_streamer, metadata, num_channels);
-                },
-                RA_tx_stream_vector[RA_singleTX],
-                md,
-                1);
-            RA_tx_vector_thread.push_back(std::move(tx));
+            RA_rx_stream_chan_vector.push_back(0);
         }
     }
+    for (size_t j = 0; j < RA_ddc_ctrls.size(); j++) {
+        // Connect DDC to streamers
+        // Reusing replay chan vector, need a vector of zeros and ones
+        RA_graph->connect(RA_ddc_ctrls[j]->get_block_id(),
+            0,
+            RA_rx_stream_vector[j],
+            RA_rx_stream_chan_vector[j]);
+        std::cout << "Connected " << RA_ddc_ctrls[j]->get_block_id() << " to "
+                  << RA_rx_stream_vector[j] << " Port " << RA_rx_stream_chan_vector[j]
+                  << std::endl;
+                   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    int pos2 = 0;
+
+    for (auto& rctrl : RA_radio_ctrls) {
+        RA_graph->connect(
+            RA_duc_ctrls[pos2]->get_block_id(), RA_duc_chan, rctrl->get_block_id(), 0);
+        std::cout << "Connected " << RA_duc_ctrls[pos2]->get_block_id() << " port "
+                  << RA_duc_chan << " to radio " << rctrl->get_block_id() << " port " << 0
+                  << std::endl;
+                   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        RA_graph->connect(
+            RA_tx_stream_vector[pos2], 0, RA_duc_ctrls[pos2]->get_block_id(), 0);
+        std::cout << "Streamer: " << RA_tx_stream_vector[pos2] << " connected to "
+                  << RA_replay_ctrls[pos2]->get_block_id() << std::endl;
+                   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        pos2++;
+    }
+}
+
+void spawnReceiveThreads() override
+{
+    int threadnum = 0;
+
+
+    // Receive RA_rx_stream_vector.size()
+    if (RA_format == "sc16") {
+        for (size_t i = 0; i < RA_rx_stream_vector.size(); i = i + 1) {
+            std::cout << "Spawning RX Thread.." << threadnum << std::endl;
+            std::thread t(
+                [this](int threadnum, uhd::rx_streamer::sptr rx_streamer) {
+                    recv(1, threadnum, rx_streamer);
+                },
+                threadnum,
+                RA_rx_stream_vector[i]);
+        
+            pthread_setname_np(t.native_handle(), "rx_thread");    
+            RA_rx_vector_thread.push_back(std::move(t));
+            threadnum++;
+        }
+    } else {
+        throw std::runtime_error("Unknown type " + RA_format);
+    }
+    return;
+}
+// graphassembly
+void buildGraph() override
+{
+    // create a usrp device
+    std::cout << std::endl;
+    uhd::device_addrs_t device_addrs = uhd::device::find(RA_args, uhd::device::USRP);
+    if (not device_addrs.empty() and device_addrs.at(0).get("type", "") == "usrp1") {
+        std::cerr << "*** Warning! ***" << std::endl;
+        std::cerr << "Benchmark results will be inaccurate on USRP1 due to insufficient "
+                     "features.\n"
+                  << std::endl;
+    }
+    /************************************************************************
+     * Create device and block controls
+     ***********************************************************************/
+    // If multiple USRPs are used, they are linked into a single RFNoc graph here.
+    std::cout << std::endl;
+    std::cout << "Creating the RFNoC graph with args: " << RA_args << "..." << std::endl;
+    RA_graph = uhd::rfnoc::rfnoc_graph::make(RA_args);
+}
 };
 /***********************************************************************
  * Main function
  **********************************************************************/
 int UHD_SAFE_MAIN(int argc, char* argv[])
 {
+    uhd::set_thread_priority_safe();
     // find configuration file -cfgFile adds to "desc" variable
-    Arch_dynamic_tx usrpSystem(argc, argv);
+    Arch_txrx_fullduplex usrpSystem(argc, argv);
+
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
