@@ -309,7 +309,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     uhd::set_thread_priority_safe();
     // find configuration file -cfgFile adds to "desc" variable
     Arch_txrx_fullduplex usrpSystem(argc, argv);
-
     usrpSystem.parseConfig();
     // Setup Graph with input Arguments
     usrpSystem.buildGraph();
@@ -358,11 +357,12 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Begin TX and RX
     // INFO: Comment what each initialization does what type of data is stored in each.
     usrpSystem.localTime();
-    // Calculate startime for threads
-    usrpSystem.updateDelayedStartTime();
+   
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     //Spawn Timer Thread
     usrpSystem.spawnTimer();
+     // Calculate startime for threads
+    usrpSystem.updateDelayedStartTime();
     // Transmit via replay block, must be before spawning receive threads.
     usrpSystem.spawnTransmitThreads();
     // Spawn receive Threads

@@ -112,7 +112,7 @@ def batch_folder_import( path0: str , ppw, new = True, numfolders = 1, datatype 
             iq_data.determine_nsamps()
             if (iq_data.nsamples - start_point) % ppw != 0:
                 x = (iq_data.nsamples-start_point) % ppw
-                sys.exit("ERROR: PPW ("+str(ppw)+") : "+"\nIncrease samples by: " + str(x) + " or use start_point = " + str(start_point+x))
+                #sys.exit("ERROR: PPW ("+str(ppw)+") : "+"\nIncrease samples by: " + str(x) + " or use start_point = " + str(start_point+x))
             iq_data.deinterleave_iq()
             iq_data.convert_to_complex()
             channel_string = iq_data.tx_channel_number + iq_data.rx_channel_number + iq_data.run_number
@@ -136,15 +136,15 @@ def batch_analyze_plot(dict0 : dict, ppw,  baseRX , save_directory = None, start
         for tx in tx_list:
             for run in run_list:
                 base_channel_string = tx + baseRX + run
-                alignment_dict[k_folder], avg_alignment_dict[k_folder] = calculate_ptp_alignment_all(v_folder, base_channel_string, ppw)
+                #alignment_dict[k_folder], avg_alignment_dict[k_folder] = calculate_ptp_alignment_all(v_folder, base_channel_string, ppw)
                 if save_directory != "":
                     image_output = str(k_folder)
                 else:
                     image_output = save_directory
-                for data in avg_alignment_dict[k_folder]:
-                    plotutil.plot_ptp_average(dict0[k_folder][data], dict0[k_folder][base_channel_string], avg_alignment_dict[k_folder], image_output , start_point)
-                for data in alignment_dict[k_folder]:
-                    plotutil.plot_ptp_alignment(dict0[k_folder][data], dict0[k_folder][base_channel_string], alignment_dict[k_folder], image_output , start_point, end_point)
+                #for data in avg_alignment_dict[k_folder]:
+                    ##plotutil.plot_ptp_average(dict0[k_folder][data], dict0[k_folder][base_channel_string], avg_alignment_dict[k_folder], image_output , start_point)
+                #for data in alignment_dict[k_folder]:
+                    ##plotutil.plot_ptp_alignment(dict0[k_folder][data], dict0[k_folder][base_channel_string], alignment_dict[k_folder], image_output , start_point, end_point)
                 for data in dict0[k_folder]:
                     if data != baseRX:
                         plotutil.plot_samps(dict0[k_folder][data], dict0[k_folder][base_channel_string], image_output,  start_point, end_point) 

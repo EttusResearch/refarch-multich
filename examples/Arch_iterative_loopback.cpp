@@ -113,11 +113,8 @@ public:
         const auto stop_time  = RA_start_time + uhd::time_spec_t(RA_time_requested);
         rx_streamer->issue_stream_cmd(stream_cmd);
         int loop_num = 0;
-        while (not RA_stop_signal_called
-               and (RA_nsamps > num_total_samps or RA_nsamps == 0)
-               and (RA_time_requested == 0.0
-                    or RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now()
-                           <= stop_time)) {
+        while ((not RA_stop_signal_called
+               and (RA_nsamps > num_total_samps or RA_nsamps == 0)) and RA_timer_stop == false) {
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -232,8 +229,12 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
              usrpSystem.RA_singleTX++) {
             // Calculate starttime for threads
             usrpSystem.updateDelayedStartTime();
-            usrpSystem.spawnReceiveThreads();
+            //Spawn Timer Thread
+            usrpSystem.spawnTimer();
+            usrpSystem.updateDelayedStartTime();
             usrpSystem.transmitFromReplay();
+            usrpSystem.spawnReceiveThreads();
+            // Join Threads
             usrpSystem.joinAllThreads();
             // Next iteration use saved_user_delay_time
             usrpSystem.RA_delay_start_time = saved_user_delay_time;

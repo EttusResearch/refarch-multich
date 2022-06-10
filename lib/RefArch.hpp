@@ -17,6 +17,7 @@
 #include <boost/program_options.hpp>
 #include <thread>
 #include <uhd/utils/thread.hpp>
+#include <atomic>
 
 // TODO: Need to rethink how to control the stop_signal
 
@@ -263,6 +264,7 @@ public:
      * @brief Used to shutdown all threads.
      */
     static bool RA_stop_signal_called;
+    static bool RA_timer_stop;
     std::thread RA_timerthread;
     std::vector<std::thread> RA_rx_vector_thread;
     std::vector<std::thread> RA_tx_vector_thread;

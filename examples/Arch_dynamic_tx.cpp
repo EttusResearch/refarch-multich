@@ -32,6 +32,7 @@ class Arch_dynamic_tx : public RefArch
 
 public:
     std::string folder_name;
+    
 
     void localTime()
     {
@@ -56,7 +57,7 @@ public:
         int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
     {
         uhd::set_thread_priority_safe(0.9F);
-        int num_total_samps = 0;
+        size_t num_total_samps = 0;
         std::unique_ptr<char[]> buf(new char[RA_spb]);
         // Prepare buffers for received samples and metadata
         uhd::rx_metadata_t md;
@@ -102,10 +103,8 @@ public:
         const auto stop_time  = RA_start_time + uhd::time_spec_t(RA_time_requested);
         rx_streamer->issue_stream_cmd(stream_cmd);
         int loop_num = 0;
-        while (not RA_stop_signal_called
-               and (RA_nsamps > num_total_samps or RA_nsamps == 0)
-               and (RA_time_requested == 0.0
-                or not RA_stop_signal_called)) {
+        while ((not RA_stop_signal_called
+               and (RA_nsamps > num_total_samps or RA_nsamps == 0)) and RA_timer_stop == false) {
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -161,7 +160,8 @@ public:
         std::vector<std::complex<float>> buff(RA_spb);
         std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
         std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
-        // send data until  the signal handler gets called
+        //Not using replay block so set replay delay to zero to ensure correct timing. 
+        
         while (not RA_stop_signal_called) {
             infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
             size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
@@ -185,6 +185,8 @@ public:
         std::vector<std::complex<float>> buff(RA_spb);
         std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
         std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
+        //Not using replay block so set replay delay to zero to ensure correct timing. 
+        RA_delay_start_time = 0;
         // send data until  the signal handler gets called
         while (not RA_stop_signal_called) {
             infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
@@ -209,6 +211,8 @@ public:
         std::vector<std::complex<float>> buff(RA_spb);
         std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
         std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
+        //Not using replay block so set replay delay to zero to ensure correct timing. 
+        RA_delay_start_time = 0;
         // send data until  the signal handler gets called
         while (not RA_stop_signal_called) {
             infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
@@ -233,6 +237,8 @@ public:
         std::vector<std::complex<float>> buff(RA_spb);
         std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
         std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
+        //Not using replay block so set replay delay to zero to ensure correct timing. 
+        RA_delay_start_time = 0;
         // send data until  the signal handler gets called
         while (not RA_stop_signal_called) {
             infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
@@ -253,6 +259,7 @@ public:
 
     void spawnTransmitThreads()
     {
+        
         if (RA_spb == 0)
             RA_spb = RA_tx_stream_vector[0]->get_max_num_samps() * 10;
         // setup the metadata flags

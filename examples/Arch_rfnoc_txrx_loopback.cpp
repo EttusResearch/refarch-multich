@@ -47,7 +47,7 @@ public:
         // clang-format on
     }
 
-    void recv(
+   void recv(
         int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
     {
         uhd::set_thread_priority_safe(0.9F);
@@ -92,15 +92,16 @@ public:
         stream_cmd.num_samps  = RA_nsamps;
         stream_cmd.stream_now = false;
         stream_cmd.time_spec  = RA_start_time;
-        md.has_time_spec      = true;
-        md.time_spec          = RA_start_time;
+        
         const auto stop_time  = RA_start_time + uhd::time_spec_t(RA_time_requested);
         rx_streamer->issue_stream_cmd(stream_cmd);
         int loop_num = 0;
         while (not RA_stop_signal_called
                and (RA_nsamps > num_total_samps or RA_nsamps == 0)
                and (RA_time_requested == 0.0
-                or not RA_stop_signal_called)) {
+                    or RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now()
+                           <= stop_time)) {
+        
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -136,6 +137,9 @@ public:
             for (size_t i = 0; i < outfiles.size(); i++) {
                 outfiles[i]->write((const char*)buff_ptrs[i],
                     num_rx_samps * sizeof(std::complex<short>));
+            }
+            if (RA_stop_signal_called){
+                std::cout << "STOP SIGNAL CALLED" << std::endl;
             }
         }
         // Shut down receiver
@@ -210,7 +214,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
     //Spawn Timer Thread
-    usrpSystem.spawnTimer();
+    //usrpSystem.spawnTimer();
     // Transmit via replay block, must be before spawning receive threads.
     usrpSystem.transmitFromReplay();
     usrpSystem.spawnReceiveThreads();

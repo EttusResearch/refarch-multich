@@ -111,11 +111,8 @@ public:
         const auto stop_time  = RA_start_time + uhd::time_spec_t(RA_time_requested);
         rx_streamer->issue_stream_cmd(stream_cmd);
         int loop_num = 0;
-        while (not RA_stop_signal_called
-               and (RA_nsamps > num_total_samps or RA_nsamps == 0)
-               and (RA_time_requested == 0.0
-                    or RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now()
-                           <= stop_time)) {
+        while ((not RA_stop_signal_called
+               and (RA_nsamps > num_total_samps or RA_nsamps == 0)) and RA_timer_stop == false) {
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -159,7 +156,7 @@ public:
 
         for (size_t i = 0; i < outfiles.size(); i++) {
             outfiles[i]->close();
-        }
+        } 
         std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
                   << " samples..." << std::endl;
     }
@@ -222,26 +219,29 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // INFO: Comment what each initialization does what type of data is stored in each.
     usrpSystem.localTime();
     
+    
     std::signal(SIGINT, usrpSystem.sigIntHandler);
-    for (double freq = 1000000000; freq <= 5500000000; freq += 100000000) {
-        
+    double freq = 1000000000;
+    while (freq <= 5500000000 and not usrpSystem.RA_stop_signal_called) {
+        std::cout << usrpSystem.RA_stop_signal_called << std::endl;
         usrpSystem.tuneRX(freq);
         usrpSystem.tuneTX(freq);
         //Spawn Timer Thread
-        //usrpSystem.spawnTimer();
-        // Sync times across threads
+        usrpSystem.spawnTimer();
         usrpSystem.updateDelayedStartTime();
         usrpSystem.transmitFromReplay();
         usrpSystem.spawnReceiveThreads();
-        usrpSystem.stopReplay();
         // Join Threads
         usrpSystem.joinAllThreads();
+        freq += 100000000;
     }
     
     std::signal(SIGINT, SIG_DFL);
     std::cout << "Run complete." << std::endl;
+    usrpSystem.stopReplay();
     // Kill LO
     usrpSystem.killLOs();
+    
 
     std::cout << std::endl << "Closing USRP Sessions" << std::endl << std::endl;
     return EXIT_SUCCESS;
