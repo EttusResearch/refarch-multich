@@ -227,7 +227,7 @@ public:
      */
     virtual void recv(const int rx_channel_nums,
         const int threadnum,
-        uhd::rx_streamer::sptr rx_streamer);
+        uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats);
     /**
      * @brief Main loop to stream samples from host. Typically streaming examples
      *  will override this function
@@ -249,23 +249,9 @@ public:
      */
     virtual void joinAllThreads();
     /**
-     * @brief Spawns a thread dedicated to timing the receive loop.
-     * 
-     */
-    virtual void spawnTimer();
-    /**
-     * @brief Acts as timer for receive function. 
-     * 
-     * @param threadnum not used but may be in future. 
-     * @return virutal 
-     */
-    virtual void asyncTimer(int threadnum);
-    /**
      * @brief Used to shutdown all threads.
      */
     static bool RA_stop_signal_called;
-    static bool RA_timer_stop;
-    std::thread RA_timerthread;
     std::vector<std::thread> RA_rx_vector_thread;
     std::vector<std::thread> RA_tx_vector_thread;
 
@@ -285,6 +271,8 @@ public:
     int RA_singleTX;
     double RA_delay_start_time;
     bool RA_TX_All_Chan;
+    bool RA_bw_summary;
+    bool RA_stats;
 
 protected:
     ///////////////////////////

@@ -54,8 +54,8 @@ public:
     }
     
 
-    void recv(
-        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
+   void recv(
+        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats) override
     {
         uhd::set_thread_priority_safe(0.9F);
         size_t num_total_samps = 0;
@@ -99,15 +99,19 @@ public:
         stream_cmd.num_samps  = RA_nsamps;
         stream_cmd.stream_now = false;
         stream_cmd.time_spec  = RA_start_time;
-        md.has_time_spec      = true;
-        md.time_spec          = RA_start_time;
-        const auto stop_time  = RA_start_time + uhd::time_spec_t(RA_time_requested);
+        
         rx_streamer->issue_stream_cmd(stream_cmd);
+        const auto start_time = std::chrono::steady_clock::now();
+        const auto stop_time =
+        start_time + std::chrono::milliseconds(int64_t(1000 * RA_time_requested+1000*RA_delay_start_time));
+        // Track time and samps between updating the BW summary
+        auto last_update                     = start_time;
+        unsigned long long last_update_samps = 0;
         int loop_num = 0;
         while (not RA_stop_signal_called
-               and (RA_nsamps > num_total_samps or RA_nsamps == 0)
-               and (RA_time_requested == 0.0
-                    or not RA_stop_signal_called)) {
+           and (RA_nsamps >= num_total_samps or RA_nsamps == 0)
+           and (RA_time_requested == 0.0 or std::chrono::steady_clock::now() <= stop_time)) {
+            const auto now = std::chrono::steady_clock::now();
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -144,7 +148,21 @@ public:
                 outfiles[i]->write((const char*)buff_ptrs[i],
                     num_rx_samps * sizeof(std::complex<short>));
             }
+            if(bw_summary){
+                last_update_samps += num_rx_samps;
+                const auto time_since_last_update = now - last_update;
+                if (time_since_last_update > std::chrono::seconds(1)) {
+                    const double time_since_last_update_s =
+                        std::chrono::duration<double>(time_since_last_update).count();
+                    const double rate = double(last_update_samps) / time_since_last_update_s;
+                    std::cout << "\t" << (rate / 1e6) << " Msps" << std::endl;
+                    last_update_samps = 0;
+                    last_update       = now;
+                }
+            }
         }
+        const auto actual_stop_time = std::chrono::steady_clock::now();
+
         // Shut down receiver
         stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
         rx_streamer->issue_stream_cmd(stream_cmd);
@@ -152,8 +170,23 @@ public:
         for (size_t i = 0; i < outfiles.size(); i++) {
             outfiles[i]->close();
         }
-        std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
-                  << " samples..." << std::endl;
+        if (stats) {
+            std::cout << std::endl;
+            if (RA_nsamps > 0){
+                std::cout << num_total_samps << " Samples Recieved: rerun with timed run for accurate stats." << std::endl;
+               return;
+            }
+            const double actual_duration_seconds =
+                std::chrono::duration<float>(actual_stop_time - start_time).count()-RA_delay_start_time;
+            size_t adjusted_samples = num_total_samps/rx_streamer->get_num_channels();
+            std::cout << std::endl;
+            std::cout << boost::format("Thread: %d Received %d samples in %f seconds") % threadnum % num_total_samps
+                            % actual_duration_seconds
+                    << std::endl;
+            const double rate = (double)adjusted_samples / actual_duration_seconds;
+            std::cout << (rate / 1e6) << " Msps" << std::endl;
+
+        }
     }
     void buildStreamsMultithreadHostTX() override
 {
@@ -178,7 +211,7 @@ public:
         RA_rx_stream_vector.push_back(RA_rx_stream);
     }
     /************************************************************************
-     * Set up streamer to Replay blocks
+     * Set up TX streamer from host
      ***********************************************************************/
     for (int i_s2r = 0; i_s2r < RA_radio_ctrls.size(); i_s2r = i_s2r + 1) {
         streamer_args["block_id"]   = RA_duc_ctrls[i_s2r]->get_block_id().to_string();
@@ -189,15 +222,6 @@ public:
         RA_tx_stream =
             RA_graph->create_tx_streamer(stream_args.channels.size(), stream_args);
         size_t tx_spp = RA_tx_stream->get_max_num_samps();
-        // Make sure that stream SPP is a multiple of the Replay Block Word Size
-        if (tx_spp % samples_per_word != 0) {
-            // Round SPP down to a multiple of the word size
-            tx_spp               = (tx_spp / samples_per_word) * samples_per_word;
-            streamer_args["spp"] = std::to_string(tx_spp);
-            stream_args.args     = streamer_args;
-            RA_tx_stream =
-                RA_graph->create_tx_streamer(stream_args.channels.size(), stream_args);
-        }
         // Vector of tx streamers
         RA_tx_stream_vector.push_back(RA_tx_stream);
     }
@@ -265,11 +289,11 @@ void spawnReceiveThreads() override
         for (size_t i = 0; i < RA_rx_stream_vector.size(); i = i + 1) {
             std::cout << "Spawning RX Thread.." << threadnum << std::endl;
             std::thread t(
-                [this](int threadnum, uhd::rx_streamer::sptr rx_streamer) {
-                    recv(1, threadnum, rx_streamer);
+                [this](int threadnum, uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats) {
+                    recv(1, threadnum, rx_streamer, bw_summary, stats);
                 },
                 threadnum,
-                RA_rx_stream_vector[i]);
+                RA_rx_stream_vector[i], RA_bw_summary, RA_stats);
         
             pthread_setname_np(t.native_handle(), "rx_thread");    
             RA_rx_vector_thread.push_back(std::move(t));
@@ -359,8 +383,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     usrpSystem.localTime();
    
     std::signal(SIGINT, usrpSystem.sigIntHandler);
-    //Spawn Timer Thread
-    usrpSystem.spawnTimer();
      // Calculate startime for threads
     usrpSystem.updateDelayedStartTime();
     // Transmit via replay block, must be before spawning receive threads.

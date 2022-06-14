@@ -35,7 +35,6 @@ namespace RA_filesystem = boost::filesystem;
 #endif
 
 bool RefArch::RA_stop_signal_called = false;
-bool RefArch::RA_timer_stop = false;
 
 
 void RefArch::parseConfig()
@@ -131,9 +130,9 @@ void RefArch::addProgramOptions()
         ("nsamps", 
             po::value<size_t>(&RA_nsamps)->default_value(16000), 
             "number of samples to play (0 for infinite)")
-        ("replay_time",
+        ("time_delay",
             po::value<double>(&RA_delay_start_time)->default_value(2.0), 
-            "Replay Block Time Delay (seconds)")
+            "TX/RX Time Delay (seconds)")
         ("singleTX",
             po::value<int>(&RA_singleTX)->default_value(0), 
             "TX Channel)")
@@ -143,6 +142,12 @@ void RefArch::addProgramOptions()
         ("time_requested", 
             po::value<double>(&RA_time_requested)->default_value(0.0), 
             "Single Loopback Continuous Time Limit (s).")
+        ("bw_summary",
+            po::value<bool>(&RA_bw_summary)->default_value(false), 
+            "Real-time display RX Rate Info")
+        ("stats",
+            po::value<bool>(&RA_stats)->default_value(false), 
+            "Display RX Stats")
         ;
     // clang-format on
 }
@@ -1149,75 +1154,116 @@ void RefArch::setTXAnt()
         rctrl->set_tx_antenna(RA_tx_ant, 0);
     }
 }
-// recvdata
-void RefArch::recv(int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer)
-{
-    // Receive to memory only, multi-threaded implementation.
-    uhd::set_thread_priority_safe(0.9F);
-    size_t num_total_samps = 0;
-    // Prepare buffers for received samples and metadata
-    uhd::rx_metadata_t md;
-    std::vector<boost::circular_buffer<std::complex<short>>> buffs(
-        rx_channel_nums, boost::circular_buffer<std::complex<short>>(RA_spb + 1));
-    // create a vector of pointers to point to each of the channel buffers
-    std::vector<std::complex<short>*> buff_ptrs;
-    for (size_t i = 0; i < buffs.size(); i++) {
-        buff_ptrs.push_back(&buffs[i].front());
-    }
-    bool overflow_message = true;
-    // setup streaming
-    uhd::stream_cmd_t stream_cmd((RA_nsamps == 0)
-                                     ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
-                                     : uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
-    stream_cmd.num_samps  = RA_nsamps;
-    stream_cmd.stream_now = false;
-    stream_cmd.time_spec  = RA_start_time;
-    md.has_time_spec      = true;
-    md.time_spec          = RA_start_time;
-    const auto stop_time  = RA_start_time + uhd::time_spec_t(RA_time_requested);
-    rx_streamer->issue_stream_cmd(stream_cmd);
-    int loop_num = 0;
-    while ((not RA_stop_signal_called
-               and (RA_nsamps > num_total_samps or RA_nsamps == 0)) and RA_timer_stop == false) {
-        size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
-        loop_num += 1;
-        if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
-            std::cout << boost::format("Timeout while streaming") << std::endl;
-            break;
+// recvdata to memory
+void RefArch::recv(
+        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats) 
+    {
+        uhd::set_thread_priority_safe(0.9F);
+        size_t num_total_samps = 0;
+        std::unique_ptr<char[]> buf(new char[RA_spb]);
+        // Prepare buffers for received samples and metadata
+        uhd::rx_metadata_t md;
+        std::vector<boost::circular_buffer<std::complex<short>>> buffs(
+            rx_channel_nums, boost::circular_buffer<std::complex<short>>(RA_spb + 1));
+        // create a vector of pointers to point to each of the channel buffers
+        std::vector<std::complex<short>*> buff_ptrs;
+        for (size_t i = 0; i < buffs.size(); i++) {
+            buff_ptrs.push_back(&buffs[i].front());
         }
-        if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
-            if (overflow_message) {
-                overflow_message    = false;
-                std::string tempstr = "\n thread:" + std::to_string(threadnum) + '\n'
-                                      + "loop_num:" + std::to_string(loop_num) + '\n';
-                std::cout << tempstr;
-            }
-            if (md.out_of_sequence != true) {
-                std::cerr
-                    << boost::format(
-                           "Got an overflow indication. Please consider the following:\n"
-                           "  Your write medium must sustain a rate of %fMB/s.\n"
-                           "  Dropped samples will not be written to the file.\n"
-                           "  Please modify this example for your purposes.\n"
-                           "  This message will not appear again.\n")
-                           % (RA_rx_rate * sizeof(std::complex<short>) / 1e6);
+        // Correctly label output files based on run method, single TX->single RX or
+        // single TX
+        // -> All RX
+        int rx_identifier = threadnum;
+        UHD_ASSERT_THROW(buffs.size() == rx_channel_nums);
+        bool overflow_message = true;
+        // setup streaming
+        uhd::stream_cmd_t stream_cmd(
+            (RA_nsamps == 0) ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
+                             : uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+        stream_cmd.num_samps  = RA_nsamps;
+        stream_cmd.stream_now = false;
+        stream_cmd.time_spec  = RA_start_time;
+        
+        rx_streamer->issue_stream_cmd(stream_cmd);
+        const auto start_time = std::chrono::steady_clock::now();
+        const auto stop_time =
+        start_time + std::chrono::milliseconds(int64_t(1000 * RA_time_requested+1000 * RA_delay_start_time));
+        // Track time and samps between updating the BW summary
+        auto last_update                     = start_time;
+        unsigned long long last_update_samps = 0;
+        int loop_num = 0;
+        while (not RA_stop_signal_called
+           and (RA_nsamps >= num_total_samps or RA_nsamps == 0)
+           and (RA_time_requested == 0.0 or std::chrono::steady_clock::now() <= stop_time)) {
+            const auto now = std::chrono::steady_clock::now();
+            size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
+            loop_num += 1;
+            if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
+                std::cout << boost::format("Timeout while streaming") << std::endl;
                 break;
             }
-            continue;
+            if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
+                if (overflow_message) {
+                    overflow_message    = false;
+                    std::string tempstr = "\n thread:" + std::to_string(threadnum) + '\n'
+                                          + "loop_num:" + std::to_string(loop_num) + '\n';
+                    std::cout << tempstr;
+                }
+                if (md.out_of_sequence != true) {
+                    std::cerr
+                        << boost::format(
+                               "Got an overflow indication. Please consider the "
+                               "following:\n"
+                               "  Your write medium must sustain a rate of %fMB/s.\n"
+                               "  Dropped samples will not be written to the file.\n"
+                               "  Please modify this example for your purposes.\n"
+                               "  This message will not appear again.\n")
+                               % (RA_rx_rate * sizeof(std::complex<short>) / 1e6);
+                    break;
+                }
+                continue;
+            }
+            if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
+                throw std::runtime_error(
+                    str(boost::format("Receiver error %s") % md.strerror()));
+            }
+            num_total_samps += num_rx_samps * rx_streamer->get_num_channels();
+            if(bw_summary){
+                last_update_samps += num_rx_samps;
+                const auto time_since_last_update = now - last_update;
+                if (time_since_last_update > std::chrono::seconds(1)) {
+                    const double time_since_last_update_s =
+                        std::chrono::duration<double>(time_since_last_update).count();
+                    const double rate = double(last_update_samps) / time_since_last_update_s;
+                    std::cout << "\t" << (rate / 1e6) << " Msps" << std::endl;
+                    last_update_samps = 0;
+                    last_update       = now;
+                }
+            }
         }
-        if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
-            throw std::runtime_error(
-                str(boost::format("Receiver error %s") % md.strerror()));
-            break;
+        const auto actual_stop_time = std::chrono::steady_clock::now();
+
+        // Shut down receiver
+        stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
+        rx_streamer->issue_stream_cmd(stream_cmd);
+        if (stats) {
+            std::cout << std::endl;
+            if (RA_nsamps > 0){
+                std::cout << num_total_samps << " Samples Recieved: rerun with timed run for accurate stats." << std::endl;
+               return;
+            }
+            const double actual_duration_seconds =
+                std::chrono::duration<float>(actual_stop_time - start_time).count();
+            size_t adjusted_samples = num_total_samps/rx_streamer->get_num_channels();
+            std::cout << std::endl;
+            std::cout << boost::format("Thread: %d Received %d samples in %f seconds") % threadnum % num_total_samps
+                            % actual_duration_seconds
+                    << std::endl;
+            const double rate = (double)adjusted_samples / actual_duration_seconds;
+            std::cout << (rate / 1e6) << " Msps" << std::endl;
+
         }
-        num_total_samps += num_rx_samps * rx_streamer->get_num_channels();
     }
-    // Shut down receiver
-    stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
-    rx_streamer->issue_stream_cmd(stream_cmd);
-    std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
-              << " samples..." << std::endl;
-}
 void RefArch::transmitFromFile(
     uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
 {
@@ -1233,15 +1279,16 @@ void RefArch::transmitFromFile(
 
         metadata.end_of_burst = infile.eof();
         // send the entire contents of the buffer
-        tx_streamer->send(buffs, buff.size(), metadata);
+        const size_t samples_sent = tx_streamer->send(buffs, buff.size(), metadata);
+        // do not use time spec for subsequent packets
+        metadata.has_time_spec = false;
 
-        metadata.start_of_burst = false;
-        metadata.has_time_spec  = false;
     }
 
     // send a mini EOB packet
     metadata.end_of_burst = true;
     tx_streamer->send("", 0, metadata);
+    infile.close();
 }
 void RefArch::transmitFromReplay()
 {
@@ -1308,7 +1355,7 @@ void RefArch::spawnTransmitThreads()
         RA_spb = RA_tx_stream_vector[0]->get_max_num_samps() * 10;
     // setup the metadata flags
     uhd::tx_metadata_t md;
-    md.start_of_burst = true;
+    md.start_of_burst = false;
     md.end_of_burst   = false;
     md.has_time_spec  = true;
     md.time_spec      = RA_start_time;
@@ -1350,11 +1397,11 @@ void RefArch::spawnReceiveThreads()
         for (size_t i = 0; i < RA_rx_stream_vector.size(); i = i + 2) {
             std::cout << "Spawning RX Thread.." << threadnum << std::endl;
             std::thread t(
-                [this](int threadnum, uhd::rx_streamer::sptr rx_streamer) {
-                    recv(2, threadnum, rx_streamer);
+                [this](int threadnum, uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats) {
+                    recv(2, threadnum, rx_streamer, bw_summary, stats);
                 },
                 threadnum,
-                RA_rx_stream_vector[i]);
+                RA_rx_stream_vector[i], RA_bw_summary, RA_stats);
 
             RA_rx_vector_thread.push_back(std::move(t));
             threadnum++;
@@ -1377,9 +1424,7 @@ void RefArch::joinAllThreads(){
     RA_stop_signal_called = true;
 
     RA_rx_vector_thread.clear();
-    if (RA_timerthread.joinable()){
-        RA_timerthread.join();
-    }
+
     // Join TX Threads
     for (auto& tx : RA_tx_vector_thread) {
         tx.join();
@@ -1387,28 +1432,4 @@ void RefArch::joinAllThreads(){
     RA_tx_vector_thread.clear();
     std::cout << "Threads Joined" << std::endl;
     RA_stop_signal_called = temp_stop_signal; // return stop_signal_called
-}
-void RefArch::spawnTimer(){
-    if (RA_nsamps == 0){
-    int threadnum = 1; 
-    std::cout << "Spawning Timer Thread" << std::endl;
-    std::thread t([this](int threadnum){asyncTimer(threadnum);},threadnum);
-    RA_timerthread = std::move(t);
-    }
-    else{
-    return;
-    }
-}
-//Async Timer
-void RefArch::asyncTimer(int threadnum){
-  int time =0;
-  RA_timer_stop = false;
-  size_t delay = RA_delay_start_time;
-  std::cout << RA_delay_start_time << std::endl;
-  //std::this_thread::sleep_for(std::chrono::seconds(5));
-  while (RA_stop_signal_called == false and time <= (RA_time_requested+delay)){
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    time = time + 1;
-  };
-  RA_timer_stop = true;
 }

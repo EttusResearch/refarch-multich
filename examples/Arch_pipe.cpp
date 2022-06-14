@@ -122,9 +122,11 @@ public:
      * @param rx_channel_nums number of rx channels
      * @param threadnum The thread number
      * @param rx_streamer sptr to the rx_streamer
+     * @param bw_summary bandwidth summary
+     * @param stats additonal information about the run
      */
     void recv(
-        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
+        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats) override
     {
         std::vector<std::shared_ptr<PipeFile>> thread_files;
         for (int i = 0; i < rx_channel_nums; i++) {

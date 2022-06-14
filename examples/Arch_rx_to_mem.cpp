@@ -32,11 +32,11 @@ public:
             for (int i = 0; i < RA_rx_stream_vector.size(); i = i + 2) {
                 std::cout << "Spawning RX Thread.." << threadnum << std::endl;
                 std::thread t(
-                    [this](int threadnum, uhd::rx_streamer::sptr rx_streamer) {
-                        recv(2, threadnum, rx_streamer);
+                    [this](int threadnum, uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats) {
+                        recv(2, threadnum, rx_streamer, bw_summary, stats);
                     },
                     threadnum,
-                    RA_rx_stream_vector[i]);
+                    RA_rx_stream_vector[i], RA_bw_summary, RA_stats);
 
                 vectorThread.push_back(std::move(t));
                 threadnum++;
@@ -138,8 +138,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // INFO: Comment what each initilization does what type of data is stored in each.
     // Sync times across threads
     usrpSystem.updateDelayedStartTime();
-    //Spawn Timer Thread
-    usrpSystem.spawnTimer();
     usrpSystem.spawnReceiveThreads();
     std::cout << "Run complete." << std::endl;
     // Kill Replay
