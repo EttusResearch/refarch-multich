@@ -1270,24 +1270,31 @@ void RefArch::transmitFromFile(
     
     uhd::set_thread_priority_safe(0.9F);
     std::vector<std::complex<float>> buff(RA_spb);
-    std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
+    //std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
     std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     // send data until  the signal handler gets called
-    while (not RA_stop_signal_called) {
+    while (not metadata.end_of_burst and not  RA_stop_signal_called) {
         infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
         size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
 
         metadata.end_of_burst = infile.eof();
         // send the entire contents of the buffer
-        const size_t samples_sent = tx_streamer->send(buffs, buff.size(), metadata);
+        const size_t samples_sent = tx_streamer->send(&buff.front(), num_tx_samps, metadata);
+        if (samples_sent != num_tx_samps) {
+            UHD_LOG_ERROR("TX-STREAM",
+                "The tx_stream timed out sending " << num_tx_samps << " samples ("
+                                                   << samples_sent << " sent).");
+            return;
+        }
         // do not use time spec for subsequent packets
+        metadata.start_of_burst = false;
         metadata.has_time_spec = false;
 
     }
 
     // send a mini EOB packet
-    metadata.end_of_burst = true;
-    tx_streamer->send("", 0, metadata);
+    //metadata.end_of_burst = true;
+    //tx_streamer->send("", 0, metadata);
     infile.close();
 }
 void RefArch::transmitFromReplay()

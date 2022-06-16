@@ -194,16 +194,21 @@ public:
     
     uhd::set_thread_priority_safe(0.9F);
     std::vector<std::complex<float>> buff(RA_spb);
-    std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
     std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     // send data until  the signal handler gets called
-    while (not RA_stop_signal_called) {
+    while (not metadata.end_of_burst and not RA_stop_signal_called) {
         infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
         size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
         
         metadata.end_of_burst = infile.eof();
         // send the entire contents of the buffer
-        const size_t samples_sent = tx_streamer->send(buffs, buff.size(), metadata);
+        const size_t samples_sent = tx_streamer->send(&buff.front(), num_tx_samps, metadata);
+         if (samples_sent != num_tx_samps) {
+            UHD_LOG_ERROR("TX-STREAM",
+                "The tx_stream timed out sending " << num_tx_samps << " samples ("
+                                                   << samples_sent << " sent).");
+            return;
+        }
         // do not use time spec for subsequent packets
         metadata.has_time_spec = false;
     }
@@ -217,20 +222,23 @@ public:
     {
     uhd::set_thread_priority_safe(0.9F);
     std::vector<std::complex<float>> buff(RA_spb);
-    std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
     std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     // send data until  the signal handler gets called
-    while (not RA_stop_signal_called) {
+    while (not metadata.end_of_burst and not RA_stop_signal_called) {
         infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
         size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
         
         metadata.end_of_burst = infile.eof();
         // send the entire contents of the buffer
-        const size_t samples_sent = tx_streamer->send(buffs, buff.size(), metadata);
+        const size_t samples_sent = tx_streamer->send(&buff.front(), num_tx_samps, metadata);
+         if (samples_sent != num_tx_samps) {
+            UHD_LOG_ERROR("TX-STREAM",
+                "The tx_stream timed out sending " << num_tx_samps << " samples ("
+                                                   << samples_sent << " sent).");
+            return;
+        }
         // do not use time spec for subsequent packets
-        metadata.has_time_spec = false;
-
-        
+        metadata.has_time_spec = false; 
     }
     // send a mini EOB packet
     metadata.end_of_burst = true;
@@ -242,45 +250,49 @@ public:
     {
     uhd::set_thread_priority_safe(0.9F);
     std::vector<std::complex<float>> buff(RA_spb);
-    std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
     std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     // send data until  the signal handler gets called
-    while (not RA_stop_signal_called) {
+    while (not metadata.end_of_burst and not RA_stop_signal_called) {
         infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
         size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
         
         metadata.end_of_burst = infile.eof();
         // send the entire contents of the buffer
-        const size_t samples_sent = tx_streamer->send(buffs, buff.size(), metadata);
+        const size_t samples_sent = tx_streamer->send(&buff.front(), num_tx_samps, metadata);
+         if (samples_sent != num_tx_samps) {
+            UHD_LOG_ERROR("TX-STREAM",
+                "The tx_stream timed out sending " << num_tx_samps << " samples ("
+                                                   << samples_sent << " sent).");
+            return;
+        }
         // do not use time spec for subsequent packets
         metadata.has_time_spec = false;     
     }
-    // send a mini EOB packet
-    metadata.end_of_burst = true;
-    tx_streamer->send("", 0, metadata);
     infile.close();
     }
     void transmitFromFile3(
         uhd::tx_streamer::sptr tx_streamer, uhd::tx_metadata_t metadata, int num_channels)
     {
         uhd::set_thread_priority_safe(0.9F);
-    std::vector<std::complex<float>> buff(RA_spb);
-    std::vector<std::complex<float>*> buffs(num_channels, &buff.front());
+    std::vector<std::complex<float>> buff(RA_spb);;
     std::ifstream infile(RA_file.c_str(), std::ifstream::binary);
     // send data until  the signal handler gets called
-    while (not RA_stop_signal_called) {
+    while (not metadata.end_of_burst and not RA_stop_signal_called) {
         infile.read((char*)&buff.front(), buff.size() * sizeof(int16_t));
         size_t num_tx_samps = size_t(infile.gcount() / sizeof(int16_t));
 
         metadata.end_of_burst = infile.eof();
         // send the entire contents of the buffer
-        const size_t samples_sent = tx_streamer->send(buffs, buff.size(), metadata);
+        const size_t samples_sent = tx_streamer->send(&buff.front(), num_tx_samps, metadata);
+         if (samples_sent != num_tx_samps) {
+            UHD_LOG_ERROR("TX-STREAM",
+                "The tx_stream timed out sending " << num_tx_samps << " samples ("
+                                                   << samples_sent << " sent).");
+            return;
+        }
         // do not use time spec for subsequent packets
         metadata.has_time_spec = false;
     }
-    // send a mini EOB packet
-    metadata.end_of_burst = true;
-    tx_streamer->send("", 0, metadata);
     infile.close();
     }
 
@@ -290,11 +302,27 @@ public:
         if (RA_spb == 0)
             RA_spb = RA_tx_stream_vector[0]->get_max_num_samps() * 10;
         // setup the metadata flags
-        uhd::tx_metadata_t md;
-        md.start_of_burst = false;
-        md.end_of_burst   = false;
-        md.has_time_spec  = true;
-        md.time_spec      = RA_start_time;
+        uhd::tx_metadata_t md0;
+        uhd::tx_metadata_t md1;
+        uhd::tx_metadata_t md2;
+        uhd::tx_metadata_t md3;
+        md0.start_of_burst = false;
+        md0.end_of_burst   = false;
+        md0.has_time_spec  = true;
+        md0.time_spec      = RA_start_time;
+        md1.start_of_burst = false;
+        md1.end_of_burst   = false;
+        md1.has_time_spec  = true;
+        md1.time_spec      = RA_start_time;
+        md2.start_of_burst = false;
+        md2.end_of_burst   = false;
+        md2.has_time_spec  = true;
+        md2.time_spec      = RA_start_time;
+        md3.start_of_burst = false;
+        md3.end_of_burst   = false;
+        md3.has_time_spec  = true;
+        md3.time_spec      = RA_start_time;
+        
         if (RA_TX_All_Chan == true) {
             // start transmit worker thread 0, not for use with replay block.
             std::cout << "Spawning TX thread: " << 0 << std::endl;
@@ -305,7 +333,7 @@ public:
                     transmitFromFile0(tx_streamer, metadata, num_channels);
                 },
                 RA_tx_stream_vector[0],
-                md,
+                md0,
                 1);
             RA_tx_vector_thread.push_back(std::move(tx0));
 
@@ -318,7 +346,7 @@ public:
                     transmitFromFile1(tx_streamer, metadata, num_channels);
                 },
                 RA_tx_stream_vector[1],
-                md,
+                md1,
                 1);
             RA_tx_vector_thread.push_back(std::move(tx1));
 
@@ -331,7 +359,7 @@ public:
                     transmitFromFile2(tx_streamer, metadata, num_channels);
                 },
                 RA_tx_stream_vector[2],
-                md,
+                md2,
                 1);
             RA_tx_vector_thread.push_back(std::move(tx2));
 
@@ -344,7 +372,7 @@ public:
                     transmitFromFile3(tx_streamer, metadata, num_channels);
                 },
                 RA_tx_stream_vector[3],
-                md,
+                md3,
                 1);
             RA_tx_vector_thread.push_back(std::move(tx3));
 
@@ -359,7 +387,7 @@ public:
                     transmitFromFile(tx_streamer, metadata, num_channels);
                 },
                 RA_tx_stream_vector[RA_singleTX],
-                md,
+                md0,
                 1);
             RA_tx_vector_thread.push_back(std::move(tx));
         }

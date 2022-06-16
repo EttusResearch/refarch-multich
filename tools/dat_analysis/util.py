@@ -112,7 +112,7 @@ def batch_folder_import( path0: str , ppw, new = True, numfolders = 1, datatype 
             iq_data.determine_nsamps()
             if (iq_data.nsamples - start_point) % ppw != 0:
                 x = (iq_data.nsamples-start_point) % ppw
-                #sys.exit("ERROR: PPW ("+str(ppw)+") : "+"\nIncrease samples by: " + str(x) + " or use start_point = " + str(start_point+x))
+                sys.exit("ERROR: PPW ("+str(ppw)+") : "+"\nIncrease samples by: " + str(x) + " or use start_point = " + str(start_point+x))
             iq_data.deinterleave_iq()
             iq_data.convert_to_complex()
             channel_string = iq_data.tx_channel_number + iq_data.rx_channel_number + iq_data.run_number
