@@ -17,6 +17,8 @@ you will find information on how to use the system and how to use the Architectu
 \li Arch_multifreq_loopback - Cycles through different frequencies
 \li Arch_rx_to_mem - receiving on all channels to memory
 \li Arch_pipe - Built to connect to third party applications. See the MATLAB example for more information.
+\li Arch_txrx_fullduplex_dpdk_mem - Simultaneously transmitting and receiving from/to the host memory using DPDK
+\li Arch_txrx_fullduplex_dpdk - Simultaneously transmitting and receiving from/to the host using DPDK
 
 ### Further Information
 

@@ -32,8 +32,6 @@ class Arch_txrx_fullduplex : public RefArch
 public:
     std::string folder_name;
     
-    
-
     void localTime()
     {
         boost::posix_time::ptime timeLocal =

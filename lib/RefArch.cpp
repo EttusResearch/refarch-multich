@@ -1160,7 +1160,6 @@ void RefArch::recv(
     {
         uhd::set_thread_priority_safe(0.9F);
         size_t num_total_samps = 0;
-        std::unique_ptr<char[]> buf(new char[RA_spb]);
         // Prepare buffers for received samples and metadata
         uhd::rx_metadata_t md;
         std::vector<boost::circular_buffer<std::complex<short>>> buffs(
@@ -1174,7 +1173,6 @@ void RefArch::recv(
         // single TX
         // -> All RX
         int rx_identifier = threadnum;
-        UHD_ASSERT_THROW(buffs.size() == rx_channel_nums);
         bool overflow_message = true;
         // setup streaming
         uhd::stream_cmd_t stream_cmd(
@@ -1291,10 +1289,6 @@ void RefArch::transmitFromFile(
         metadata.has_time_spec = false;
 
     }
-
-    // send a mini EOB packet
-    //metadata.end_of_burst = true;
-    //tx_streamer->send("", 0, metadata);
     infile.close();
 }
 void RefArch::transmitFromReplay()
@@ -1362,7 +1356,7 @@ void RefArch::spawnTransmitThreads()
         RA_spb = RA_tx_stream_vector[0]->get_max_num_samps() * 10;
     // setup the metadata flags
     uhd::tx_metadata_t md;
-    md.start_of_burst = false;
+    md.start_of_burst = true;
     md.end_of_burst   = false;
     md.has_time_spec  = true;
     md.time_spec      = RA_start_time;

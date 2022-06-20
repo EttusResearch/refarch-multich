@@ -30,30 +30,7 @@ class Arch_txrx_fullduplex : public RefArch
     using RefArch::RefArch;
 
 public:
-    std::string folder_name;
-    
-    
-
-    void localTime()
-    {
-        boost::posix_time::ptime timeLocal =
-            boost::posix_time::second_clock::local_time();
-        std::string month   = std::to_string(timeLocal.date().month());
-        month               = std::string(2 - month.length(), '0') + month;
-        std::string day     = std::to_string(timeLocal.date().day());
-        day                 = std::string(2 - day.length(), '0') + day;
-        std::string year    = std::to_string(timeLocal.date().year());
-        std::string hour    = std::to_string(timeLocal.time_of_day().hours());
-        hour                = std::string(2 - hour.length(), '0') + hour;
-        std::string minute  = std::to_string(timeLocal.time_of_day().minutes());
-        minute              = std::string(2 - minute.length(), '0') + minute;
-        std::string seconds = std::to_string(timeLocal.time_of_day().seconds());
-        seconds             = std::string(2 - seconds.length(), '0') + seconds;
-        folder_name =
-            month + day + year + "_" + hour + minute + seconds + "_" + RA_rx_file;
-    }
-    
-
+   
     void recv(
         int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats) override
     {
@@ -292,12 +269,6 @@ void buildGraph() override
     // create a usrp device
     std::cout << std::endl;
     uhd::device_addrs_t device_addrs = uhd::device::find(RA_args, uhd::device::USRP);
-    if (not device_addrs.empty() and device_addrs.at(0).get("type", "") == "usrp1") {
-        std::cerr << "*** Warning! ***" << std::endl;
-        std::cerr << "Benchmark results will be inaccurate on USRP1 due to insufficient "
-                     "features.\n"
-                  << std::endl;
-    }
     /************************************************************************
      * Create device and block controls
      ***********************************************************************/
@@ -363,8 +334,6 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Sync time across devices
     usrpSystem.syncAllDevices();
     // Begin TX and RX
-    // INFO: Comment what each initialization does what type of data is stored in each.
-    usrpSystem.localTime();
     // Calculate startime for threads
     usrpSystem.updateDelayedStartTime();
     std::signal(SIGINT, usrpSystem.sigIntHandler);
