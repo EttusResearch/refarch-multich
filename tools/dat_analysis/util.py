@@ -48,7 +48,7 @@ def parse_args():
 
 def calculate_window(signal_freq: int, fs):
     T = 1/signal_freq # Period
-    two_T = 4*T # four Periods
+    two_T = 2*T # two Periods
     samples = float(fs)*two_T # Samples for two periods
     return int(samples)
 
@@ -136,15 +136,15 @@ def batch_analyze_plot(dict0 : dict, ppw,  baseRX , save_directory = None, start
         for tx in tx_list:
             for run in run_list:
                 base_channel_string = tx + baseRX + run
-                alignment_dict[k_folder], avg_alignment_dict[k_folder] = calculate_ptp_alignment_all(v_folder, base_channel_string, ppw)
+                #alignment_dict[k_folder], avg_alignment_dict[k_folder] = calculate_ptp_alignment_all(v_folder, base_channel_string, ppw)
                 if save_directory != "":
                     image_output = str(k_folder)
                 else:
                     image_output = save_directory
-                for data in avg_alignment_dict[k_folder]:
-                    plotutil.plot_ptp_average(dict0[k_folder][data], dict0[k_folder][base_channel_string], avg_alignment_dict[k_folder], image_output , start_point)
-                for data in alignment_dict[k_folder]:
-                    plotutil.plot_ptp_alignment(dict0[k_folder][data], dict0[k_folder][base_channel_string], alignment_dict[k_folder], image_output , start_point, end_point)
+                #for data in avg_alignment_dict[k_folder]:
+                    ##plotutil.plot_ptp_average(dict0[k_folder][data], dict0[k_folder][base_channel_string], avg_alignment_dict[k_folder], image_output , start_point)
+                #for data in alignment_dict[k_folder]:
+                    ##plotutil.plot_ptp_alignment(dict0[k_folder][data], dict0[k_folder][base_channel_string], alignment_dict[k_folder], image_output , start_point, end_point)
                 for data in dict0[k_folder]:
                     if data != baseRX:
                         plotutil.plot_samps(dict0[k_folder][data], dict0[k_folder][base_channel_string], image_output,  start_point, end_point) 

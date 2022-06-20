@@ -51,10 +51,10 @@ public:
     }
 
     void recv(
-        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer) override
+        int rx_channel_nums, int threadnum, uhd::rx_streamer::sptr rx_streamer, bool bw_summary, bool stats) override
     {
         uhd::set_thread_priority_safe(0.9F);
-        int num_total_samps = 0;
+        size_t num_total_samps = 0;
         std::unique_ptr<char[]> buf(new char[RA_spb]);
         // Prepare buffers for received samples and metadata
         uhd::rx_metadata_t md;
@@ -80,7 +80,7 @@ public:
                 folder_name,
                 RA_rx_file_channels,
                 RA_rx_file_location);
-            std::ofstream* outstream        = new std::ofstream;
+            auto outstream = std::shared_ptr<std::ofstream>(new std::ofstream());
             outstream->rdbuf()->pubsetbuf(buf.get(), RA_spb); // Important
             outstream->open(this_filename.c_str(), std::ofstream::binary);
             outfiles.push_back(std::shared_ptr<std::ofstream>(outstream));
@@ -95,16 +95,19 @@ public:
         stream_cmd.num_samps  = RA_nsamps;
         stream_cmd.stream_now = false;
         stream_cmd.time_spec  = RA_start_time;
-        md.has_time_spec      = true;
-        md.time_spec          = RA_start_time;
-        const auto stop_time  = RA_start_time + uhd::time_spec_t(RA_time_requested);
+        
         rx_streamer->issue_stream_cmd(stream_cmd);
+        const auto start_time = std::chrono::steady_clock::now();
+        const auto stop_time =
+        start_time + std::chrono::milliseconds(int64_t(1000 * RA_time_requested+1000*RA_delay_start_time));
+        // Track time and samps between updating the BW summary
+        auto last_update                     = start_time;
+        unsigned long long last_update_samps = 0;
         int loop_num = 0;
         while (not RA_stop_signal_called
-               and (RA_nsamps > num_total_samps or RA_nsamps == 0)
-               and (RA_time_requested == 0.0
-                    or RA_graph->get_mb_controller(0)->get_timekeeper(0)->get_time_now()
-                           <= stop_time)) {
+           and (RA_nsamps >= num_total_samps or RA_nsamps == 0)
+           and (RA_time_requested == 0.0 or std::chrono::steady_clock::now() <= stop_time)) {
+            const auto now = std::chrono::steady_clock::now();
             size_t num_rx_samps = rx_streamer->recv(buff_ptrs, RA_spb, md, RA_rx_timeout);
             loop_num += 1;
             if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -141,7 +144,21 @@ public:
                 outfiles[i]->write((const char*)buff_ptrs[i],
                     num_rx_samps * sizeof(std::complex<short>));
             }
+            if(bw_summary){
+                last_update_samps += num_rx_samps;
+                const auto time_since_last_update = now - last_update;
+                if (time_since_last_update > std::chrono::seconds(1)) {
+                    const double time_since_last_update_s =
+                        std::chrono::duration<double>(time_since_last_update).count();
+                    const double rate = double(last_update_samps) / time_since_last_update_s;
+                    std::cout << "\t" << (rate / 1e6) << " Msps" << std::endl;
+                    last_update_samps = 0;
+                    last_update       = now;
+                }
+            }
         }
+        const auto actual_stop_time = std::chrono::steady_clock::now();
+
         // Shut down receiver
         stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
         rx_streamer->issue_stream_cmd(stream_cmd);
@@ -149,8 +166,23 @@ public:
         for (size_t i = 0; i < outfiles.size(); i++) {
             outfiles[i]->close();
         }
-        std::cout << "Thread: " << threadnum << " Received: " << num_total_samps
-                  << " samples..." << std::endl;
+        if (stats) {
+            std::cout << std::endl;
+            if (RA_nsamps > 0){
+                std::cout << num_total_samps << " Samples Recieved: rerun with timed run for accurate stats." << std::endl;
+               return;
+            }
+            const double actual_duration_seconds =
+                std::chrono::duration<float>(actual_stop_time - start_time).count()-RA_delay_start_time;
+            size_t adjusted_samples = num_total_samps/rx_streamer->get_num_channels();
+            std::cout << std::endl;
+            std::cout << boost::format("Thread: %d Received %d samples in %f seconds") % threadnum % num_total_samps
+                            % actual_duration_seconds
+                    << std::endl;
+            const double rate = (double)adjusted_samples / actual_duration_seconds;
+            std::cout << (rate / 1e6) << " Msps" << std::endl;
+
+        }
     }
 };
 /***********************************************************************
