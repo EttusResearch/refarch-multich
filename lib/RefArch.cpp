@@ -186,11 +186,25 @@ void RefArch::setSources()
 {
     // Set clock reference
     std::cout << "Locking motherboard reference/time sources..." << std::endl;
-    // Lock mboard clocks
-    for (size_t i = 0; i < RA_graph->get_num_mboards(); ++i) {
-        RA_graph->get_mb_controller(i)->set_clock_source(RA_ref);
-        RA_graph->get_mb_controller(i)->set_time_source(RA_ref);
+    // Try/Catch Temp fix for TDC issue that will be patched in UHD 4.3
+    size_t count = 5;
+    while (count > 0){
+    try{
+         // Lock mboard clocks
+        for (size_t i = 0; i < RA_graph->get_num_mboards(); ++i) {
+            RA_graph->get_mb_controller(i)->set_clock_source(RA_ref);
+            RA_graph->get_mb_controller(i)->set_time_source(RA_ref);
+        }
+        break;
+        
+        } 
+        catch(...){
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            UHD_LOG_WARNING("TDC ERROR", "Retrying " << count << " more times...");
+            count--;
+        }
     }
+   
 }
 int RefArch::syncAllDevices()
 {
