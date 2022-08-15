@@ -1,6 +1,3 @@
-# Development Branch!
-
-You are currently in the development branch of the Multichannel RF Reference Architecture. Please checkout either a tagged release or a stable branch. This Development branch has the latest features that the team is working on. There will likely be bugs and some features may not be completely implemented. Developing applications based off this branch is not recommended. Use this branch to watch and give feedback on what we are currently working on!
 # Multichannel RF Reference Architecture
 
 Welcome to the Multichannel RF Reference Architecture software distribution. refarch-multich is the free and open-source reference architecture code for building a Multichannel RF Reference Architecture system, designed by NI.
